@@ -85,6 +85,8 @@ function draw_map(column_name,data){
 	});	
 }
 
+/* Added slider*/
+
 // d3.csv("Airfares_by_State.csv", function(data){
 // 	draw_map("1993Q1", data)
 // 	$(function(){
