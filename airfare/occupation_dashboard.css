@@ -146,6 +146,6 @@ div.tooltip {
 #slider{
 	width:200px;
 	position: absolute;
-	top:50px;
 	left:200px;
+	bottom:300px;
 }
