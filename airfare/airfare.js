@@ -88,7 +88,9 @@ function draw_map(column_name,data){
 d3.csv("Airfares_by_State.csv", function(data){
 	draw_map("1993Q1", data)
 	$(function(){
-		$("#slider").slider();
+		$("#slider").slider({
+			dates: d3.keys(data[0])
+		});
 	});
 })
 // d3.csv("Airfares_by_State.csv", function(data){
