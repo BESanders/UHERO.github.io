@@ -87,21 +87,27 @@ function draw_map(column_name,data){
 
 d3.csv("Airfares_by_State.csv", function(data){
 	draw_map("1993Q1", data)
-	d3.select("#interactive_area").selectAll("a")
-		.data(d3.keys(data[0]))
-		.enter()
-		.append("a")
-		.html(function(d){ 
-			if(d !== "State"){
-				if(d.indexOf("Q4") === -1){
-					return d + " | ";
-				}else{
-					return d + "<br/>";
-				}
-			}
-		})
-		.attr("href", "javascript:;")
-		.on("click", function(d){
-			draw_map(d,data);
-		})
+	$(function(){
+		$("#slider").slider();
+	});
 })
+// d3.csv("Airfares_by_State.csv", function(data){
+// 	draw_map("1993Q1", data)
+// 	d3.select("#interactive_area").selectAll("a")
+// 		.data(d3.keys(data[0]))
+// 		.enter()
+// 		.append("a")
+// 		.html(function(d){ 
+// 			if(d !== "State"){
+// 				if(d.indexOf("Q4") === -1){
+// 					return d + " | ";
+// 				}else{
+// 					return d + "<br/>";
+// 				}
+// 			}
+// 		})
+// 		.attr("href", "javascript:;")
+// 		.on("click", function(d){
+// 			draw_map(d,data);
+// 		})
+// })
