@@ -35,8 +35,8 @@ function draw_map(){
 					.append("svg")
 					.attr("id", "map")
 	
-	var map_width = 360//960,
-	    map_height = 360//660;
+	var map_width = 560//960,
+	    map_height = 260//660;
 
 	map_svg.attr("width", map_width)
 	    	.attr("height", map_height);
