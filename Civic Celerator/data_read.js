@@ -29,6 +29,19 @@ function get_contributions_received(table, chamber, district, callback) {
 		})
 	});
 }
+
+function draw_map(){
+	var map_svg = d3.select("body")
+					.append("svg")
+					.attr("id", "map")
+	
+	var map_width = 560//960,
+	    map_height = 460//660;
+
+	map_svg.attr("width", map_width)
+	    	.attr("height", map_height);
+}
+
 var temp_data
 
 function draw(query_data, election_period, chamber, district) {
@@ -277,3 +290,4 @@ function load_dataset(){
 }
 
 load_dataset();
+draw_map();
