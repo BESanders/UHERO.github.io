@@ -52,7 +52,7 @@ function draw_map(){
 	    .projection(projection);
 		 
 	d3.json("hawaii_voting_districts_topo.json", function(error, hawaii) {
-
+		console.log(hawaii)
 		map_svg.selectAll("path.district")
 				 .data(topojson.feature(hawaii, hawaii.objects.hawaii_voting_districts).features)
 				 .enter().append("path")
