@@ -40,6 +40,31 @@ function draw_map(){
 
 	map_svg.attr("width", map_width)
 	    	.attr("height", map_height);
+	
+	var projection = d3.geo.albers()
+		.center([0, 18.5])//0, 18.5
+		.rotate([157.50, -1.5])
+		.parallels([15, 25])//15, 25
+		.scale(5500)
+		.translate([map_width / 2, (map_height / 2) + 50]);
+
+	var path = d3.geo.path()
+	    .projection(projection);
+		 
+	d3.json("hawaii_voting_districts_topo.json", function(error, hawaii) {
+
+		map_svg.selectAll("path.district")
+				 .data(topojson.feature(hawaii, hawaii.objects.hawaii_voting_districts).features)
+				 .enter().append("path")
+			    .attr("class", function(d) { 
+						var desc = d.id.split("-"); 
+						if(desc[0][0] === "0"){
+							desc[0] = desc[0].slice(1);
+						}
+						return "district" + desc[0]; 
+				 })
+			    .attr("d", path)
+	});
 }
 
 var temp_data
