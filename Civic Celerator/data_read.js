@@ -315,4 +315,4 @@ function load_dataset(){
 }
 
 load_dataset();
-draw_map();
+//draw_map();
