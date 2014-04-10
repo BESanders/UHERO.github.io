@@ -102,7 +102,7 @@ d3.csv("Airfares_by_State.csv", function(data){
 						return color(airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]]);
 					}
 				})
-				//d3.select("#interactive_area").append("h3").text(d3.keys(data[0])[ui.value])
+				$("#label").val(d3.keys(data[0])[ui.value])
 			}
 		});
 	});
