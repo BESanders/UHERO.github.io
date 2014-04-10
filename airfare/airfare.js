@@ -97,6 +97,7 @@ d3.csv("Airfares_by_State.csv", function(data){
 	$(function(){
 		$("#slider").slider({
 			min:0,
+			max:83,
 			slide: function(event, ui){
 				console.log(ui.value)
 			}
