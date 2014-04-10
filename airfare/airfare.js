@@ -90,6 +90,8 @@ function draw_map(column_name,data){
 var dates = [];
 d3.csv("Airfares_by_State.csv", function(data){
 	draw_map("1993Q1", data)
+	var keys = d3.keys(data[0]);
+	console.log(keys)
 	for(int i = 1; i < (d3.keys(data[0])).length; i++){
 		dates.push({i:d3.keys(data[0])[i]});
 	}
