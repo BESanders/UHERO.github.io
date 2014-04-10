@@ -87,13 +87,18 @@ function draw_map(column_name,data){
 
 /* Added slider*/
 
+var dates = [];
 d3.csv("Airfares_by_State.csv", function(data){
 	draw_map("1993Q1", data)
+	for(int i = 1; i < d3.keys(data[0]).length; i++){
+		dates.push({i:d3.keys(data[0])[i]});
+	}
+	console.log(dates)
 	$(function(){
 		$("#slider").slider({
-			values: [d3.keys(data[0])],
+
 			slide: function(event, ui){
-				console.log(event)
+				console.log(ui.value)
 			}
 		});
 	});
