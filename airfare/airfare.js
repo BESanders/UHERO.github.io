@@ -93,6 +93,7 @@ d3.csv("Airfares_by_State.csv", function(data){
 	var keys = d3.keys(data[0]);
 	console.log(keys)
 	console.log(keys.length)
+	console.log(d3.keys(data[0]).length)
 	// for(int i = 1; i < (d3.keys(data[0])).length; i++){
 	// 	dates.push({i:d3.keys(data[0])[i]});
 	// }
