@@ -85,18 +85,6 @@ function initial_draw_map(column_name, data){
 	});
 }
 
-function recolor(column_name,data){
-	d3.selectAll("path.state")
-	  .attr("fill", function(d){
-		if(d.properties.abbreviation === "HI"){
-			return 0;
-		}else{
-			return color(airfares[d.properties.abbreviation][column_name]);
-		}
-	})
-	
-}
-
 /* Added slider*/
 
 d3.csv("Airfares_by_State.csv", function(data){
@@ -106,7 +94,14 @@ d3.csv("Airfares_by_State.csv", function(data){
 			min:1,
 			max:83,
 			slide: function(event, ui){
-				recolor(d3.keys(data[0])[ui.value],data);
+				d3.selectAll("path.state")
+				  .attr("fill", function(d){
+					if(d.properties.abbreviation === "HI"){
+						return 0;
+					}else{
+						return color(airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]]);
+					}
+				})
 			}
 		});
 	});
