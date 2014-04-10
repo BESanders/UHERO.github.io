@@ -36,26 +36,27 @@ var path = d3.geo.path()
 			
 var color = d3.scale.linear();
 var numbers = [];
-
 var airfares = {};
-data.forEach(function(d){
-	airfares[d.State] = d
-	numbers = numbers.concat(d3.values(d).filter(function(d){
-					return !isNaN(d) && d !== "";
-				}))
-})
+	
+function initial_draw_map(column_name, data){
+	data.forEach(function(d){
+		airfares[d.State] = d
+		numbers = numbers.concat(d3.values(d).filter(function(d){
+						return !isNaN(d) && d !== "";
+					}))
+	})
 
-for(var i = 0; i < numbers.length; i++){
-	numbers[i] = +numbers[i];
-}
+	for(var i = 0; i < numbers.length; i++){
+		numbers[i] = +numbers[i];
+	}
 
-numbers.sort(function(a,b){ return a - b;})
-color.domain([d3.min(numbers, function(d){ return d;}), d3.max(numbers, function(d){ return d;})])
-	  .range(["rgb(222,235,247)", "rgb(8,48,107)"])
-	  .interpolate()
-	//.range(["rgb(247,251,255)", "rgb(222,235,247)", "rgb(198,219,239)", "rgb(158,202,225)", "rgb(107,174,214)","rgb(66,146,198)", "rgb(33,113,181)", "rgb(8,81,156)", "rgb(8,48,107)"])
+	numbers.sort(function(a,b){ return a - b;})
+	color.domain([d3.min(numbers, function(d){ return d;}), d3.max(numbers, function(d){ return d;})])
+		  .range(["rgb(222,235,247)", "rgb(8,48,107)"])
+		  .interpolate()
+		//.range(["rgb(247,251,255)", "rgb(222,235,247)", "rgb(198,219,239)", "rgb(158,202,225)", "rgb(107,174,214)","rgb(66,146,198)", "rgb(33,113,181)", "rgb(8,81,156)", "rgb(8,48,107)"])
 
-function initial_draw_map(column_name, data){	
+	
 	d3.json("us-states.json",function(states){
 		states.features.pop()
 		d3.json("states.json",function(abbrev){
