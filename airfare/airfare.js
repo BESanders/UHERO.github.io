@@ -93,7 +93,7 @@ d3.csv("Airfares_by_State.csv", function(data){
 		$("#slider").slider({
 			dates: d3.keys(data[0]),
 			slide: function(event, ui){
-				console.log(ui.value.dates)
+				console.log(ui)
 			}
 		});
 	});
