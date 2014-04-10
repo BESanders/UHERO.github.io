@@ -91,7 +91,7 @@ d3.csv("Airfares_by_State.csv", function(data){
 	draw_map("1993Q1", data)
 	$(function(){
 		$("#slider").slider({
-			values: d3.keys(data[0]),
+			dates: d3.keys(data[0]),
 			slide: function(event, ui){
 				console.log(ui.value)
 			}
