@@ -37,7 +37,7 @@ var path = d3.geo.path()
 var color = d3.scale.linear();
 var numbers = [];
 
-function draw_map(column_name,data){
+function initial_draw_map(column_name, data){
 	var airfares = {};
 	data.forEach(function(d){
 		airfares[d.State] = d
@@ -82,19 +82,26 @@ function draw_map(column_name,data){
 					.attr("stroke", "#CCC")
 					.attr("d",path)
 		});
-	});	
+	});
 }
 
 /* Added slider*/
 
 d3.csv("Airfares_by_State.csv", function(data){
-	draw_map("1993Q1", data)
+	initial_draw_map("1993Q1", data)
 	$(function(){
 		$("#slider").slider({
 			min:1,
 			max:83,
 			slide: function(event, ui){
-				draw_map(d3.keys(data[0])[ui.value],data);
+				d3.selectAll("path.states")
+				  .attr("fill", function(d){
+					if(d.properties.abbreviation === "HI"){
+						return 0;
+					}else{
+						return color(airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]]);
+					}
+				})
 			}
 		});
 	});
