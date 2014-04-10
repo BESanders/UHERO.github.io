@@ -71,7 +71,7 @@ function initial_draw_map(column_name, data){
 					.data(states.features)
 					.enter()
 					.append("path")
-					.attr("class", function(d) { return d.properties.name;})
+					.attr("class", function(d) { return "state " + d.properties.name;})
 					.attr("fill", function(d){
 						if(d.properties.abbreviation === "HI"){
 							return 0;
@@ -85,6 +85,11 @@ function initial_draw_map(column_name, data){
 	});
 }
 
+function recolor(column_name,data){
+	d3.selectAll("path.states")
+	
+}
+
 /* Added slider*/
 
 d3.csv("Airfares_by_State.csv", function(data){
@@ -94,14 +99,7 @@ d3.csv("Airfares_by_State.csv", function(data){
 			min:1,
 			max:83,
 			slide: function(event, ui){
-				d3.selectAll("path.states")
-				  .attr("fill", function(d){
-					if(d.properties.abbreviation === "HI"){
-						return 0;
-					}else{
-						return color(airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]]);
-					}
-				})
+				recolor(d3.keys(data[0])[ui.value],data);
 			}
 		});
 	});
