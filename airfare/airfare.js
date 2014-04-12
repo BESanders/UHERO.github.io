@@ -110,7 +110,7 @@ d3.csv("Airfares_by_State.csv", function(data){
 				})
 				.on("mouseover", function(d){
 					d3.select("#interactive_area").append("h3").attr("class", "state").text(d.properties.name);
-					d3.select("#interactive_area").append("h3").attr("class","price").text(airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]])
+					d3.select("#interactive_area").append("h3").attr("class","price").text("Median airfare: $" + airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]])
 				})
 				.on("mouseout", function(){
 					d3.select("#interactive_area").selectAll("h3.state").remove();
