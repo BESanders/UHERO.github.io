@@ -109,7 +109,7 @@ d3.csv("Airfares_by_State.csv", function(data){
 					}
 				})
 				.on("mouseover", function(){
-					d3.select("#interactive_area").append("h3").text(d3.select(this).attr("class"))
+					d3.select("#interactive_area").append("h3").text(d3.select(this).attr("class").split(" ")[1])
 				})
 				d3.select("#interactive_area").append("h3").text(d3.keys(data[0])[ui.value]);
 				
