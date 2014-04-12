@@ -78,7 +78,7 @@ function initial_draw_map(column_name, data){
 					.append("path")
 					.attr("class", function(d) { return "state " + d.properties.name;})
 					.attr("fill", function(d){
-						if(d.properties.abbreviation === "HI"){
+						if(d.properties.abbreviation === "HI" || d.properties.abbreviation === "DC"){
 							return 0;
 						}else{
 							return color(airfares[d.properties.abbreviation][column_name]);
