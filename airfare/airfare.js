@@ -78,7 +78,7 @@ function initial_draw_map(column_name, data){
 					.append("path")
 					.attr("class", function(d) { return "state " + d.properties.name;})
 					.attr("fill", function(d){
-						if(d.properties.abbreviation === "HI" || d.properties.abbreviation === "DC"){
+						if(d.properties.abbreviation === "HI" || d.properties.abbreviation === ""){
 							return 0;
 						}else{
 							return color(airfares[d.properties.abbreviation][column_name]);
@@ -109,7 +109,7 @@ d3.csv("Airfares_by_State.csv", function(data){
 					}
 				})
 				.on("mouseover", function(){
-					
+					d3.select("#interactive_area").append("h3").text(d3.select(this).attr("class"))
 				})
 				d3.select("#interactive_area").append("h3").text(d3.keys(data[0])[ui.value]);
 				
