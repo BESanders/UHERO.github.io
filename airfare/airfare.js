@@ -51,8 +51,13 @@ function initial_draw_map(column_name, data){
 	}
 
 	numbers.sort(function(a,b){ return a - b;})
-	color.domain([d3.min(numbers, function(d){ return d;}), d3.max(numbers, function(d){ return d;})])
-		  .range(["rgb(222,235,247)", "rgb(8,48,107)"])
+	all_prices = numbers.reduce(function (a,b) {return a.concat(b)}, []);
+	overall_median = d3.median(all_prices)
+	price_quantiles = d3.scale.quantile().domain(all_prices).range([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19])
+	console.log(price_quantiles.quantiles())
+	console.log(d3.min(numbers))
+	color.domain([200, price_quantiles.quantiles()[18]])
+		  .range(["#fffcf7","rgb(25, 102, 127)"])//, "white", "orange"])
 		  .interpolate()
 		//.range(["rgb(247,251,255)", "rgb(222,235,247)", "rgb(198,219,239)", "rgb(158,202,225)", "rgb(107,174,214)","rgb(66,146,198)", "rgb(33,113,181)", "rgb(8,81,156)", "rgb(8,48,107)"])
 
@@ -103,7 +108,11 @@ d3.csv("Airfares_by_State.csv", function(data){
 						return color(airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]]);
 					}
 				})
+				.on("mouseover", function(){
+					
+				})
 				d3.select("#interactive_area").append("h3").text(d3.keys(data[0])[ui.value]);
+				
 			}
 		});
 	});
