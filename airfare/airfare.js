@@ -94,6 +94,7 @@ d3.csv("Airfares_by_State.csv", function(data){
 			min:1,
 			max:83,
 			slide: function(event, ui){
+				d3.select("#interactive_area").selectAll("h3").remove();
 				d3.selectAll("path.state")
 				  .attr("fill", function(d){
 					if(d.properties.abbreviation === "HI"){
@@ -102,7 +103,7 @@ d3.csv("Airfares_by_State.csv", function(data){
 						return color(airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]]);
 					}
 				})
-				$("#dates").val(d3.keys(data[0])[ui.value])
+				d3.select("#interactive_area").append("h3").text(d3.keys(data[0])[ui.value]);
 			}
 		});
 	});
