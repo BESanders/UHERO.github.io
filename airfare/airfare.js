@@ -86,8 +86,19 @@ function initial_draw_map(column_name, data){
 					})
 					.attr("stroke", "#CCC")
 					.attr("d",path)
+					.on("mouseover", function(d){
+						d3.select("#interactive_area").append("h3").attr("class", "state").text(d.properties.name);
+						d3.select("#interactive_area").append("h3").attr("class","price").text("Median airfare: $" + airfares[d.properties.abbreviation][column_name])
+					})
+					.on("mouseout", function(){
+						d3.select("#interactive_area").selectAll("h3.state").remove();
+						d3.select("#interactive_area").selectAll("h3.price").remove();
+					})
 		});
+		
 	});
+	d3.select("#interactive_area").append("h3").attr("class","year").text([column_name]);
+	
 }
 
 /* Added slider*/
