@@ -67,6 +67,43 @@ function draw_map(){
 	});
 }
 
+function create_inset(){
+	var inset_width = 560,
+	 	inset_height = 460;
+
+	var inset_svg = d3.select("body")
+						.append("svg")
+						.attr("id", "inset")
+						.attr("width", inset_width)
+						.attr("height", inset_height)
+	
+	var projection = d3.geo.albers()
+						.center([0, 18.5])
+						.rotate([157.967, -2.941])
+						.scale(41284)
+						.translate([228, 199])
+						
+	var path = d3.geo.path()	
+				.projection(projection)
+	
+	d3.json("hawaii_voting_districts_topo.json", function(error, hawaii) {
+		
+		inset_svg.selectAll("path.inset")
+				 .data(topojson.feature(hawaii, hawaii.objects.hawaii_voting_districts).features)
+				 .enter()
+				 .append("path")
+				 .attr("class", function(d) { 
+					var desc = d.id.split("-"); 
+					if(desc[0][0] === "0"){
+						desc[0] = desc[0].slice(1);
+					}
+					return "inset" + desc[0]; 
+				 })
+				 .attr("d", path)
+				
+	})
+}
+
 var temp_data
 
 function draw(query_data, election_period, chamber, district) {
@@ -316,3 +353,4 @@ function load_dataset(){
 
 load_dataset();
 draw_map();
+create_inset();
