@@ -25,9 +25,9 @@ var params = {
 var dat_gui_ranges = {
 	center_lat: [-10.0, 10.0],
 	center_lon: [15.0, 22.0], 
-	rotate_lat: [-150.0, 165.0],
+	rotate_lat: [-150.0, 200.0],
 	rotate_lon: [-5.0, 5.0],
-	scale:[8000, 45000],
+	scale:[0, 45000],
 	translate_x: [0, 800],
 	translate_y: [0, 800],	
 }
