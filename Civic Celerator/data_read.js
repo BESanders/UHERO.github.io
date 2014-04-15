@@ -45,7 +45,7 @@ function draw_map(){
 		.center([0, 18.5])//0, 18.5
 		.rotate([157.50, -1.5])
 		.parallels([15, 25])//15, 25
-		.scale(3000)
+		.scale(2700)
 		.translate([map_width / 2, (map_height / 2) + 50]);
 
 	var path = d3.geo.path()
