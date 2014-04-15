@@ -69,7 +69,7 @@ function draw_map(){
 
 function create_inset(){
 	var inset_width = 560,
-	 	inset_height = 460;
+	 	inset_height = 160;
 
 	var inset_svg = d3.select("body")
 						.append("svg")
