@@ -78,10 +78,10 @@ function create_inset(){
 						.attr("height", inset_height)
 	
 	var projection = d3.geo.albers()
-						.center([0, 21.5])
+						.center([0, 18.5])
 						.rotate([157.967, -2.941])
-						.scale(17624)
-						.translate([208, 199])
+						.scale(176284)
+						.translate([228, 199])
 						
 	var path = d3.geo.path()	
 				.projection(projection)
