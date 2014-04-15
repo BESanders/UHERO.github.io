@@ -81,7 +81,7 @@ function create_inset(){
 						.center([0, 18.5])
 						.rotate([157.967, -2.941])
 						.scale(17684)
-						.translate([228, 199])
+						.translate([228, 189])
 						
 	var path = d3.geo.path()	
 				.projection(projection)
