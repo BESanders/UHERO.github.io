@@ -45,8 +45,8 @@ function draw_map(){
 		.center([0, 18.5])//0, 18.5
 		.rotate([157.50, -1.5])
 		.parallels([15, 25])//15, 25
-		.scale(2700)
-		.translate([map_width / 2, (map_height / 2) + 50]);
+		.scale(3000)
+		.translate([map_width / 2 - 50, (map_height / 2) + 50]);
 
 	var path = d3.geo.path()
 	    .projection(projection);
@@ -69,7 +69,7 @@ function draw_map(){
 
 function create_inset(){
 	var inset_width = 560,
-	 	inset_height = 160;
+	 	inset_height = 200;
 
 	var inset_svg = d3.select("body")
 						.append("svg")
@@ -80,8 +80,8 @@ function create_inset(){
 	var projection = d3.geo.albers()
 						.center([0, 18.5])
 						.rotate([157.967, -2.941])
-						.scale(17444)
-						.translate([228, 139])
+						.scale(14444)
+						.translate([228, 159])
 						
 	var path = d3.geo.path()	
 				.projection(projection)
@@ -352,5 +352,5 @@ function load_dataset(){
 }
 
 load_dataset();
-draw_map();
-create_inset();
+//draw_map();
+//create_inset();
