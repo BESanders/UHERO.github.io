@@ -60,7 +60,7 @@ function draw_map(){
 					.data(topojson.feature(hawaii, hawaii.objects.hawaii_voting_districts).features)
 					.enter().append("path")
 					.attr("fill", map_fill)
-					.attr("stroke", map_fill)
+//					.attr("stroke", map_fill)
 				    .attr("class", precinct_class)
 				    .attr("d", path)
 					.on("mouseover", function(d,i) { 
@@ -101,7 +101,7 @@ function create_inset(data){
 		 .enter()
 		 .append("path")
 		.attr("fill", map_fill)
-		.attr("stroke", map_fill)
+//		.attr("stroke", map_fill)
 		 .attr("class", precinct_class)
 		 .attr("d", d3.geo.path().projection(inset_projections["City and County of Honolulu"]))
 		.on("mouseover", function(d,i) { 
@@ -109,7 +109,7 @@ function create_inset(data){
 			console.log(d3.select(this).attr("class"))
 			d3.select(this).attr("fill", highlight_fill).attr("stroke", highlight_fill)
 		})
-		.on("mouseout", function(d,i) { d3.select(this).attr("fill", map_fill).attr("stroke", map_fill)})
+		.on("mouseout", function(d,i) { d3.select(this).attr("fill", map_fill)//.attr("stroke", map_fill)})
 			
 }
 
