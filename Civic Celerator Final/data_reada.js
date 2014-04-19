@@ -26,7 +26,7 @@ var district_label_color = "#AAA"
 var contributor_type_scale = d3.scale.category10();
 var contributor_type_scale = d3.scale.ordinal()
 		.domain(["Candidate", "Immediate Family", "Individual", "Noncandidate Committee", "Other Entity", "Political Party" ])
-		.range(["#347da8", "#ce2927", "#017d75", "#a30e46", "#e8a64f", "#003e63"])
+		.range(["#e8a624", "#e24481", "#017d75", "#830475", "#5f9c11", "#003e63"])
 
 var urls = {
 	campaign_contributions_received: "https://data.hawaii.gov/resource/jexd-xbcg.json",
