@@ -74,7 +74,7 @@ function draw_map(chamber, district){
 						 .data(topojson.feature(hawaii, hawaii.objects.hawaii_voting_districts).features)
 						 .enter().append("path")
 						.attr("fill", map_fill)
-						.attr("stroke", map_fill)
+//						.attr("stroke", map_fill)
 					    .attr("class", function(d) { 
 								var desc = d.id.split("-"); 
 								if(desc[0][0] === "0"){
@@ -121,7 +121,7 @@ function create_inset(data){
 			 .enter()
 			 .append("path")
 			.attr("fill", map_fill)
-			.attr("stroke", map_fill)
+//			.attr("stroke", map_fill)
 			 .attr("class", function(d) { 
 				var desc = d.id.split("-"); 
 				if(desc[0][0] === "0"){
@@ -146,8 +146,8 @@ function highlight_map(chamber, district){
 	 if(chamber === "House"){
 		 if(parseInt(precincts[i][chamber]) === district){
 			
-			d3.selectAll("path.district.H"+district).attr("fill", highlight_fill).attr("stroke", highlight_fill)
-			d3.selectAll("path.inset.H"+district).attr("fill", highlight_fill).attr("stroke", highlight_fill)
+			d3.selectAll("path.district.H"+district).attr("fill", highlight_fill)//.attr("stroke", highlight_fill)
+			d3.selectAll("path.inset.H"+district).attr("fill", highlight_fill)//.attr("stroke", highlight_fill)
 			var county = precincts[i]["County"]
 			if (county_selected !== county) {
 				county_selected = county
@@ -159,8 +159,8 @@ function highlight_map(chamber, district){
 	 if(chamber === "Senate"){
 		 if(parseInt(precincts[i][chamber]) === district){
 			console.log("did this 2")
-			d3.selectAll("path.district.S"+district).attr("fill", highlight_fill).attr("stroke", highlight_fill)
-			d3.selectAll("path.inset.S"+district).attr("fill", highlight_fill).attr("stroke", highlight_fill)
+			d3.selectAll("path.district.S"+district).attr("fill", highlight_fill)//.attr("stroke", highlight_fill)
+			d3.selectAll("path.inset.S"+district).attr("fill", highlight_fill)//.attr("stroke", highlight_fill)
 			inset_svg.selectAll("path.inset").attr("d", d3.geo.path().projection(inset_projections[precincts[i]["County"]]))
 			break;
 		 }
@@ -386,19 +386,19 @@ function load_districts(house_districts, senate_districts){
 		.on("click", function(d,i) { 
 			chamber_selected = "House"
 			district_selected = d
-			d3.selectAll("path.district").attr("fill", map_fill).attr("stroke", map_fill)
-			d3.selectAll("path.inset").attr("fill", map_fill).attr("stroke", map_fill)
+			d3.selectAll("path.district").attr("fill", map_fill)//.attr("stroke", map_fill)
+			d3.selectAll("path.inset").attr("fill", map_fill)//.attr("stroke", map_fill)
 			get_data("House", d);
 			highlight_map("House",d)
 		;})
 		.on("mouseover", function(d,i) {
-			d3.selectAll("path.district").attr("fill", map_fill).attr("stroke", map_fill)
-			d3.selectAll("path.inset").attr("fill", map_fill).attr("stroke", map_fill)
+			d3.selectAll("path.district").attr("fill", map_fill)//.attr("stroke", map_fill)
+			d3.selectAll("path.inset").attr("fill", map_fill)//.attr("stroke", map_fill)
 			highlight_map("House",d)
 		})
 		.on("mouseout", function(d,i) {
-			d3.selectAll("path.district").attr("fill", map_fill).attr("stroke", map_fill)
-			d3.selectAll("path.inset").attr("fill", map_fill).attr("stroke", map_fill)
+			d3.selectAll("path.district").attr("fill", map_fill)//.attr("stroke", map_fill)
+			d3.selectAll("path.inset").attr("fill", map_fill)//.attr("stroke", map_fill)
 			highlight_map(chamber_selected, district_selected)
 		})
 
@@ -413,19 +413,19 @@ function load_districts(house_districts, senate_districts){
 		.text(function(d){ return d +" | "; })
 		.attr("href", "javascript:;")
 		.on("click", function(d,i) { 
-			d3.selectAll("path.district").attr("fill", map_fill).attr("stroke", map_fill)
-			d3.selectAll("path.inset").attr("fill", map_fill).attr("stroke", map_fill)
+			d3.selectAll("path.district").attr("fill", map_fill)//.attr("stroke", map_fill)
+			d3.selectAll("path.inset").attr("fill", map_fill)//.attr("stroke", map_fill)
 			get_data("Senate", d);
 			highlight_map("Senate",d)
 		;})
 		.on("mouseover", function(d,i) {
-			d3.selectAll("path.district").attr("fill", map_fill).attr("stroke", map_fill)
-			d3.selectAll("path.inset").attr("fill", map_fill).attr("stroke", map_fill)
+			d3.selectAll("path.district").attr("fill", map_fill)//.attr("stroke", map_fill)
+			d3.selectAll("path.inset").attr("fill", map_fill)//.attr("stroke", map_fill)
 			highlight_map("Senate",d)
 		})
 		.on("mouseout", function(d,i) {
-			d3.selectAll("path.district").attr("fill", map_fill).attr("stroke", map_fill)
-			d3.selectAll("path.inset").attr("fill", map_fill).attr("stroke", map_fill)
+			d3.selectAll("path.district").attr("fill", map_fill)//.attr("stroke", map_fill)
+			d3.selectAll("path.inset").attr("fill", map_fill)//.attr("stroke", map_fill)
 			highlight_map(chamber_selected, district_selected)
 		})
 		

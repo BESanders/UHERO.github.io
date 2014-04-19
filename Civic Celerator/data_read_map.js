@@ -107,7 +107,7 @@ function create_inset(data){
 		.on("mouseover", function(d,i) { 
 			console.log(d)
 			console.log(d3.select(this).attr("class"))
-			d3.select(this).attr("fill", highlight_fill).attr("stroke", highlight_fill)
+			d3.select(this).attr("fill", highlight_fill)//.attr("stroke", highlight_fill)
 		})
 		.on("mouseout", function(d,i) { d3.select(this).attr("fill", map_fill)});//.attr("stroke", map_fill)})
 			
