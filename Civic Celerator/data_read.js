@@ -1,5 +1,5 @@
-var map_fill = "gray"
-var highlight_fill = "red"
+var map_fill = "#CCC"
+var highlight_fill = "#017d75"
 
 var urls = {
 	campaign_contributions_received: "https://data.hawaii.gov/resource/jexd-xbcg.json",
