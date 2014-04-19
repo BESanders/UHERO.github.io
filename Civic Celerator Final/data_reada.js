@@ -223,8 +223,8 @@ function show_candidate_contribution_groupings(svgs) {
 		.attr("height", d3.sum(ps.row_heights) + 60)
 		
 	svgs.transition()
-		.duration(1000)
-		.attr("transform", function(d,i) { return v_offsets[i] })
+		.duration(1000)		
+		.attr("y_offset", function(d,i) { return v_offsets[i] })
 		.attr("transform", function(d,i) { return "translate(0, " + v_offsets[i] + ")" } )
 	
 	svgs.selectAll("circle.contribution")
