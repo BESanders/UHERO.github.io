@@ -9,16 +9,13 @@
 	<style>
 		table.small { font-size:9px; font-family:Arial }
 		div.tooltip { display:none; position:absolute; border: 1px solid gray;  }
-		svg#map{ position:absolute; left: 500px}
-		svg#inset {position:absolute; top: 100px; left:-100px;}
-		#record_count { padding-top: 200px;}
+		svg#map{position:absolute; left:500px; }
+		svg#inset {position:absolute; left:720px; top: 60px;}
 	</style>
 </head>
 <body>
 	<div id="districts"></div>
-	
-	<div id="map" style="position:relative; height:350px"></div>
-	
+	<div id="map" style="position:relative; z-index:-1; bottom:50px; height:50px"></div>
 	<h1 id="record_count"></h1>
 	<div id="controls"></div>
 	<div id="header"></div>
@@ -28,6 +25,6 @@
 	</div>
 	<div id="svgs"></div>
 	<div id="summary"></div>
-	<script src="data_read.js"></script>
+	<script src="data_read_small.js"></script>
 </body>
 </html>

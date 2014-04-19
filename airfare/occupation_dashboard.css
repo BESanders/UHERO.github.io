@@ -149,3 +149,7 @@ div.tooltip {
 	left:200px;
 	bottom:300px;
 }
+
+line{
+	z-index:4;
+}

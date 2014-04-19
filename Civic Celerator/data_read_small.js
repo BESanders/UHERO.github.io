@@ -1,6 +1,3 @@
-var map_fill = "gray"
-var highlight_fill = "red"
-
 var urls = {
 	campaign_contributions_received: "https://data.hawaii.gov/resource/jexd-xbcg.json",
 	campaign_contributions_made_to: "https://data.hawaii.gov/resource/6huc-dcuw.json",
@@ -10,6 +7,8 @@ var urls = {
 var inset_svg;
 var projections_inset;	
 var precincts;
+var chamber_selected;
+var district_selected;
 
 function query_string(table,chamber, district, offset) {
 	if (offset ===0)
@@ -59,8 +58,8 @@ function draw_map(chamber, district){
 		.center([0, 18.5])
 		.rotate([159.266, -3.049])
 		.parallels([15, 25])
-		.scale(5000)
-		.translate([287, 90]);
+		.scale(4000)
+		.translate([327, 70]);
 		
 	var path = d3.geo.path()
 	    .projection(projection);
@@ -73,8 +72,6 @@ function draw_map(chamber, district){
 				map_svg.selectAll("path.district")
 						 .data(topojson.feature(hawaii, hawaii.objects.hawaii_voting_districts).features)
 						 .enter().append("path")
-						.attr("fill", map_fill)
-						.attr("stroke", map_fill)
 					    .attr("class", function(d) { 
 								var desc = d.id.split("-"); 
 								if(desc[0][0] === "0"){
@@ -83,7 +80,6 @@ function draw_map(chamber, district){
 								if(desc[1][0] === "0"){
 									desc[1] = desc[1].slice(1);
 								}
-								console.log(desc)
 								var senate = "";
 								for(var i = 0; i < precincts.length; i++){
 									if(precincts[i]["House"] === desc[0] && precincts[i]["Precinct"] === desc[1]){
@@ -100,8 +96,9 @@ function draw_map(chamber, district){
 }
 
 function create_inset(data){	
-	var inset_width = 560,
-	 	inset_height = 320;
+	console.log(data)
+	var inset_width = 260,
+	 	inset_height = 220;
 
 	inset_svg = d3.select("#map")
 						.append("svg")
@@ -110,62 +107,35 @@ function create_inset(data){
 						.attr("height", inset_height)
 	
 	inset_projections = {
-		"City and County of Honolulu": d3.geo.albers().center([0, 18.5]).rotate([157.967, -2.941]).scale(29284).translate([308, 139]),
-		"Hawaii County": d3.geo.albers().center([0, 18.5]).rotate([155.527, -.99]).scale(11016).translate([355, 159]),
-	    "Kauai County": d3.geo.albers().center([0, 18.5]).rotate([159.917, -3.374]).scale(16431).translate([288, 170]),
-	    "Maui County": d3.geo.albers().center([0, 18.5]).rotate([156.665, -2.290]).scale(18428).translate([305, 159])
+		"City and County of Honolulu": d3.geo.albers().center([0, 18.5]).rotate([157.967, -2.941]).scale(19284).translate([138, 119]),
+		"Hawaii County": d3.geo.albers().center([0, 18.5]).rotate([155.527, -.99]).scale(7016).translate([155, 119]),
+	    "Kauai County": d3.geo.albers().center([0, 18.5]).rotate([159.917, -3.374]).scale(12431).translate([108, 150]),
+	    "Maui County": d3.geo.albers().center([0, 18.5]).rotate([156.665, -2.290]).scale(11428).translate([125, 129])
 	}
 	
 	inset_svg.selectAll("path.inset")
 			 .data(data)
 			 .enter()
 			 .append("path")
-			.attr("fill", map_fill)
-			.attr("stroke", map_fill)
 			 .attr("class", function(d) { 
 				var desc = d.id.split("-"); 
-				if(desc[0][0] === "0"){
-					desc[0] = desc[0].slice(1);
-				}
-				if(desc[1][0] === "0"){
-					desc[1] = desc[1].slice(1);
-				}
+				if(desc[0][0] === "0") { desc[0] = desc[0].slice(1); }
+				if(desc[1][0] === "0") { desc[1] = desc[1].slice(1); }
 				var senate = "";
-				for(var i = 0; i < precincts.length; i++){
-					if(precincts[i]["House"] === desc[0] && precincts[i]["Precinct"] === desc[1]){
-						senate = precincts[i]["Senate"]; 
-					}
-				}
+				row_matches = precincts.filter(function(d) { return d["House"] === desc[0] && d["Precinct"] === desc[1]})
+				if (row_matches.length > 1) { senate = row_matches[0]["Senate"] }
 				return "inset H" + desc[0] + " P" + desc[1] + " S" + senate; 
 			 })
-			 .attr("d", d3.geo.path().projection(inset_projections["City and County of Honolulu"]))
 }
 
 function highlight_map(chamber, district){
- for(var i = 0; i < precincts.length; i++){
-	 if(chamber === "House"){
-		 if(parseInt(precincts[i][chamber]) === district){
-			
-			d3.selectAll("path.district.H"+district).attr("fill", highlight_fill).attr("stroke", highlight_fill)
-			d3.selectAll("path.inset.H"+district).attr("fill", highlight_fill).attr("stroke", highlight_fill)
-			var county = precincts[i]["County"]
-			if (county_selected !== county) {
-				county_selected = county
-				inset_svg.selectAll("path.inset").attr("d", d3.geo.path().projection(inset_projections[county]))
-			}
-			break;
-		 }
-	 }
-	 if(chamber === "Senate"){
-		 if(parseInt(precincts[i][chamber]) === district){
-			console.log("did this 2")
-			d3.selectAll("path.district.S"+district).attr("fill", highlight_fill).attr("stroke", highlight_fill)
-			d3.selectAll("path.inset.S"+district).attr("fill", highlight_fill).attr("stroke", highlight_fill)
-			inset_svg.selectAll("path.inset").attr("d", d3.geo.path().projection(inset_projections[precincts[i]["County"]]))
-			break;
-		 }
-	 }
- }
+	var county = precincts.filter(function(d) { return parseInt(d[chamber]) === district })[0]["County"]
+	d3.selectAll("path.district."+chamber[0]+district).attr("fill", "red")
+	d3.selectAll("path.inset."+chamber[0]+district).attr("fill", "red")
+	inset_svg
+		.selectAll("path.inset")
+		.attr("d", d3.geo.path().projection(inset_projections[county]))
+	
 }
 var temp_data
 
@@ -367,10 +337,6 @@ function load_candidates(office_name, data){
 		.append("a")
 }
 
-var chamber_selected = "House"
-var district_selected = 1
-var county_selected = "Hawaii County"
-
 function load_districts(house_districts, senate_districts){
 
 	var div = d3.select("#districts")//("body").append("div")
@@ -384,21 +350,23 @@ function load_districts(house_districts, senate_districts){
 		.text(function(d){ return d +" | "; })
 		.attr("href", "javascript:;")
 		.on("click", function(d,i) { 
-			chamber_selected = "House"
-			district_selected = d
-			d3.selectAll("path.district").attr("fill", map_fill).attr("stroke", map_fill)
-			d3.selectAll("path.inset").attr("fill", map_fill).attr("stroke", map_fill)
+			d3.selectAll("path.district").attr("fill", "black")
+			d3.selectAll("path.inset").attr("fill", 'black')
 			get_data("House", d);
-			highlight_map("House",d)
-		;})
-		.on("mouseover", function(d,i) {
-			d3.selectAll("path.district").attr("fill", map_fill).attr("stroke", map_fill)
-			d3.selectAll("path.inset").attr("fill", map_fill).attr("stroke", map_fill)
-			highlight_map("House",d)
+			highlight_map("House",d);
+			district_selected = d;
+			chamber_selected = "House";
 		})
-		.on("mouseout", function(d,i) {
-			d3.selectAll("path.district").attr("fill", map_fill).attr("stroke", map_fill)
-			d3.selectAll("path.inset").attr("fill", map_fill).attr("stroke", map_fill)
+		.on("mouseover", function(d,i){	
+			d3.selectAll("path.district").attr("fill", "black")
+			d3.selectAll("path.inset").attr("fill", 'black')
+			get_data("House", d);
+			highlight_map("House",d);
+		})
+		.on("mouseout", function(d,i){
+			d3.selectAll("path.district").attr("fill", "black")
+			d3.selectAll("path.inset").attr("fill", 'black')
+			get_data(chamber_selected,district_selected)
 			highlight_map(chamber_selected, district_selected)
 		})
 
@@ -413,19 +381,23 @@ function load_districts(house_districts, senate_districts){
 		.text(function(d){ return d +" | "; })
 		.attr("href", "javascript:;")
 		.on("click", function(d,i) { 
-			d3.selectAll("path.district").attr("fill", map_fill).attr("stroke", map_fill)
-			d3.selectAll("path.inset").attr("fill", map_fill).attr("stroke", map_fill)
+			d3.selectAll("path.district").attr("fill", "black")
+			d3.selectAll("path.inset").attr("fill", 'black')
 			get_data("Senate", d);
 			highlight_map("Senate",d)
+			district_selected = d;
+			chamber_selected = "Senate";
 		;})
-		.on("mouseover", function(d,i) {
-			d3.selectAll("path.district").attr("fill", map_fill).attr("stroke", map_fill)
-			d3.selectAll("path.inset").attr("fill", map_fill).attr("stroke", map_fill)
-			highlight_map("Senate",d)
+		.on("mouseover", function(d,i){	
+			d3.selectAll("path.district").attr("fill", "black")
+			d3.selectAll("path.inset").attr("fill", 'black')
+			get_data("Senate", d);
+			highlight_map("Senate",d);
 		})
-		.on("mouseout", function(d,i) {
-			d3.selectAll("path.district").attr("fill", map_fill).attr("stroke", map_fill)
-			d3.selectAll("path.inset").attr("fill", map_fill).attr("stroke", map_fill)
+		.on("mouseout", function(d,i){
+			d3.selectAll("path.district").attr("fill", "black")
+			d3.selectAll("path.inset").attr("fill", 'black')
+			get_data(chamber_selected,district_selected)
 			highlight_map(chamber_selected, district_selected)
 		})
 		
@@ -442,7 +414,9 @@ function load_dataset(){
 	load_districts(house_districts, senate_districts);
 	//d3.select("body").append("h1").attr("id","record_count");
 	get_data("House", 1);
-	draw_map("House", 1)
+	draw_map("House", 1);
+	chamber_selected = "House";
+	district_selected = 1;
 }
 
 load_dataset();
