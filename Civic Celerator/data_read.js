@@ -437,7 +437,7 @@ function load_dataset(){
 	for(var i = 1; i < 52; i++){house_districts.push(i)}
 	
 	var senate_districts = [];
-	for(var i = 1; i < 25; i++){senate_districts.push(i)}
+	for(var i = 1; i < 26; i++){senate_districts.push(i)}
 
 	load_districts(house_districts, senate_districts);
 	//d3.select("body").append("h1").attr("id","record_count");
