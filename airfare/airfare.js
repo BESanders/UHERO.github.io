@@ -37,7 +37,9 @@ var path = d3.geo.path()
 var color = d3.scale.linear();
 var numbers = [];
 var airfares = {};
-	
+
+var tooltip = d3.select("#interactive_area").append("div").attr("class", "tooltip")
+
 function initial_draw_map(column_name, data){
 	data.forEach(function(d){
 		airfares[d.State] = d
@@ -87,12 +89,21 @@ function initial_draw_map(column_name, data){
 					.attr("stroke", "#CCC")
 					.attr("d",path)
 					.on("mouseover", function(d){
-						d3.select("#interactive_area").append("h3").attr("class", "state").text(d.properties.name);
-						d3.select("#interactive_area").append("h3").attr("class","price").text("Median airfare: $" + airfares[d.properties.abbreviation][column_name])
+						d3.select("svg").append("line").attr("class","state").attr("x1", path.bounds(d)[0][0]).attr("y1", path.bounds(d)[0][1]).attr("x2", path.bounds(d)[1][0]).attr("y2", path.bounds(d)[1][1]).attr("stroke", "black")
+						console.log(path.bounds(d))
+						console.log(document.getElementById("map").offsetTop)
+						tooltip.style({
+							left: path.bounds(d)[1][0] + "px",
+							top: ((path.bounds(d)[1][1] - path.bounds(d)[0][1])/2)+ "px",
+							opacity: 1
+						})
+						tooltip.html(d.properties.name + "<br/>" + "Median airfare: $" + airfares[d.properties.abbreviation][column_name])
+						// d3.select("#interactive_area").append("h3").attr("class", "state").text(d.properties.name);
+						// 						d3.select("#interactive_area").append("h3").attr("class","price").text("Median airfare: $" + airfares[d.properties.abbreviation][column_name])
 					})
 					.on("mouseout", function(){
-						d3.select("#interactive_area").selectAll("h3.state").remove();
-						d3.select("#interactive_area").selectAll("h3.price").remove();
+						d3.select("line.state").remove()
+						tooltip.style("opacity", 0);
 					})
 			console.log(states.features)		
 			svg.selectAll("text.states")
@@ -101,21 +112,63 @@ function initial_draw_map(column_name, data){
 				.append("text")
 				.attr("class", function(d) { return "state " + d.properties.name;})
 				.text(function(d){
-					if(d.properties.abbreviation === "HI"){
+					if(d.properties.abbreviation === "HI" || airfares[d.properties.abbreviation][column_name] === ""){
 						return "$" + 0;
 					}else{
 						return "$" + airfares[d.properties.abbreviation][column_name];
 					}
 				})
-
+			    .attr("x", function(d){
+					if(d.properties.name === "Vermont"){
+						return path.centroid(d)[0] - 20;
+					}else if(d.properties.name === "New Hampshire"){
+						return path.centroid(d)[0] + 70;
+					}else if(d.properties.name === "Massachusetts"){
+						return path.centroid(d)[0] + 70;
+					}else if(d.properties.name === "Rhode Island"){
+						return path.centroid(d)[0] + 60;
+					}else if(d.properties.name === "Connecticut"){
+						return path.centroid(d)[0] + 60;
+					}else if(d.properties.name === "Delaware"){
+						return path.centroid(d)[0] + 75;
+					}else if(d.properties.name === "Maryland"){
+						return path.centroid(d)[0] + 94;
+					}else{
+						return path.centroid(d)[0];
+					}
+			    })
+			    .attr("y", function(d){
+					if(d.properties.name === "Vermont"){
+						return path.centroid(d)[1] - 50;
+					}else if(d.properties.name === "New Hampshire"){
+						return path.centroid(d)[1] + 5;
+					}else if(d.properties.name === "Massachusetts"){
+						return path.centroid(d)[1] + 5;	
+					}else if(d.properties.name === "Rhode Island"){
+						return path.centroid(d)[1] + 20;
+					}else if(d.properties.name === "Connecticut"){
+						return path.centroid(d)[1] + 30;
+					}else if(d.properties.name === "Delaware"){
+						return path.centroid(d)[1] + 5;
+					}else if(d.properties.name === "Maryland"){
+						return path.centroid(d)[1] + 15;
+					}else{
+						return path.centroid(d)[1];
+					}
+			    })
 				.attr("text-anchor", "middle")
 				.attr("font-size", "10px")
 				.attr("fill", "orange")
+			svg.append("line").attr("class", "Vermont").attr("x1", "570px").attr("y1", "50px").attr("x2", "585px").attr("y2", "90px").attr("stroke", "black")
+			svg.append("line").attr("class", "New Hampshire").attr("x1", "600px").attr("y1", "102px").attr("x2", "650px").attr("y2", "102px").attr("stroke", "black")
+			svg.append("line").attr("class", "Massachusetts").attr("x1", "600px").attr("y1", "115px").attr("x2", "650px").attr("y2", "115px").attr("stroke", "black")
+			svg.append("line").attr("class", "Rhode Island").attr("x1", "605px").attr("y1", "125px").attr("x2", "650px").attr("y2", "140px").attr("stroke", "black")
+			svg.append("line").attr("class", "Connecticut").attr("x1", "590px").attr("y1", "127px").attr("x2", "640px").attr("y2", "150px").attr("stroke", "black")
+			svg.append("line").attr("class", "Delaware").attr("x1", "580px").attr("y1", "175px").attr("x2", "640px").attr("y2", "175px").attr("stroke", "black")
+			svg.append("line").attr("class", "Maryland").attr("x1","580px").attr("y1","185px").attr("x2","640px").attr("y2","185px").attr("stroke","black")
 		});
 		
 	});
-	// svg.append("line").attr("x1", "570px").attr("y1", "50px").attr("x2", "580px").attr("y2", "80px").attr("stroke", "black")
-	// svg.append("line").attr("x1", "580px").attr("y1", "100px").attr("x2", "710px").attr("y2", "100px").attr("stroke", "black")
 	d3.select("#interactive_area").append("h3").attr("class","year").text([column_name]);
 	
 }
@@ -148,7 +201,7 @@ d3.csv("Airfares_by_State.csv", function(data){
 					})
 				d3.selectAll("text.state")
 					.text(function(d){
-						if(d.properties.abbreviation === "HI"){
+						if(d.properties.abbreviation === "HI" || airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]] === ""){
 							return "$" + 0;
 						}else{
 							return "$" + airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]];

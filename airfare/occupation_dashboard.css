@@ -54,49 +54,7 @@ height:1200px;
 }
 
 
-.tooltip {
-  position: absolute;
-  width: 200px;
-  height: 28px;
-  pointer-events: none;
-  /*z-index: -4;*/
-}
 
-#div_tooltip{
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	left: 10px;
-	opacity: 5;
-	z-index: 5;
-}
-
-.axis path,
-.axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
-/*.x.axis path {
-  display: none;
-}*/
-
-.line {
-  fill: none;
-  stroke: steelblue;
-  stroke-width: 1.5px;
-}
-
-.overlay {
-  fill: none;
-  pointer-events: all;
-}
-
-.focus circle {
-  fill: none;
-  stroke: steelblue;
-}
 
 div.tooltip {  
 	position: absolute;
@@ -106,41 +64,16 @@ div.tooltip {
 	font-size: 12px;
 	font-family: Arial,sans-serif;
 	opacity: 0;
-	background: rgba(0,0,0,.4);
 	color: #fff;
 	border: 1px solid rgba(0,0,0,.4);
 	margin-left: 1em;
-	margin-top: -1em;	
-}
-
-.label{
-	position: absolute;
-	z-index: 2;
-	border-radius: 3px;
-	padding: .25em;
-	font-size: 12px;
-	font-family: Arial,sans-serif;
-	opacity: 0;
-	background: rgba(0,0,0,1.0);
-	color: #fff;
-	border: 1px solid rgba(0,0,0,.4);
-	margin-left: 6em;
-	margin-top: 1em;
-	white-space: nowrap;	
-}	
-
-.detail{
-	pointer-events: none;
-	position: absolute;
-	top: 0;
-	z-index: 2;
-	background: rgba(0,0,0,.8);
-	bottom: 0;
-	width: 1px;
-	transition: opacity .25s linear;
-	-moz-transition: opacity .25s linear;
-	-o-transition: opacity .25s linear;
-	-webkit-transition: opacity .25s linear;	
+	margin-top: -1em;
+	text-align: left;           
+	width: 140px;                  
+	height: 30px;                       
+	background: #4c4c4c;   
+	border: 0px;                
+	pointer-events: none;	
 }
 
 #slider{
@@ -150,6 +83,7 @@ div.tooltip {
 	bottom:300px;
 }
 
-line{
-	z-index:4;
+
+svg#map{
+	position:absolute;
 }

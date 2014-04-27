@@ -1,3 +1,5 @@
+// Ben Trevino 
+// April 2014
 // Legislative dates
 // 2014-01-15 - 2014-05-01
 // 2013 1/16 - 5/3
@@ -13,7 +15,7 @@ var summary_data
 var winner_data
 var precinct_data
 var hawaii_geo_json
-var race_scale = d3.scale.ordinal().domain(["2006-2008", "2008-2010", "2010-2012", "2012-2014"]).range([225,450,675,900])
+var race_scale = d3.scale.ordinal().domain(["2006-2008", "2008-2010", "2010-2012", "2012-2014"]).range([200,375,550,725])
 var race_highlight_fill = "#f9f9f9"
 var race_date_color = "#017d75"
 var candidate_name_color = "#AAA"
@@ -49,6 +51,10 @@ function addCommas(nStr)
 	return x1 + x2;
 }
 
+function getURLParameter(name) {
+  return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
+}
+
 // Ruby = 1.upto(5) { |i| puts i }
 // JS = (1).upto(5, function(i){console.log(i);})
 Number.prototype.upto = function(t, cb) {
@@ -64,13 +70,17 @@ return +this;
 };
 
 function query_string(table,chamber, district, offset) {
-	if (offset ===0)
-		return urls[table]+"?$where=office=%27"+chamber+"%27%20and%20district=%27"+district+"%27";
-	else
-		return urls[table]+"?$where=office=%27"+chamber+"%27%20and%20district=%27"+district+"%27" + "%27&$offset="+offset+"%27";
+	if (offset ===0) {
+		console.log(urls[table]+"?$where=office=%27"+chamber+"%27%20and%20district=%27"+district+"%27%20and%20election_period=%27"+election_period+"%27");
+		return urls[table]+"?$where=office=%27"+chamber+"%27%20and%20district=%27"+district+"%27%20and%20election_period=%27"+election_period+"%27";
+	}
+	else {
+		console.log(urls[table]+"?$where=office=%27"+chamber+"%27%20and%20district=%27"+district+"%27%20and%20election_period=%27"+election_period+"%27&$offset="+offset+"%27");
+		return urls[table]+"?$where=office=%27"+chamber+"%27%20and%20district=%27"+district+"%27%20and%20election_period=%27"+election_period+"%27&$offset="+offset+"%27";
+	}
 }
 function count_query(table, chamber, district) {
-	return urls[table] + "?$select=count(*)&$where=office=%27"+chamber+"%27%20and%20district=%27"+district+"%27";
+	return urls[table] + "?$select=count(*)&$where=office=%27"+chamber+"%27%20and%20district=%27"+district+"%27%20and%20election_period=%27"+election_period+"%27";
 }
 
 function get_contributions_received(table, chamber, district, callback) {
@@ -79,12 +89,14 @@ function get_contributions_received(table, chamber, district, callback) {
 	// by default this gets 1000
 	$.get(count_query(table, chamber, district), function(data) {
 		var count = data[0].count
-		q.defer($.get, query_string(table, chamber, district, 0))
+		console.log(count)
 		for (i=0; i < count / 1000; i++) {
-			q.defer($.get, query_string(table, chamber, district, i * 1000))
+			q.defer(d3.json, query_string(table, chamber, district, i * 1000))
 		}
-		q.awaitAll(function(results) {
-			callback(null, results);
+		q.awaitAll(function(error, results) {
+			merged = []
+			merged = merged.concat.apply(merged, results);
+			callback(null, merged);
 		})
 	});
 }
@@ -406,8 +418,8 @@ function show_candidate_timelines(svgs) {
 	min_date = new Date (election_period.split("-")[0],10,1)
 	max_date = new Date (election_period.split("-")[1],10,31)
 
-	bubble_scale = d3.scale.sqrt().domain([0,1000]).range([0,25])
-	timeline_scale = d3.time.scale().domain([min_date, max_date]).range([200,1100])
+	bubble_scale = d3.scale.sqrt().domain([0,1000]).range([0,20])
+	timeline_scale = d3.time.scale().domain([min_date, max_date]).range([200,900])
 	
 	session_data = []
 	start_year = timeline_scale.domain()[0].getFullYear() + 1
@@ -606,7 +618,7 @@ function data_by_candidate(query_data, election_period, chamber, district) {
 
 	return candidates	
 }
-timeline_width = 1400
+timeline_width = 1000
 timeline_height = 120
 minimum_grouping_width = 150
 function create_candidate_svgs(candidates) {
@@ -736,7 +748,16 @@ function precinct_class(d) {
 	return "H" + desc[0] + " P" + desc[1] + " S" + senate;
 }
 
-
+function check_county(d) { 
+	if (county_selected !== d.county) {
+		console.log("changing to " + d.county)
+		county_selected = d.county
+		inset_svg
+			.selectAll("path")
+			.attr("d", d3.geo.path().projection(inset_projections[d.county]))
+	}
+	
+} 
 function draw_map(){
 	d3.select("#district_map")
 		.append("div")
@@ -777,16 +798,7 @@ function draw_map(){
 				//.attr("stroke", map_fill)
 			    .attr("class", precinct_class)
 			    .attr("d", path)
-				.on("mouseover", function(d,i) { 
-					if (county_selected !== d.county) {
-						console.log("changing to " + d.county)
-						county_selected = d.county
-						inset_svg
-							.selectAll("path")
-							.attr("d", d3.geo.path().projection(inset_projections[d.county]))
-					}
-					
-				})				
+				.on("mouseover", check_county)				
 	}) 
 }
  
@@ -805,6 +817,21 @@ function reset(d) {
 	draw_summary(summary_data.filter(function(d){if(d.key.match(/^H/g)){return true;}}),"#house_summaries");
 	draw_summary(summary_data.filter(function(d){if(d.key.match(/^S/g)){return true;}}),"#senate_summaries")
 	
+}
+function highlight_precinct_from_this(d, obj) {
+	if (map_clicked) return;
+	d3.select("#reset_container").style("display", "block")
+	inset_svg.selectAll("path").attr("fill", map_fill)//.attr("stroke", map_fill)
+	d3.select(obj).attr("fill", highlight_fill)//.attr("stroke", highlight_fill)
+	draw_summary(summary_data.filter(function(e) { 
+		return e.key === "House "+ zero_pad(d.house+"") 
+	}),"#house_summaries")
+	draw_summary(summary_data.filter(function(e) { 
+		return e.key === "Senate "+zero_pad(d.senate)
+	}),"#senate_summaries")	
+}
+function highlight_precinct(d) {
+	highlight_precinct_from_this(d, this)
 }
 function create_inset(data){
 	
@@ -826,22 +853,12 @@ function create_inset(data){
 		//.attr("stroke", map_fill)
 		.attr("class", precinct_class)
 		.attr("d", d3.geo.path().projection(inset_projections["City and County of Honolulu"]))
-		.on("mouseover", function(d) {
-			if (map_clicked) return;
-			d3.select("#reset_container").style("display", "block")
-			inset_svg.selectAll("path").attr("fill", map_fill)//.attr("stroke", map_fill)
-			d3.select(this).attr("fill", highlight_fill)//.attr("stroke", highlight_fill)
-			draw_summary(summary_data.filter(function(e) { 
-				return e.key === "House "+ zero_pad(d.house+"") 
-			}),"#house_summaries")
-			draw_summary(summary_data.filter(function(e) { 
-				return e.key === "Senate "+zero_pad(d.senate)
-			}),"#senate_summaries")
-		})
+		.on("mouseover", highlight_precinct)
 		.on("click", function(d) { 
 			d3.event.stopPropagation()
 			map_clicked = true 
 		})
+		
 			
 }
 
@@ -853,7 +870,7 @@ function race_summary(sum_svgs) {
 		.append("svg")
 		.attr("class", "district_summary")
 		.attr("height", 120)
-		.attr("width", 1200)
+		.attr("width", 900)
 	
 	sum_svgs
 		.selectAll("image")
@@ -911,7 +928,7 @@ function race_summary(sum_svgs) {
 		//.attr("stroke", "red")
 		.attr("x", -50)
 		.attr("y", -15)
-		.attr("width", 230)
+		.attr("width", 175)
 		.attr("height", 110)
 		.attr("stroke-opacity", 0)
 
@@ -1012,8 +1029,17 @@ function load_summary_data() {
 			var d_key = parseInt(district.key.split(" ")[1])+""
 			district.county = precinct_data.filter(function(d) { return d[chamber] === d_key })[0]["County"]
 		})
-		draw_summary(summary_data.filter(function(d){if(d.key.match(/^H/g)){return d;}}),"#house_summaries");
-        draw_summary(summary_data.filter(function(d){if(d.key.match(/^S/g)){return true;}}),"#senate_summaries")
+		
+		var precinct = getURLParameter("precinct")
+		if (precinct !== null && precinct.split("-").length === 2) {
+			d = d3.select("#inset .H"+ precinct.split("-")[0] +".P"+ precinct.split("-")[1]).data()[0]
+			check_county(d)
+			highlight_precinct_from_this(d, "#inset .H"+ precinct.split("-")[0] +".P"+ precinct.split("-")[1])
+			map_clicked = true;
+		} else {
+			draw_summary(summary_data.filter(function(d){if(d.key.match(/^H/g)){return d;}}),"#house_summaries");
+        	draw_summary(summary_data.filter(function(d){if(d.key.match(/^S/g)){return true;}}),"#senate_summaries")
+		}
 	});
 }
 

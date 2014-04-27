@@ -39,7 +39,8 @@
 		svg#inset {position:absolute; top: 150px; }
 		svg#overview_map {position:absolute; left: 50px;}
 		div#district_map { position:relative; height: 420px; }
-		.modal-content { width: 1200px; margin-left: -250px; padding: 10px 30px}
+		.modal-content { width: 1000px;}
+		/*.modal-content { width: 1100px; margin-left: -0px; padding: 10px 30px}*/
 		
 		/*div#interactive_container {position:relative;}*/
 		div#readout {
@@ -67,6 +68,9 @@
                 margin-left:auto;
                 margin-right:auto; 
                 }
+		#attribution {margin-top:20px;}
+		#instructions {font-size:11px; margin-top:40px; width:200px;}
+		#instructions li {margin-bottom:8px}
 	</style>
 </head>
 <body>
@@ -74,8 +78,9 @@
         <div class="row">
             <div class="col-md-12">
               <h1>Funding a Campaign for the Hawaii State Legislature</h1>
-              <h3>Campaign Finance and Fundraiser Filings from 2006 - 2014 </h3>
-
+              <h3>Campaign Finance and Fundraiser Filings from 2006 - 2014 (Alpha Release)</h3>
+			  <p id="attribution">Designed and Developed by <a href="http://uhero.hawaii.edu/46/benjamin-trevino">Ben Trevino</a>, David Wang, Viil Lid and Alex Bergo. <br />Please email <a href="mailto:btrevino@hawaii.edu">Ben</a> with comments, questions or feature requests</p>
+			  
             </div>
         </div>
          <!-- Modal -->
@@ -113,10 +118,13 @@
             <div class="col-md-7" id="district_map">
             </div>
             <div class="col-md-5">
+	<ul id="instructions"><li>Hover over / click on a precinct to show the House and Senate races for that area.</li><li>Click on a race to view the fundraising details.</li><li> Click "Reset Map" to show all races</li></ul>
                 <!-- <img src="assets/img/map.png" class="img-responsive"> -->
             </div>
+
         </div>
            <div class="row">
+	
             <div class="col-md-12">
                  
 	
