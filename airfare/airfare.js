@@ -20,12 +20,12 @@ $(document).ready(function() {
 });
 
 var width = 1000,
-    height = 400;//860
-
-var svg = d3.select("#map").attr({
-			width: width,
-			height: height
-})
+    height = 400,//860
+	ts_width = 400,
+	ts_height = 400;
+	
+var svg = d3.select("#map").attr({ width: width, height: height})
+var time_series_svg = d3.select("#time_series").attr({ width: ts_width, height: ts_height})
 
 var projection = d3.geo.albersUsa()
 					.translate([350,200])
@@ -37,16 +37,47 @@ var path = d3.geo.path()
 var color = d3.scale.linear();
 var numbers = [];
 var airfares = {};
+var tickets = {};
+var column_name ="1993Q1" //quarter to draw initially
+var slider_index = 1;
+var quarters_array = []
+var price_scale;
+var time_scale;
 
 var tooltip = d3.select("#interactive_area").append("div").attr("class", "tooltip")
 
-function initial_draw_map(column_name, data){
-	data.forEach(function(d){
-		airfares[d.State] = d
-		numbers = numbers.concat(d3.values(d).filter(function(d){
-						return !isNaN(d) && d !== "";
-					}))
-	})
+function mouseover_state(d,i) {
+
+		d3.select(this).attr("stroke", "orange" )
+		var bounds = path.bounds(d)
+		tooltip.style({
+			left: bounds[1][0] + "px",
+			top: (bounds[0][1] + (bounds[1][1] - bounds[0][1])/2)+ "px",
+			opacity: 1
+		})
+		tooltip.html(d.properties.name 
+			+ "<br/>Median airfare: $" 
+			+ airfares[d.properties.abbreviation][quarters_array[slider_index]]
+			+ "<br/>Number of Tickets: "
+			+ tickets[d.properties.abbreviation][quarters_array[slider_index]]
+			)
+}
+
+function mouseout_state(d,i) {
+	d3.select(this).attr("stroke", "#CCC")
+	tooltip.style("opacity", 0);
+}
+
+function text_fill(d,i) {
+	if (["VT", "NH", "MA", "RI", "CT", "DE", "MD", "HI"].indexOf(d.properties.abbreviation) > -1 || airfares[d.properties.abbreviation][quarters_array[slider_index]] === "")
+		return "#222"
+	else if (airfares[d.properties.abbreviation][quarters_array[slider_index]] < 550)
+		return "#222"
+	else
+		return "#d9e3e3"	
+}
+
+function initial_draw_map(data){
 
 	for(var i = 0; i < numbers.length; i++){
 		numbers[i] = +numbers[i];
@@ -88,23 +119,8 @@ function initial_draw_map(column_name, data){
 					})
 					.attr("stroke", "#CCC")
 					.attr("d",path)
-					.on("mouseover", function(d){
-						d3.select("svg").append("line").attr("class","state").attr("x1", path.bounds(d)[0][0]).attr("y1", path.bounds(d)[0][1]).attr("x2", path.bounds(d)[1][0]).attr("y2", path.bounds(d)[1][1]).attr("stroke", "black")
-						console.log(path.bounds(d))
-						console.log(document.getElementById("map").offsetTop)
-						tooltip.style({
-							left: path.bounds(d)[1][0] + "px",
-							top: ((path.bounds(d)[1][1] - path.bounds(d)[0][1])/2)+ "px",
-							opacity: 1
-						})
-						tooltip.html(d.properties.name + "<br/>" + "Median airfare: $" + airfares[d.properties.abbreviation][column_name])
-						// d3.select("#interactive_area").append("h3").attr("class", "state").text(d.properties.name);
-						// 						d3.select("#interactive_area").append("h3").attr("class","price").text("Median airfare: $" + airfares[d.properties.abbreviation][column_name])
-					})
-					.on("mouseout", function(){
-						d3.select("line.state").remove()
-						tooltip.style("opacity", 0);
-					})
+					.on("mouseover", mouseover_state)
+					.on("mouseout", mouseout_state)
 			console.log(states.features)		
 			svg.selectAll("text.states")
 				.data(states.features)
@@ -158,7 +174,7 @@ function initial_draw_map(column_name, data){
 			    })
 				.attr("text-anchor", "middle")
 				.attr("font-size", "10px")
-				.attr("fill", "orange")
+				.attr("fill", text_fill)
 			svg.append("line").attr("class", "Vermont").attr("x1", "570px").attr("y1", "50px").attr("x2", "585px").attr("y2", "90px").attr("stroke", "black")
 			svg.append("line").attr("class", "New Hampshire").attr("x1", "600px").attr("y1", "102px").attr("x2", "650px").attr("y2", "102px").attr("stroke", "black")
 			svg.append("line").attr("class", "Massachusetts").attr("x1", "600px").attr("y1", "115px").attr("x2", "650px").attr("y2", "115px").attr("stroke", "black")
@@ -173,45 +189,96 @@ function initial_draw_map(column_name, data){
 	
 }
 
-/* Added slider*/
+var ts_path = d3.svg.line()
+	.y(function(d) { return price_scale(+d.value) })
+	.x(function(d) { return time_scale(d.key) })
+function draw_time_series(states_to_draw) {
+	all_prices = states_to_draw.map(function(d) { 
+		return d3.values(d.value)
+			.map(function(e) { return +e }) 
+	})
+	//console.log(all_prices)
+	price_min = d3.min(d3.min(all_prices))
+	price_max = d3.max(d3.max(all_prices))
+	//console.log(d3.max(d3.max(all_prices)))
+	//console.log(d3.min(d3.min(all_prices)))
 
-d3.csv("Airfares_by_State.csv", function(data){
-	initial_draw_map("1993Q1", data)
-	$(function(){
-		$("#slider").slider({
-			min:1,
-			max:83,
-			slide: function(event, ui){
-				d3.select("#interactive_area").selectAll("h3.year").remove();
-				d3.selectAll("path.state")
-			 		.attr("fill", function(d){
-						if(d.properties.abbreviation === "HI"){
-							return 0;
-						}else{
-							return color(airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]]);
-						}
-					})
-					.on("mouseover", function(d){
-						d3.select("#interactive_area").append("h3").attr("class", "state").text(d.properties.name);
-						d3.select("#interactive_area").append("h3").attr("class","price").text("Median airfare: $" + airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]])
-					})
-					.on("mouseout", function(){
-						d3.select("#interactive_area").selectAll("h3.state").remove();
-						d3.select("#interactive_area").selectAll("h3.price").remove();
-					})
-				d3.selectAll("text.state")
-					.text(function(d){
-						if(d.properties.abbreviation === "HI" || airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]] === ""){
-							return "$" + 0;
-						}else{
-							return "$" + airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]];
-						}
-					})
-				d3.select("#interactive_area").append("h3").attr("class","year").text(d3.keys(data[0])[ui.value]);
+	price_scale = d3.scale.linear().range([ts_height, 0]).domain([price_min, price_max])
+	states_paths = states_to_draw.map(function(d) { return {key: d.key, value: d3.entries(d.value) }})
+	//console.log(states_paths) 
+	var ts_paths = time_series_svg.selectAll("path.ts")
+		.data(states_paths)
+	
+	ts_paths.enter()
+		.append("path")
+			
+	ts_paths
+		.attr("d", function(d) { 
+			return ts_path(d.value
+				.filter(function(e) { return e.key !== "State"})
+			) 
+		})
+		.attr("class", "ts")
+		.attr("stroke", function(d) {
+			return d.key === "US" ? "orange" : "#003e5f"
+		})
+		.attr("stroke-opacity", function(d) {
+			return d.key === "US" ? 1 : 0.1
+		})
+		.attr("fill", "none")
+}
+
+/* Added slider*/
+d3.csv("Tickets_by_State.csv", function(ticket_data) {
+	d3.csv("Airfares_by_State.csv", function(data){
+		data.forEach(function(d){
+			airfares[d.State] = d
+			numbers = numbers.concat(d3.values(d)
+				.filter(function(d) {
+					return !isNaN(d) && d !== "";
+				}))
+		})
+		
+		ticket_data.forEach(function(d) { tickets[d.State] = d });
+	
+		quarters_array = d3.keys(data[0])
+		time_scale = d3.scale.ordinal().domain(quarters_array).rangePoints([0,ts_width])
+		initial_draw_map(data)
+		draw_time_series(d3.entries(airfares)) 
+		//draw_time_series([{key:"US", value:airfares["US"]}])
+		$(function(){
+			$("#slider").slider({
+				min:1,
+				max:83,
+				slide: function(event, ui){
+					slider_index = ui.value;
+					d3.select("#interactive_area h3.year").text(quarters_array[ui.value]);
 				
-			}
+					d3.selectAll("path.state")
+				 		.attr("fill", function(d){
+							if(d.properties.abbreviation === "HI"){
+								return 0;
+							}else{
+								return color(airfares[d.properties.abbreviation][quarters_array[slider_index]]);
+							}
+						})
+						.on("mouseover", mouseover_state)
+						.on("mouseout", mouseout_state)
+
+					d3.selectAll("text.state")
+						.text(function(d){
+							if(d.properties.abbreviation === "HI" || airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]] === ""){
+								return "$" + 0;
+							}else{
+								return "$" + airfares[d.properties.abbreviation][d3.keys(data[0])[ui.value]];
+							}
+						})
+						.attr("fill", text_fill)
+				
+				}
+			});
 		});
-	});
+	})
 })
 
 // d3.csv("Airfares_by_State.csv", function(data){

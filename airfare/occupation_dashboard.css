@@ -70,7 +70,7 @@ div.tooltip {
 	margin-top: -1em;
 	text-align: left;           
 	width: 140px;                  
-	height: 30px;                       
+	height: 45px;                       
 	background: #4c4c4c;   
 	border: 0px;                
 	pointer-events: none;	
@@ -79,11 +79,21 @@ div.tooltip {
 #slider{
 	width:400px;
 	position: absolute;
-	left:200px;
+	left:80px;
 	bottom:300px;
+}
+h3.year {
+	position:absolute;
+	left:80px;
+	bottom: 310px;
 }
 
 
 svg#map{
 	position:absolute;
+}
+svg#time_series {
+	position:absolute;
+	right:0px;;
+	bottom:300px;
 }
