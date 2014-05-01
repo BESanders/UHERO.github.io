@@ -302,7 +302,7 @@ function draw_bars(states_to_draw) {
 /* Added slider*/
 
 d3.csv("total_pass_state.csv", function(ticket_data) {
-	d3.csv("Airfares_yoy_by_State.csv", function(yoy_data) {
+	d3.csv("fare_median_pchya.csv", function(yoy_data) {
 	d3.csv("fare_medians_state.csv", function(data){
 		data.forEach(function(d){
 			airfares[d.State] = d
@@ -327,7 +327,11 @@ d3.csv("total_pass_state.csv", function(ticket_data) {
 				slide: function(event, ui){
 					slider_index = ui.value;
 					d3.select("#interactive_area h3.year").text(quarters_array[ui.value]);
-					d3.select("#us_details").text(" Avg Fare:" + airfares["US"][quarters_array[slider_index]] + "YOY:" + yoys["US"][quarters_array[slider_index]] + "%")
+					d3.select("#us_details").text("Avg US Fare: $" 
+						+ Math.round(airfares["US"][quarters_array[slider_index]]) 
+						+ " (YOY: " 
+						+ Math.round(yoys["US"][quarters_array[slider_index]] * 100) 
+						+ "%)")
 				
 					d3.selectAll("path.state")
 				 		.attr("fill", function(d){
