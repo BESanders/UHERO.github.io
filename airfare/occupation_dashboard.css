@@ -60,7 +60,7 @@ div.tooltip {
 	position: absolute;
 	z-index: 2;
 	border-radius: 3px;
-	padding: .25em;
+	padding: 5px;
 	font-size: 12px;
 	font-family: Arial,sans-serif;
 	opacity: 0;
@@ -70,7 +70,7 @@ div.tooltip {
 	margin-top: -1em;
 	text-align: left;           
 	width: 140px;                  
-	height: 45px;                       
+	/*height: 60px;*/                       
 	background: #4c4c4c;   
 	border: 0px;                
 	pointer-events: none;	
@@ -95,5 +95,17 @@ svg#map{
 svg#time_series {
 	position:absolute;
 	right:0px;;
+	bottom:400px;
+}
+
+svg#yoy {
+	position:absolute;
+	right:0px;
 	bottom:300px;
+}
+
+#us_details {
+	position:absolute;
+	left:120px;
+	bottom:310;
 }
