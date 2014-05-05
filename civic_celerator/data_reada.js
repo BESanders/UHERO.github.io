@@ -11,9 +11,11 @@
 // 2007
 // 2006
 
+//http://edu2opendata.xdoe-soh.opendata.arcgis.com/datasets/d71c27f6d2504b3f8eea5314b415ef68_0.geojson
+
 var summary_data
 var winner_data
-var precinct_data
+//var precinct_data
 var hawaii_geo_json
 var race_scale = d3.scale.ordinal().domain(["2006-2008", "2008-2010", "2010-2012", "2012-2014"]).range([200,375,550,725])
 var race_highlight_fill = "#f9f9f9"
@@ -721,40 +723,19 @@ function load_candidates(office_name, data){
 		.append("a")
 }
 
-
-
 var inset_svg;
-var county_selected = "City and County of Honolulu"
+var county_selected = "STATE"
 
 function precinct_class(d) {
-	var desc = d.id.split("-"); 
-	if(desc[0][0] === "0"){
-		desc[0] = desc[0].slice(1);
-	}
-	if(desc[1][0] === "0"){
-		desc[1] = desc[1].slice(1);
-	}
-	var senate = "";
-	for(var i = 0; i < precinct_data.length; i++) {
-		if(precinct_data[i]["House"] === desc[0] && precinct_data[i]["Precinct"] === desc[1]){
-			senate = precinct_data[i]["Senate"];
-			county =  precinct_data[i]["County"];					
-		}
-	}
-	d.house = desc[0]
-	d.senate = senate
-	d.precinct = desc[1]
-	d.county = county
-	return "H" + desc[0] + " P" + desc[1] + " S" + senate;
+	return "H" + d.properties.State_House + " P" + d.id + " S" + d.properties.State_Senate;
 }
 
 function check_county(d) { 
-	if (county_selected !== d.county) {
-		console.log("changing to " + d.county)
-		county_selected = d.county
-		inset_svg
-			.selectAll("path")
-			.attr("d", d3.geo.path().projection(inset_projections[d.county]))
+	var county = d.properties.COUNTY
+	if (map_clicked) return;
+	if (county_selected !== county) {
+		county_selected = county
+		zoom_to_bounds(county_bounds[county])
 	}
 	
 } 
@@ -767,100 +748,153 @@ function draw_map(){
 		.attr("href", "javascript:;")
 		.on("click", reset)
 		.text("Reset Map")
-		
-	var map_svg = d3.select("#district_map")
-					.append("svg")
-					.attr("id", "overview_map")
 	
-	var map_width = 760//960,
-	    map_height = 360//660;
-
-	map_svg.attr("width", map_width)
-	    	.attr("height", map_height);
-	
-	var projection = d3.geo.albers()
-		.center([0, 18.5])
-		.rotate([159.266, -3.049])
-		.parallels([15, 25])
-		.scale(5000)
-		.translate([287, 90]);
-		
-	var path = d3.geo.path()
-	    .projection(projection);
-	
-
-	d3.json("hawaii_voting_districts_topo.json", function(error, hawaii) {
-			create_inset(topojson.feature(hawaii, hawaii.objects.hawaii_voting_districts).features)
-			map_svg.selectAll("path")
-				.data(topojson.feature(hawaii, hawaii.objects.hawaii_voting_districts).features)
-				.enter().append("path")
-				.attr("fill", map_fill)
-				//.attr("stroke", map_fill)
-			    .attr("class", precinct_class)
-			    .attr("d", path)
-				.on("mouseover", check_county)				
-	}) 
+	var precinct_data = topojson.feature(hawaii_geo_json, hawaii_geo_json.objects.updated_precincts).features
+	precinct_data = precinct_data.filter(function(d) { return d.id !== "30-04"}) //this one seems to have a screwed up path
+	create_inset(precinct_data)
+			
 }
  
+//don't need these county projections anymore
 var inset_projections = {
-	"City and County of Honolulu": d3.geo.albers().center([0, 18.5]).rotate([157.967, -2.941]).scale(29284).translate([308, 139]),
-	"Hawaii County": d3.geo.albers().center([0, 18.5]).rotate([155.527, -.99]).scale(11016).translate([355, 159]),
-    "Kauai County": d3.geo.albers().center([0, 18.5]).rotate([159.917, -3.374]).scale(16431).translate([288, 170]),
-    "Maui County": d3.geo.albers().center([0, 18.5]).rotate([156.665, -2.290]).scale(18428).translate([305, 159])
+	"OAHU": d3.geo.albers().center([0, 18.5]).rotate([157.967, -2.941]).scale(29284).translate([308, 139]),
+	"HAWAII": d3.geo.albers().center([0, 18.5]).rotate([155.527, -.99]).scale(11016).translate([355, 159]),
+    "KAUAI": d3.geo.albers().center([0, 18.5]).rotate([159.917, -3.374]).scale(16431).translate([288, 170]),
+    "MAUI": d3.geo.albers().center([0, 18.5]).rotate([156.665, -2.290]).scale(18428).translate([305, 159]),
+	"STATE": d3.geo.albers().center([0, 18.5]).rotate([159.266, -3.049]).parallels([15, 25]).scale(5000).translate([130, 90])
 }
+var county_bounds = {}
 
 var map_clicked = false
+
 function reset(d) {
-	map_clicked = false 
+	map_clicked = true; 
+	county_selected = "STATE"
 	d3.select("#reset_container").style("display", "none")
 	inset_svg.selectAll("path").attr("fill", map_fill)//.attr("stroke", map_fill)
-	draw_summary(summary_data.filter(function(d){if(d.key.match(/^H/g)){return true;}}),"#house_summaries");
-	draw_summary(summary_data.filter(function(d){if(d.key.match(/^S/g)){return true;}}),"#senate_summaries")
+	inset_svg.transition()
+		.duration(750)
+		.call(zoom.translate([0, 0]).scale(1).event)
+		.each("end", function(d) { 
+			map_clicked = false;
+			draw_summary(summary_data.filter(function(d){if(d.key.match(/^H/g)){return true;}}),"#house_summaries");
+			draw_summary(summary_data.filter(function(d){if(d.key.match(/^S/g)){return true;}}),"#senate_summaries");	
+		});
 	
 }
 function highlight_precinct_from_this(d, obj) {
 	if (map_clicked) return;
-	d3.select("#reset_container").style("display", "block")
+	
 	inset_svg.selectAll("path").attr("fill", map_fill)//.attr("stroke", map_fill)
 	d3.select(obj).attr("fill", highlight_fill)//.attr("stroke", highlight_fill)
 	draw_summary(summary_data.filter(function(e) { 
-		return e.key === "House "+ zero_pad(d.house+"") 
+		return e.key === "House "+ zero_pad(d.properties.State_House+"") 
 	}),"#house_summaries")
 	draw_summary(summary_data.filter(function(e) { 
-		return e.key === "Senate "+zero_pad(d.senate)
+		return e.key === "Senate "+zero_pad(d.properties.State_Senate+"")
 	}),"#senate_summaries")	
 }
 function highlight_precinct(d) {
+	check_county(d)
 	highlight_precinct_from_this(d, this)
 }
+
+function zoom_to_bounds(bounds) {
+	d3.select("#reset_container").style("display", "block")
+	var map_clicked_state = map_clicked
+	map_clicked = true
+	var	  dx = bounds[1][0] - bounds[0][0],
+	      dy = bounds[1][1] - bounds[0][1],
+	      x = (bounds[0][0] + bounds[1][0]) / 2,
+	      y = (bounds[0][1] + bounds[1][1]) / 2,
+	      scale = .6 / Math.max(dx / inset_width, dy / inset_height),
+	      translate = [inset_width / 2 - scale * x, inset_height / 2 - scale * y];
+	
+	inset_svg.transition()
+	      .duration(750)
+	      .call(zoom.translate(translate).scale(scale).event)
+		.each("end", function(d) { map_clicked = map_clicked_state });;
+	
+}
+
+var geo_path = d3.geo.path().projection(inset_projections["STATE"])
+function inset_click(d) {
+	d3.event.stopPropagation()
+
+	if (d3.event.defaultPrevented) { return } 
+	
+	if (map_clicked) {
+		map_clicked = false;
+		highlight_precinct_from_this(d,this)
+	}
+
+	map_clicked = true
+	
+	var bounds = geo_path.bounds(d)
+	zoom_to_bounds(bounds)
+		
+	
+}
+
+zoom = d3.behavior.zoom()
+    .translate([0, 0])
+    .scale(1)
+    .scaleExtent([1, 40])
+    .on("zoom", zoomed);
+
+var inset_width = 550;
+var inset_height = 350;
+
+function zoomed() {
+	if (d3.event.sourceEvent) { d3.select("#reset_container").style("display", "block")	}
+	inset_svg.select("g").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+}
+
+function county_accessor(d) {
+	return d.__data__.properties.COUNTY
+}
+
 function create_inset(data){
 	
-	var inset_width = 560,
-	 	inset_height = 320;
-
 	inset_svg = d3.select("#district_map")
 		.append("svg")
-		.attr("id", "inset")
+		.attr("id", "overview_map")
 		.attr("width", inset_width)
 		.attr("height", inset_height)
 		.on("click", reset)
 	
-	inset_svg.selectAll("path.inset")
+	var g = inset_svg.append("g")
+	
+	paths = g.selectAll("path")
 		.data(data)
 		.enter()
 		.append("path")
 		.attr("fill", map_fill)
-		//.attr("stroke", map_fill)
+		.attr("stroke", "white")
+		.attr("stroke-width", .05)
 		.attr("class", precinct_class)
-		.attr("d", d3.geo.path().projection(inset_projections["City and County of Honolulu"]))
+		.attr("d", d3.geo.path().projection(inset_projections["STATE"]))
 		.on("mouseover", highlight_precinct)
-		.on("click", function(d) { 
-			d3.event.stopPropagation()
-			map_clicked = true 
-		})
+		.on("click", inset_click)
+
+	d3.keys(inset_projections).forEach(function(area) { 
+		var included_precincts = paths[0].filter(function(d) { return county_accessor(d) === area})
+		var precinct_bounds = included_precincts.map(function(d) { return geo_path.bounds(d.__data__)})
+		var left = d3.min(precinct_bounds, function(d) {return d[0][0]}),
+			top = d3.min(precinct_bounds, function(d) {return d[0][1]}),
+			right = d3.max(precinct_bounds, function(d) {return d[1][0]}),
+			bottom = d3.max(precinct_bounds, function(d) {return d[1][1]})
+			
+		county_bounds[area] = [[left, top], [right, bottom]]
+	})
+	
+	inset_svg
+		.call(zoom)
+		.call(zoom.event);
 		
 			
 }
+
 
 
 
@@ -1027,15 +1061,18 @@ function load_summary_data() {
 			})
 			var chamber = district.key.split(" ")[0]
 			var d_key = parseInt(district.key.split(" ")[1])+""
-			district.county = precinct_data.filter(function(d) { return d[chamber] === d_key })[0]["County"]
+			//district.county = precinct_data.filter(function(d) { return d[chamber] === d_key })[0]["County"]
 		})
 		
 		var precinct = getURLParameter("precinct")
 		if (precinct !== null && precinct.split("-").length === 2) {
-			d = d3.select("#inset .H"+ precinct.split("-")[0] +".P"+ precinct.split("-")[1]).data()[0]
-			check_county(d)
-			highlight_precinct_from_this(d, "#inset .H"+ precinct.split("-")[0] +".P"+ precinct.split("-")[1])
+			var precinct_path = d3.select(".P"+ precinct)
+			d = precinct_path.data()[0]
+			//check_county(d)
+			highlight_precinct_from_this(d, ".P"+precinct)
 			map_clicked = true;
+			var bounds = geo_path.bounds(d)
+			zoom_to_bounds(bounds)
 		} else {
 			draw_summary(summary_data.filter(function(d){if(d.key.match(/^H/g)){return d;}}),"#house_summaries");
         	draw_summary(summary_data.filter(function(d){if(d.key.match(/^S/g)){return true;}}),"#senate_summaries")
@@ -1046,12 +1083,10 @@ function load_summary_data() {
 function load_file_data() {
 	var q = queue()
 	q.defer(d3.csv, "election_results.csv")
-	q.defer(d3.csv,"precincts.csv")	
-	q.defer(d3.json, "hawaii_voting_districts_topo.json")
+	q.defer(d3.json, "updated_precincts_topo.json")
 	q.awaitAll(function(error, results) {
 		data = results[0]
-		precinct_data = results[1]
-		hawaii_geo_json = results[2]
+		hawaii_geo_json = results[1]
 
 		winner_data = d3.nest()
 			.key(function(d) { return d.Title+" "+zero_pad(d.District)+" "+d.Election})

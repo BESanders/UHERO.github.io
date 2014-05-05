@@ -26,9 +26,11 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="assets/js/bootstrap.min.js"></script>
-    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-	<script src="http://d3js.org/topojson.v1.min.js"></script>
-	<script src="http://d3js.org/queue.v1.min.js"></script>
+
+	<script src="d3.v3.min.js" charset="utf-8"></script>
+	<script src="topojson.v1.min.js"></script>
+	<script src="queue.min.js"></script>
+
 	<style>
 		table.small { font-size:9px; font-family:Arial }
 		div.tooltip { display:none; position:absolute; border: 1px solid gray;  }
@@ -36,9 +38,9 @@
 		div#summary_svgs {padding-top:100px;}
 		div#summary_svgs svg {border: 1px solid #EEE}
 		
-		svg#inset {position:absolute; top: 150px; }
-		svg#overview_map {position:absolute; left: 50px;}
-		div#district_map { position:relative; height: 420px; }
+/*		svg#inset {position:absolute; top: 150px; }*/
+		svg#overview_map {border-top:1px solid #CCC; border-bottom:1px solid #CCC}
+		div#district_map { position:relative; height: 350px; }
 		.modal-content { width: 1000px;}
 		/*.modal-content { width: 1100px; margin-left: -0px; padding: 10px 30px}*/
 		
@@ -58,7 +60,7 @@
 		/*#readout { position: relative; background: #33c2c6; } 
 		#readout:after { bottom: 100%; left: 50%; border: solid transparent; content: " "; height: 0; width: 0; position: absolute; pointer-events: none; border-color: rgba(51, 194, 198, 0); border-bottom-color: #33c2c6; border-width: 8px; margin-left: -8px; }
 		*/
-		#reset_container { position:absolute; top: 400px; left: 600px; display:none;}
+		#reset_container { position:absolute; top: 320px; left: 480px; display:none;}
 		#reset_button {color: #017d75}
 		div#date { font-size: 12px;}
                body #S200620081 {
@@ -68,9 +70,9 @@
                 margin-left:auto;
                 margin-right:auto; 
                 }
-		#attribution {margin-top:20px;}
-		#instructions {font-size:11px; margin-top:40px; width:200px;}
-		#instructions li {margin-bottom:8px}
+		#attribution {margin:20px 0 20px 0;}
+		#instructions {font-size:11px; width:250px; padding:0}
+		#instructions li {margin-bottom:8px; }
 	</style>
 </head>
 <body>
@@ -79,7 +81,7 @@
             <div class="col-md-12">
               <h1>Funding a Campaign for the Hawaii State Legislature</h1>
               <h3>Campaign Finance and Fundraiser Filings from 2006 - 2014 (Alpha Release)</h3>
-			  <p id="attribution">Designed and Developed by <a href="http://uhero.hawaii.edu/46/benjamin-trevino">Ben Trevino</a>, David Wang, Viil Lid and Alex Bergo. <br />Please email <a href="mailto:btrevino@hawaii.edu">Ben</a> with comments, questions or feature requests</p>
+			  <p id="attribution">Designed and Developed by <a href="http://uhero.hawaii.edu/46/benjamin-trevino">Ben Trevino</a>, David Wang, Viil Lid and Alex Bergo. Please email <a href="mailto:btrevino@hawaii.edu">Ben</a> with comments, questions or feature requests</p>
 			  
             </div>
         </div>
@@ -115,9 +117,9 @@
                                             </div>
                  <!-- MODAL OVER-->
         <div class="row">
-            <div class="col-md-7" id="district_map">
+            <div class="col-md-6" id="district_map">
             </div>
-            <div class="col-md-5">
+            <div class="col-md-6">
 	<ul id="instructions"><li>Hover over / click on a precinct to show the House and Senate races for that area.</li><li>Click on a race to view the fundraising details.</li><li> Click "Reset Map" to show all races</li></ul>
                 <!-- <img src="assets/img/map.png" class="img-responsive"> -->
             </div>
