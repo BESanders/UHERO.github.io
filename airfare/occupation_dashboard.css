@@ -39,6 +39,7 @@ h4.dash_sub {
 	
 }
 
+
 .contentwrapper-bottom {
 background:none;
 background-color:white;
@@ -77,35 +78,98 @@ div.tooltip {
 }
 
 #slider{
-	width:400px;
-	position: absolute;
-	left:80px;
-	bottom:300px;
-}
-h3.year {
-	position:absolute;
-	left:80px;
-	bottom: 310px;
+	height:131px;
+	width:60px;
+	position:relative;
+	right:13px;
+	top:56px;
+	z-index:1;
 }
 
+h3.year {
+	position:absolute;
+	left:945px;
+	bottom: -13px;
+}
+
+#price{
+	position:absolute;
+	font-size:50px;
+	left:27px;
+}
+
+div.inset{
+	position:relative;
+	width:205px;
+	height:93px;
+	left:700px;
+	top:26px;
+	border-bottom: solid;
+	padding-bottom: 47px;
+}
 
 svg#map{
 	position:absolute;
 }
+
 svg#time_series {
 	position:absolute;
-	right:0px;;
-	bottom:400px;
+	right:327px;;
+	bottom:53px;
 }
 
 svg#yoy {
 	position:absolute;
-	right:0px;
-	bottom:300px;
+	right:347px;
+	bottom:-50px;
+}
+
+svg.inset_time{
+	position:absolute;
+	left:81px;
+	top:34px;
+}
+
+svg.inset_svg{
+	position:absolute;
+	left:-60px;
+	top:-17px;
 }
 
 #us_details {
 	position:absolute;
-	left:150px;
-	bottom:320px;
+	left:700px;
+	bottom:702px;
+}
+
+#show_all{
+	position:absolute;
+	left:180px;
+	top:414px;
+}
+
+#show_weighted{
+	position:absolute;
+	left:250px;
+	top:414px;
+}
+
+#show_none{
+	position:absolute;
+	left:360px;
+	top:414px;
+}
+
+#fares{
+	position:absolute;
+	left:270px;
+	top:10px;
+	text-decoration:underline;
+}
+
+#tickets{
+	position:absolute;
+	left:320px;
+	top:10px;
+	text-decoration:underline;
 }

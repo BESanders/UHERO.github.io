@@ -25,8 +25,10 @@
 	<script src="jquery.tipsy.js"></script>
 	<link media="screen,print" href="tipsy.css" type="text/css" rel="stylesheet">
 	<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+	<link rel="stylesheet" href="d3.slider.css" type="text/css">
   	<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
   	<script src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+	<script src="d3.slider.js"></script>
 </head>
 <body>
 	<ol id="accessibility-nav">
@@ -86,8 +88,17 @@
 		<svg id="map"></svg>
 		<svg id="time_series"></svg>
 		<svg id="yoy"></svg>
-		<div id="us_details"></div>
+		<div id="us_details">
+			<h2 id="title"></h2>
+			<br/>
+			<h1 id="price"></h1>
+		</div>
 		<div id="slider"></div>
+		<a href="javascript:;" id="show_all">Show All</a>
+		<a href="javascript:;" id="show_weighted">Show Weighted</a>
+		<a href="javascript:;" id="show_none">Show None</a>
+		<a href="javascript:;" id="fares">Fares</a>
+		<a href="javascript:;" id="tickets">Tickets</a>
 	</div>
 	<label for="dates"></label>
 		

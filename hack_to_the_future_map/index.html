@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Funding a Campaign for Hawaii State Legislature</title>
+
+	<script src="d3.v3.min.js" charset="utf-8"></script>
+	<script src="topojson.v1.min.js"></script>
+	<script src="queue.min.js"></script>
+
+	<style>
+		body {   font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;  color: #777}
+		svg#overview_map {border-top:1px solid #CCC; border-bottom:1px solid #CCC}
+		div#district_map { position:relative; height: 350px; }
+		#reset_container { position:absolute; top: 320px; left: 480px; display:none;}
+		#reset_button {color: #017d75}
+		h1 { font-size: 64px}
+		a { text-decoration: none}
+	</style>
+	
+</head>
+<body>
+
+<h1>Precinct Map</h1>
+
+<div id="district_map">
+</div>
+<script>
+var winner_data
+var hawaii_geo_json
+var map_fill = "#CCC"
+var highlight_fill = "#017d75"
+var svg;
+var map_clicked = false
+var inset_width = 550;
+var inset_height = 350;
+
+
+// --------------------------------- MAGIC ---------------------------------
+var county_selected = "STATE"
+var county_bounds = {}
+var geo_path = d3.geo.path().projection(d3.geo.albers().center([0, 18.5]).rotate([159.266, -3.049]).parallels([15, 25]).scale(5000).translate([130, 90]))
+zoom = d3.behavior.zoom()
+    .translate([0, 0])
+    .scale(1)
+    .scaleExtent([1, 40])
+    .on("zoom", zoomed);
+
+
+function zoomed() {
+	if (d3.event.sourceEvent) { d3.select("#reset_container").style("display", "block")	}
+	svg.select("g").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+}
+
+function zero_pad(num_string) {
+	return num_string.length === 1 ? "0"+num_string : num_string
+}
+
+function check_county(d) { 
+	var county = d.properties.COUNTY
+	if (map_clicked) return;
+	if (county_selected !== county) {
+		county_selected = county
+		zoom_to_bounds(county_bounds[county])
+	}
+	
+} 
+
+function reset(d) {
+	map_clicked = true; 
+	county_selected = "STATE"
+	d3.select("#reset_container").style("display", "none")
+
+	d3.selectAll("path.precinct").attr("fill-opacity", 1)
+	//svg.select(".highlight").attr("stroke", "none")
+	//svg.selectAll("path").attr("fill", map_fill)//.attr("stroke", map_fill)
+	svg.transition()
+		.duration(750)
+		.call(zoom.translate([0, 0]).scale(1).event)
+		.each("end", function(d) { 
+			map_clicked = false;
+		});
+	
+}
+
+function highlight_precinct_from_this(d, obj) {
+	if (map_clicked) return;	
+
+	//d3.selectAll("path.precinct").attr("fill-opacity", 1)
+	d3.select(obj).attr("fill-opacity", .1)
+	
+	// d3.select("path.highlight")
+	// 	.attr("stroke", highlight_fill)
+	// 	.attr("d", obj.attr("d"))
+
+	//	var bounds = geo_path.bounds(d)
+	// d3.select("g")
+	// 	.select("rect")
+	// 	.attr("x", bounds[0][0])
+	// 	.attr("y",bounds[0][1] )
+	// 	.attr("width", bounds[1][0]- bounds[0][0])
+	// 	.attr("height", bounds[1][1]-bounds[0][1] )
+}
+
+function highlight_precinct(d) {
+	check_county(d)
+	highlight_precinct_from_this(d, this)
+
+}
+
+function zoom_to_bounds(bounds) {
+	d3.select("#reset_container").style("display", "block")
+	var map_clicked_state = map_clicked
+	map_clicked = true
+	var	  dx = bounds[1][0] - bounds[0][0],
+	      dy = bounds[1][1] - bounds[0][1],
+	      x = (bounds[0][0] + bounds[1][0]) / 2,
+	      y = (bounds[0][1] + bounds[1][1]) / 2,
+	      scale = .6 / Math.max(dx / inset_width, dy / inset_height),
+	      translate = [inset_width / 2 - scale * x, inset_height / 2 - scale * y];
+	
+	svg.transition()
+	      .duration(750)
+	      .call(zoom.translate(translate).scale(scale).event)
+		.each("end", function(d) { map_clicked = map_clicked_state });;
+	
+}
+
+function click_precinct(d) {
+	d3.event.stopPropagation()
+
+	if (d3.event.defaultPrevented) { return } 
+	
+	if (map_clicked) {
+		map_clicked = false;
+		highlight_precinct_from_this(d,this)
+	}
+
+	map_clicked = true
+	
+	var bounds = geo_path.bounds(d)
+	zoom_to_bounds(bounds)
+	
+}
+
+function county_accessor(d) {
+	return d.__data__.properties.COUNTY
+}
+
+function precinct_class(d) {
+	return "precinct H" + d.properties.State_House + " P" + d.id + " S" + d.properties.State_Senate;
+}
+
+function set_up_map() {
+	svg = d3.select("#district_map")
+		.append("svg")
+		.attr("id", "overview_map")
+		.attr("width", inset_width)
+		.attr("height", inset_height)
+		.on("click", reset)
+		
+	d3.select("#district_map").append("div")
+		.attr("id", "reset_container")
+		.append("a")
+		.attr("id", "reset_button")
+		.attr("href", "javascript:;")
+		.on("click", reset)
+		.text("Reset Map")
+
+	svg.call(zoom).call(zoom.event);
+}
+
+function calculate_bounds(paths) {
+	counties = ["OAHU", "HAWAII", "KAUAI", "MAUI", "STATE"]
+	counties.forEach(function(county) { 
+		var included_precincts = paths[0].filter(function(d) { return county_accessor(d) === county})
+		var precinct_bounds = included_precincts.map(function(d) { return geo_path.bounds(d.__data__)})
+		var left = d3.min(precinct_bounds, function(d) {return d[0][0]}),
+			top = d3.min(precinct_bounds, function(d) {return d[0][1]}),
+			right = d3.max(precinct_bounds, function(d) {return d[1][0]}),
+			bottom = d3.max(precinct_bounds, function(d) {return d[1][1]})
+
+		county_bounds[county] = [[left, top], [right, bottom]]
+	})
+	
+}
+
+
+// --------------------------------- END MAGIC ---------------------------------
+
+
+
+
+function draw_map(data){
+	
+	var g = svg.append("g")
+
+	var paths = g.selectAll("path")
+		.data(data)
+		.enter()
+		.append("path")
+		.attr("fill", map_fill)
+		.attr("stroke", "white")
+		.attr("stroke-width", .05)
+		.attr("class", precinct_class)
+		.attr("d", geo_path)
+		.on("mouseover", highlight_precinct)
+		.on("mouseout", function(d) { d3.select(this).attr("fill-opacity", 1) })
+		.on("click", click_precinct)
+
+	var highlight = g.append("path")
+		.attr("class", "highlight")
+		.attr("stroke", highlight_fill)
+		.attr("fill", "none")
+ 
+	// var highlight = g.append("rect")
+		// .attr("class", "highlight")
+		// .attr("stroke", "red")
+		// .attr("fill", "none")
+
+	calculate_bounds(paths)
+		
+}
+
+function draw(){
+	set_up_map();
+	
+	var precinct_data = topojson.feature(hawaii_geo_json, hawaii_geo_json.objects.updated_precincts).features
+	precinct_data = precinct_data.filter(function(d) { return d.id !== "30-04"}) //this one seems to have a screwed up path
+
+	console.log(precinct_data)
+	console.log(election_data)
+	
+	draw_map(precinct_data)
+	
+	// Put your new code here!			
+}
+
+function load_file_data() {
+	var q = queue()
+	q.defer(d3.json, "updated_precincts_topo.json")
+	q.defer(d3.csv, "election_results_all.csv")
+	
+	q.awaitAll(function(error, results) {
+		hawaii_geo_json = results[0]
+		election_data = d3.nest().key(function(d) {return d.Precinct_Name}).rollup(function(leaves) { return leaves[0]}).map(results[1])
+		draw();
+	})
+}
+
+load_file_data();
+
+
+
+//Workshop Code Snippets for Copy and Pasting: 
+//precincts = d3.selectAll("path.precinct")
+//precincts.attr("fill", "red")
+//county_scale = d3.scale.category10()
+//precincts.data()[0]
+//precincts.data()[0].properties
+//precincts.attr("fill", function(d) { return county_scale(d.properties.COUNTY) })
+
+//house_scale = d3.scale.linear().domain([1,50]).range(["#EEE", "#3182bd"])
+//precincts.attr("fill", function(d) { return house_scale(d.properties["State_House"]) })
+
+// data_extent = d3.extent(d3.entries(election_data), function(d) { return parseInt(d.value.Reg_voters) })
+// reg_voters_scale = d3.scale.linear().domain(data_extent).range(["#EEE", "#3182bd"])
+// precincts.attr("fill", function(d) { return election_data[d.properties.NAME] ? reg_voters_scale(election_data[d.properties.NAME]["Reg_voters"]) : "black" })
+
+// 
+// precincts = d3.selectAll("path.precinct")
+// data_extent = d3.extent(d3.entries(election_data), function(d) {  return parseInt(d.value.Reg_voters) > 0 ? parseInt(d.value.Absentee_votes) / parseInt(d.value.Reg_voters) : 0 })
+// console.log(data_extent)
+// reg_voters_scale = d3.scale.linear().domain(data_extent).range(["#EEE", "#3182bd"])
+// precincts.attr("fill", function(d) { return election_data[d.properties.NAME] ? reg_voters_scale(parseInt(election_data[d.properties.NAME]["Absentee_votes"]) / parseInt(election_data[d.properties.NAME]["Reg_voters"])) : "black" })
+
+//centroids = d3.select("g").selectAll("circle").data(precincts.data()).enter().append("circle")
+//centroids.data()[0]
+//centroids.attr("fill","black").attr("r",2).attr("fill-opacity",.1)
+//centroids.attr("cx",function(d) { return geo_path.centroid(d)[0] })
+//centroids.attr("cy",function(d) { return geo_path.centroid(d)[1] })
+</script>
+</body>
+</html>
