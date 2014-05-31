@@ -4,7 +4,7 @@
   <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Funding a Campaign for Hawaii State Legislature</title>
+    <title>Precinct Map Workshop: Hack to the Future II - Honolulu 2014</title>
 
 	<script src="d3.v3.min.js" charset="utf-8"></script>
 	<script src="topojson.v1.min.js"></script>
@@ -14,7 +14,7 @@
 		body {   font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;  color: #777}
 		svg#overview_map {border-top:1px solid #CCC; border-bottom:1px solid #CCC}
 		div#district_map { position:relative; height: 350px; }
-		#reset_container { position:absolute; top: 320px; left: 480px; display:none;}
+		#reset_container { position:absolute; top: 500px; left: 900px; display:none;}
 		#reset_button {color: #017d75}
 		h1 { font-size: 64px}
 		a { text-decoration: none}
@@ -34,14 +34,20 @@ var map_fill = "#CCC"
 var highlight_fill = "#017d75"
 var svg;
 var map_clicked = false
-var inset_width = 550;
-var inset_height = 350;
-
+var inset_width = 1000;
+var inset_height = 550;
 
 // --------------------------------- MAGIC ---------------------------------
 var county_selected = "STATE"
 var county_bounds = {}
-var geo_path = d3.geo.path().projection(d3.geo.albers().center([0, 18.5]).rotate([159.266, -3.049]).parallels([15, 25]).scale(5000).translate([130, 90]))
+var geo_path = d3.geo.path().projection(
+	d3.geo.albers()//.center([0, 18.5]).rotate([159.266, -3.049]).parallels([15, 25]).scale(5000).translate([130, 90])
+		.center([0, 18.5])
+		.rotate([157.50, -1.5])
+		.parallels([15, 25])
+		.scale(8000)
+		.translate([inset_width / 2, inset_height / 2+80])
+);
 zoom = d3.behavior.zoom()
     .translate([0, 0])
     .scale(1)
