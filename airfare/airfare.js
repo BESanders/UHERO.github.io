@@ -45,7 +45,7 @@ var path = d3.geo.path()
 			
 var color = d3.scale.linear();
 var numbers = [];
-var ticket_numbers = [];
+var all_ticket_percents = [];
 var airfares = {};
 var tickets = {};
 var yoys = {};
@@ -206,7 +206,11 @@ function mouseout_state(d,i) {
 	}
 }
 
-function text_fill(d,i) {
+function get_percent(d){
+	return Math.round(tickets[d.properties.abbreviation][quarters_array[slider_index]] / tickets["US"][quarters_array[slider_index]] * 10000) / 100
+}
+
+function text_price_fill(d,i) {
 	if (["VT", "NH", "MA", "RI", "CT", "DE", "MD", "HI"].indexOf(d.properties.abbreviation) > -1 || airfares[d.properties.abbreviation][quarters_array[slider_index]] === "")
 		return "#222"
 	else if (airfares[d.properties.abbreviation][quarters_array[slider_index]] < 550)
@@ -215,6 +219,14 @@ function text_fill(d,i) {
 		return "#d9e3e3"	
 }
 
+function text_ticket_fill(d,i){
+	if (["VT", "NH", "MA", "RI", "CT", "DE", "MD", "HI"].indexOf(d.properties.abbreviation) > -1 || get_percent(d) === "")
+		return "#222"
+	else if (get_percent(d) < 50)
+		return "#222"
+	else
+		return "#d9e3e3"
+}
 /*
 	all_prices uses numbers array
 */
@@ -224,14 +236,32 @@ function create_all_prices_array(){
 	}
 
 	numbers.sort(function(a,b){ return a - b;})
-	all_prices = numbers.reduce(function (a,b) {return a.concat(b)}, []);
+	all_prices = numbers;
+	//all_prices = numbers.reduce(function (a,b) {return a.concat(b)}, []);
 }
 
+
 function get_median_of_prices(){
-	overall_median = d3.median(all_prices)
+	overall_median_price = d3.median(all_prices)
+}
+
+function create_all_ticket_percent_array(){
+	for(var i=0; i < ticket_data.length; i++){
+		for(var j=1; j < quarters_array.length; j++){
+		 	all_ticket_percents.push(Math.round(tickets[ticket_data[i].State][quarters_array[j]] / tickets["US"][quarters_array[j]] * 10000) / 100)
+		}
+	}
+}
+
+function color_scale_based_ticket_quantiles(){
+	
+	color.domain([0, d3.max(all_ticket_percents, function(d){ return d;})])
+		.range(["#fffcf7","rgb(25, 102, 127)"])
+		.interpolate()
 }
 
 function color_scale_based_price_quantiles(){
+	all_prices = numbers;
 	price_quantiles = d3.scale.quantile().domain(all_prices).range([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19])
 
 	color.domain([200, price_quantiles.quantiles()[18]])
@@ -252,6 +282,10 @@ function create_abbreviations_for_states(abbrev, states){
 var ts_inset_path = d3.svg.line()
 	.y(function(d) { return inset_price_scale(+d.value) })
 	.x(function(d) { return inset_time_scale(d.key) })
+
+var ts_ticket_inset_path = d3.svg.line()
+	.y(function(d){ return inset_ticket_scale(+d.value) })
+	.x(function(d){ return inset_time_scale(d.key) })
 	
 function create_inset_time_scale(){
 	inset_time_scale = d3.scale.ordinal().domain(quarters_array).rangePoints([0+ts_left,ts_inset_width - ts_right])
@@ -259,6 +293,10 @@ function create_inset_time_scale(){
 
 function create_inset_price_scale(){
 	inset_price_scale = d3.scale.linear().range([ts_inset_height, 0]).domain([price_min, price_max])
+}
+
+function create_inset_ticket_scale(){
+	inset_ticket_scale = d3.scale.linear().range([ts_inset_height, 0]).domain([ticket_min, ticket_max])
 }
 
 function show_selected_time_marker(abbreviation){
@@ -413,7 +451,7 @@ function attach_text_to_states(states){
 		    })
 			.attr("text-anchor", "middle")
 			.attr("font-size", "10px")
-			.attr("fill", text_fill)
+			.attr("fill", text_price_fill)
 }
 
 function create_label_lines(){
@@ -450,6 +488,7 @@ function initial_draw_map(data){
 	//data = fare_medians_state.csv
 	create_all_prices_array();
 	get_median_of_prices();
+	create_all_ticket_percent_array();
 	color_scale_based_price_quantiles();
 		//.range(["rgb(247,251,255)", "rgb(222,235,247)", "rgb(198,219,239)", "rgb(158,202,225)", "rgb(107,174,214)","rgb(66,146,198)", "rgb(33,113,181)", "rgb(8,81,156)", "rgb(8,48,107)"])
 
@@ -471,6 +510,10 @@ var ts_path = d3.svg.line()
 	.y(function(d) { return price_scale(+d.value) })
 	.x(function(d) { return time_scale(d.key) })
 
+var ts_ticket_path = d3.svg.line()
+	.y(function(d){ return ticket_scale(+d.value) })
+	.x(function(d){ return time_scale(d.key) })
+
 /*
 	all_prices array uses d3.entries(airfares)
 */
@@ -478,13 +521,25 @@ function create_price_scale(states_to_draw){
 	//all_prices: arrays of all values with arrays represented per state and used for price scale
 	all_prices = states_to_draw.map(function(d) { 
 		return d3.values(d.value)
-			.map(function(e) { return +e }) 
+			.map(function(e) {return +e }) 
 	})
 	
 	price_min = d3.min(d3.min(all_prices))
 	price_max = d3.max(d3.max(all_prices))
 
 	price_scale = d3.scale.linear().range([ts_height, 0]).domain([price_min, price_max])
+}
+
+function create_ticket_scale(states_to_draw){
+	all_tickets = states_to_draw.map(function(d) {
+		return d3.values(d.value)
+			.map(function(e) { return +e })
+	})
+	
+	ticket_min = d3.min(d3.min(all_tickets))
+	ticket_max = d3.max(d3.max(all_tickets))
+	
+	ticket_scale = d3.scale.linear().range([ts_height, 0]).domain([ticket_min, ticket_max])
 }
 
 /*
@@ -514,6 +569,18 @@ function create_time_markers(states_to_draw){
 		.attr("r", 3)
 		.attr("cx", function(d) { return time_scale(quarters_array[slider_index]) } )
 		.attr("cy", function(d) { return price_scale(+d.value[quarters_array[slider_index]]) })
+}
+
+function create_ticket_time_markers(states_to_draw){
+	d3.selectAll("circle.time_marker")
+		.attr("cx", function(d) { return time_scale(quarters_array[slider_index]) } )
+		.attr("cy", function(d) { return ticket_scale(+d.value[quarters_array[slider_index]]) } )
+}
+
+function create_price_time_markers(states_to_draw){
+	d3.selectAll("circle.time_marker")
+		.attr("cx", function(d) { return time_scale(quarters_array[slider_index]) } )
+		.attr("cy", function(d) { return price_scale(+d.value[quarters_array[slider_index]]) } )
 }
 
 function create_time_series_paths(){
@@ -570,6 +637,25 @@ function create_time_series_paths(){
 			}
 		})
 }
+
+function create_ticket_time_paths(){
+	time_series_svg.selectAll("path.ts")
+		.attr("d", function(d){
+			return ts_ticket_path(d.value
+				.filter(function(e) { return e.key !== "State"})
+			)
+		})
+}
+
+function create_price_time_paths(){
+	time_series_svg.selectAll("path.ts")
+		.attr("d", function(d){
+			return ts_ticket_path(d.value
+				.filter(function(e) { return e.key !== "State"})
+			)
+		})
+}
+
 /*
 	Draws time series using d3.entries(airfares) with key as state and fare_median_states as values
 	x-axis is the year, path is the prices, y-axis is the states
@@ -583,6 +669,7 @@ function draw_time_series(states_to_draw) {
 	create_time_series_paths();	
 	draw_bars(states_to_draw)
 }
+
 
 function draw_bars(states_to_draw) {
 	var bar_width = 2
@@ -644,49 +731,74 @@ function display_year_and_avg_us_fare(evt, value){
 }
 
 function change_state_color(){
-	d3.selectAll("path.state")
- 		.attr("fill", function(d){
-			if(d.properties.abbreviation === "HI"){
-				return 0;
-			}else{
-				return color(airfares[d.properties.abbreviation][quarters_array[slider_index]]);
-			}
-		})
-		.on("mouseover", mouseover_state)
-		.on("mouseout", mouseout_state)
+	if(fare_clicked){
+		d3.selectAll("path.state")
+	 		.attr("fill", function(d){
+				if(d.properties.abbreviation === "HI"){
+					return 0;
+				}else{
+					return color(airfares[d.properties.abbreviation][quarters_array[slider_index]]);
+				}
+			})
+			.on("mouseover", mouseover_state)
+			.on("mouseout", mouseout_state)
+		
+	}else if(ticket_clicked){
+		d3.selectAll("path.state")
+	 		.attr("fill", function(d){
+				if(d.properties.abbreviation === "HI"){
+					return 0;
+				}else{
+					return color(get_percent(d));
+				}
+			})
+			.on("mouseover", mouseover_state)
+			.on("mouseout", mouseout_state)
+	}else{
+		d3.selectAll("path.state")
+	 		.attr("fill", function(d){
+				if(d.properties.abbreviation === "HI"){
+					return 0;
+				}else{
+					return color(airfares[d.properties.abbreviation][quarters_array[slider_index]]);
+				}
+			})
+			.on("mouseover", mouseover_state)
+			.on("mouseout", mouseout_state)
+	}
 }
 
-function change_text_on_state(data, value){
+function change_text_on_state(){
 	if(fare_clicked){
 		d3.selectAll("text.state")
 			.text(function(d){
-				if(d.properties.abbreviation === "HI" || airfares[d.properties.abbreviation][d3.keys(data[0])[value]] === ""){
+				if(d.properties.abbreviation === "HI" || airfares[d.properties.abbreviation][quarters_array[slider_index]] === ""){
 					return "$" + 0;
 				}else{
-					return "$" + airfares[d.properties.abbreviation][d3.keys(data[0])[value]];
+					return "$" + airfares[d.properties.abbreviation][quarters_array[slider_index]];
 				}
 			})
-			.attr("fill", text_fill)
+			.attr("fill", text_price_fill)
 	}else if(ticket_clicked){
 		d3.selectAll("text.state")
 			.text(function(d){
-				if(d.properties.abbreviation === "HI" || tickets[d.properties.abbreviation][d3.keys(data[0])[value]] === ""){
+				if(d.properties.abbreviation === "HI" || tickets[d.properties.abbreviation][quarters_array[slider_index]] === ""){
 					return 0;
 				}else{
-					return tickets[d.properties.abbreviation][d3.keys(data[0])[value]];
+					return tickets[d.properties.abbreviation][quarters_array[slider_index]];
 				}
 			})
-			.attr("fill", text_fill)
+			.attr("fill", text_ticket_fill)
 	}else{
 		d3.selectAll("text.state")
 			.text(function(d){
-				if(d.properties.abbreviation === "HI" || airfares[d.properties.abbreviation][d3.keys(data[0])[value]] === ""){
+				if(d.properties.abbreviation === "HI" || airfares[d.properties.abbreviation][quarters_array[slider_index]] === ""){
 					return "$" + 0;
 				}else{
-					return "$" + airfares[d.properties.abbreviation][d3.keys(data[0])[value]];
+					return "$" + airfares[d.properties.abbreviation][quarters_array[slider_index]];
 				}
 			})
-			.attr("fill", text_fill)
+			.attr("fill", text_price_fill)
 	}
 }
 
@@ -721,7 +833,7 @@ function create_slider(data){
 		slider_index = value;
 		display_year_and_avg_us_fare(evt,value);
 		change_state_color();
-		change_text_on_state(data, value);
+		change_text_on_state();
 		move_time_marker();
 		highlight_yoy_bar();
 		create_marker_tooltip();	
@@ -789,39 +901,44 @@ function show_no_time_series(){
 	})
 }
 
-function show_text(){ 
-	if(ticket_clicked){
-		d3.selectAll("text.state").text(function(d){
-			if(d.properties.abbreviation === "HI" || tickets[d.properties.abbreviation][quarters_array[slider_index]] === ""){
-				return 0;
-			}else{
-				return tickets[d.properties.abbreviation][quarters_array[slider_index]];
-			}
-		})
-	}else if(fare_clicked){
-		d3.selectAll("text.state").text(function(d){
-			if(d.properties.abbreviation === "HI" || airfares[d.properties.abbreviation][quarters_array[slider_index]] === ""){
-				return "$" + 0;
-			}else{
-				return "$" + airfares[d.properties.abbreviation][quarters_array[slider_index]];
-			}
-		})
-	}
-}
+// function show_text(){ 
+// 	if(ticket_clicked){
+// 		d3.selectAll("text.state").text(function(d){
+// 			if(d.properties.abbreviation === "HI" || tickets[d.properties.abbreviation][quarters_array[slider_index]] === ""){
+// 				return 0;
+// 			}else{
+// 				return tickets[d.properties.abbreviation][quarters_array[slider_index]];
+// 			}
+// 		})
+// 	}else if(fare_clicked){
+// 		d3.selectAll("text.state").text(function(d){
+// 			if(d.properties.abbreviation === "HI" || airfares[d.properties.abbreviation][quarters_array[slider_index]] === ""){
+// 				return "$" + 0;
+// 			}else{
+// 				return "$" + airfares[d.properties.abbreviation][quarters_array[slider_index]];
+// 			}
+// 		})
+// 	}
+// }
 
-function show_ticket_data(){
+
+function show_ticket_data(states_to_draw){
 	d3.select("#tickets").on("click", function(){
 		ticket_clicked = true;
 		fare_clicked = false;
-		show_text();
+		color_scale_based_ticket_quantiles();
+		change_text_on_state();
+		change_state_color();
 	})
 }
 
-function show_fare_data(){
+function show_fare_data(states_to_draw){
 	d3.select("#fares").on("click", function(){
 		fare_clicked = true;
 		ticket_clicked = false;
-		show_text();
+		color_scale_based_price_quantiles();
+		change_text_on_state(); 
+		change_state_color();
 	})
 }
 /*
@@ -847,8 +964,8 @@ q.awaitAll(function(error, results){
 	show_all_time_series();
 	show_weighted_time_series();
 	show_no_time_series();
-	show_ticket_data();
-	show_fare_data();
+	show_ticket_data(d3.entries(tickets));
+	show_fare_data(d3.entries(airfares));
 })
 
 // d3.csv("total_pass_state.csv", function(ticket_data) {
