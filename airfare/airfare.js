@@ -45,9 +45,11 @@ var path = d3.geo.path()
 			
 var color = d3.scale.linear();
 var numbers = [];
+var percents = [];
 var all_ticket_percents = [];
 var airfares = {};
 var tickets = {};
+var ticket_percent = {};
 var yoys = {};
 var column_name ="1993Q1" //quarter to draw initially
 var slider_index = 1;
@@ -62,6 +64,7 @@ var US_row_index = 51;
 var button_clicked;
 var ticket_clicked = false;
 var fare_clicked = false;
+var modifed_ticket_data = [];
 
 var tooltip = d3.select("#interactive_area").append("div").attr("class", "tooltip")
 
@@ -96,17 +99,19 @@ function create_state_marker_tooltip(d){
 }
 
 function create_marker_tooltip(){
-	marker_tooltip.style({
-		left: (parseInt(time_series_svg.select("circle.time_marker.US").attr("cx")) - 50) + "px",
-		top: (parseInt(time_series_svg.select("circle.time_marker.US").attr("cy")) + 400) + "px",
-		opacity: 1
-	})
-	
-	marker_tooltip.html("Avg US Fare: $" 
-		+ Math.round(airfares["US"][quarters_array[slider_index]]) 
-		+ "<br/>(YOY: " 
-		+ Math.round(yoys["US"][quarters_array[slider_index]] * 100) 
-		+ "%)")
+	if(!ticket_clicked){
+		marker_tooltip.style({
+			left: (parseInt(time_series_svg.select("circle.time_marker.US").attr("cx")) - 50) + "px",
+			top: (parseInt(time_series_svg.select("circle.time_marker.US").attr("cy")) + 400) + "px",
+			opacity: 1
+		})
+
+		marker_tooltip.html("Avg US Fare: $" 
+			+ Math.round(airfares["US"][quarters_array[slider_index]]) 
+			+ "<br/>(YOY: " 
+			+ Math.round(yoys["US"][quarters_array[slider_index]] * 100) 
+			+ "%)")
+	}
 }
 
 function create_tooltip(d){
@@ -129,8 +134,16 @@ function create_tooltip(d){
 }
 
 function change_price_text(d){
-	d3.select("#title").html("Median " + d.properties.name + "<br/> airfare: ")
-	d3.select("#price").text("$" + airfares[d.properties.abbreviation][quarters_array[slider_index]])//.html("<h2>Median " + d.properties.name + "<br/> airfare: <br/>$" + airfares[d.properties.abbreviation][quarters_array[slider_index]] + "</h2>")
+	if(fare_clicked){
+		d3.select("#title").html("Median " + d.properties.name + "<br/> airfare: ")
+		d3.select("#price").text("$" + airfares[d.properties.abbreviation][quarters_array[slider_index]])//.html("<h2>Median " + d.properties.name + "<br/> airfare: <br/>$" + airfares[d.properties.abbreviation][quarters_array[slider_index]] + "</h2>")
+	}else if(ticket_clicked){
+		d3.select("#title").html(d.properties.name + " Ticket" + "<br/> volume: ")
+		d3.select("#price").text(tickets[d.properties.abbreviation][quarters_array[slider_index]])//.html("<h2>Median " + d.properties.name + "<br/> airfare: <br/>$" + airfares[d.properties.abbreviation][quarters_array[slider_index]] + "</h2>")
+	}else{
+		d3.select("#title").html("Median " + d.properties.name + "<br/> airfare: ")
+		d3.select("#price").text("$" + airfares[d.properties.abbreviation][quarters_array[slider_index]])//.html("<h2>Median " + d.properties.name + "<br/> airfare: <br/>$" + airfares[d.properties.abbreviation][quarters_array[slider_index]] + "</h2>")
+	}
 }
 
 function highlight_state(state_node, d, i) {
@@ -174,13 +187,31 @@ function unselect_time_series(d){
 	}
 }
 
-function show_text_for_US(d){
-	if(select_states_abbreviation.indexOf(d.properties.abbreviation) === -1 && select_states_abbreviation.length === 0){
-		d3.select("#title").html("Avg US Fare: ")
-		d3.select("#price").text("$" + Math.round(airfares["US"][quarters_array[slider_index]]))//.html("<h2>Avg US Fare: <br/>$" + Math.round(airfares["US"][quarters_array[slider_index]]) + "</h2>")
+function show_text_for_US(){
+	if(fare_clicked){
+		if(select_states_abbreviation.length === 0){
+			d3.select("#title").html("Avg US Fare: ")
+			d3.select("#price").text("$" + Math.round(airfares["US"][quarters_array[slider_index]]))//.html("<h2>Avg US Fare: <br/>$" + Math.round(airfares["US"][quarters_array[slider_index]]) + "</h2>")
+		}else{
+			d3.select("#title").html("Median " + select_states_name[select_states_name.length - 1] + "<br/>" + "airfare:")
+			d3.select("#price").text("$" + airfares[select_states_abbreviation[select_states_abbreviation.length - 1]][quarters_array[slider_index]])//.html("<h2>Median " + select_states_name[select_states_name.length - 1] + "<br/> airfare: <br/>$" + airfares[select_states_abbreviation[select_states_abbreviation.length - 1]][quarters_array[slider_index]] + "</h2>")
+		}
+	}else if(ticket_clicked){
+		if(select_states_abbreviation.length === 0){
+			d3.select("#title").html("Total US Tickets: ")
+			d3.select("#price").text(Math.round(tickets["US"][quarters_array[slider_index]]))//.html("<h2>Avg US Fare: <br/>$" + Math.round(airfares["US"][quarters_array[slider_index]]) + "</h2>")
+		}else{
+			d3.select("#title").html(select_states_name[select_states_name.length - 1] + " Ticket" + "<br/>" + "Volume:")
+			d3.select("#price").text(tickets[select_states_abbreviation[select_states_abbreviation.length - 1]][quarters_array[slider_index]])//.html("<h2>Median " + select_states_name[select_states_name.length - 1] + "<br/> airfare: <br/>$" + airfares[select_states_abbreviation[select_states_abbreviation.length - 1]][quarters_array[slider_index]] + "</h2>")
+		}
 	}else{
-		d3.select("#title").html("Median " + select_states_name[select_states_name.length - 1] + "<br/>" + "airfare:")
-		d3.select("#price").text("$" + airfares[select_states_abbreviation[select_states_abbreviation.length - 1]][quarters_array[slider_index]])//.html("<h2>Median " + select_states_name[select_states_name.length - 1] + "<br/> airfare: <br/>$" + airfares[select_states_abbreviation[select_states_abbreviation.length - 1]][quarters_array[slider_index]] + "</h2>")
+		if(select_states_abbreviation.length === 0){
+			d3.select("#title").text("Avg US Fare:") 
+			d3.select("#price").text("$" + Math.round(airfares["US"][quarters_array[slider_index]]))
+		}else{
+			d3.select("#title").html("Median " + select_states_name[select_states_name.length - 1] + "<br/>airfare:")
+			d3.select("#price").text("$" + airfares[select_states_abbreviation[select_states_abbreviation.length - 1]][quarters_array[slider_index]])
+		}
 	}
 }
 
@@ -190,7 +221,7 @@ function clear_state(state_node, d ,i) {
 	generate_yoy_for_US();
 	unselect_time_series(d);
 	unselect_time_marker(d);
-	show_text_for_US(d);	
+	show_text_for_US();	
 }
 
 function mouseover_state(d,i) {
@@ -246,17 +277,27 @@ function get_median_of_prices(){
 }
 
 function create_all_ticket_percent_array(){
-	for(var i=0; i < ticket_data.length; i++){
-		for(var j=1; j < quarters_array.length; j++){
-		 	all_ticket_percents.push(Math.round(tickets[ticket_data[i].State][quarters_array[j]] / tickets["US"][quarters_array[j]] * 10000) / 100)
-		}
-	}
+	modifed_ticket_data.forEach(function(d) {
+		percents = percents.concat(d3.values(d)
+			.filter(function(d) {
+				return !isNaN(d) && d !== "";
+			}))
+	})
+	
+	percents.sort(function(a,b){ return a - b;})
+	all_ticket_percents = percents;
+	// for(var i=0; i < ticket_data.length; i++){
+	// 		for(var j=1; j < quarters_array.length; j++){
+	// 		 	all_ticket_percents.push(Math.round(tickets[ticket_data[i].State][quarters_array[j]] / tickets["US"][quarters_array[j]] * 10000) / 100)
+	// 		}
+	// 	}
 }
 
 function color_scale_based_ticket_quantiles(){
 	
-	color.domain([0, d3.max(all_ticket_percents, function(d){ return d;})])
-		.range(["#fffcf7","rgb(25, 102, 127)"])
+	color.domain([0, d3.median(all_ticket_percents), d3.max(all_ticket_percents, function(d){ return d;})])
+		//.range(["#fffcf7","rgb(25, 102, 127)"])
+		.range(["#fffcf7", "#6a9ba9", "rgb(25, 102, 127)"])
 		.interpolate()
 }
 
@@ -308,34 +349,91 @@ function show_selected_time_marker(abbreviation){
 	// 	.attr("r", 10)
 	// 	.attr("cx", d3.select(".time_marker." + abbreviation).attr("cx"))
 	// 	.attr("cy", d3.select(".time_marker." + abbreviation).attr("cy"))
-	var selected = d3.entries(airfares).filter(function(d){
-		return d.key === abbreviation;
-	})
-	g.append("circle").attr("class", "inset_time_marker " + abbreviation) 
-	g.select("circle.inset_time_marker." + abbreviation).data(selected)
-			.attr("fill", "#003e5f")
-			.attr("fill-opacity", 1)
-			.attr("r", 3)
-			.attr('cx', function(d) { return inset_time_scale(quarters_array[slider_index]) } )
-			.attr("cy", function(d) { return inset_price_scale(d.value[quarters_array[slider_index]]) })
+	if(fare_clicked){
+		var selected = d3.entries(airfares).filter(function(d){
+			return d.key === abbreviation;
+		})
+		g.append("circle").attr("class", "inset_time_marker " + abbreviation) 
+		g.select("circle.inset_time_marker." + abbreviation).data(selected)
+				.attr("fill", "#003e5f")
+				.attr("fill-opacity", 1)
+				.attr("r", 3)
+				.attr('cx', function(d) { return inset_time_scale(quarters_array[slider_index]) } )
+				.attr("cy", function(d) { return inset_price_scale(d.value[quarters_array[slider_index]]) })
+	}else if(ticket_clicked){
+		var selected = d3.entries(ticket_percent).filter(function(d){
+			return d.key === abbreviation;
+		})
+		g.append("circle").attr("class", "inset_time_marker " + abbreviation) 
+		g.select("circle.inset_time_marker." + abbreviation).data(selected)
+				.attr("fill", "#003e5f")
+				.attr("fill-opacity", 1)
+				.attr("r", 3)
+				.attr('cx', function(d) { return inset_time_scale(quarters_array[slider_index]) } )
+				.attr("cy", function(d) { return inset_ticket_scale(d.value[quarters_array[slider_index]]) })
+	}else{
+		var selected = d3.entries(airfares).filter(function(d){
+			return d.key === abbreviation;
+		})
+		g.append("circle").attr("class", "inset_time_marker " + abbreviation) 
+		g.select("circle.inset_time_marker." + abbreviation).data(selected)
+				.attr("fill", "#003e5f")
+				.attr("fill-opacity", 1)
+				.attr("r", 3)
+				.attr('cx', function(d) { return inset_time_scale(quarters_array[slider_index]) } )
+				.attr("cy", function(d) { return inset_price_scale(d.value[quarters_array[slider_index]]) })
+	}
 }
 
 function show_selected_time_series(abbreviation){
- 	time_inset = d3.select(".inset." + abbreviation).append("svg").attr("class","inset_time " + abbreviation).attr({width: ts_inset_width, height: ts_inset_height})
+ 	time_inset = d3.select(".inset." + abbreviation).append("svg").attr("class","inset_time " + abbreviation).attr({width: ts_inset_width, height: 107})
 	g = time_inset.append("g")
 	//var path_inset = d3.select("path.ts." + abbreviation).attr("d")
-	var selected = states_paths.filter(function(d){
-		return d.key === abbreviation;
-	})
-	g.append("path").attr("class", "path_inset " + abbreviation)
-	g.select("path.path_inset." + abbreviation).data(selected).attr("d", function(d) { 
-		return ts_inset_path(d.value
-					.filter(function(e) { return e.key !== "State"})
-				) 
-	}) 
-	.attr("stroke", "#003e5f")
-	.attr("stroke-opacity",1)
-	.attr("fill", "none")
+	if(fare_clicked){
+		var selected = states_paths.filter(function(d){
+			return d.key === abbreviation;
+		})
+		g.append("path").attr("class", "path_inset " + abbreviation)
+		g.select("path.path_inset." + abbreviation).data(selected).attr("d", function(d) { 
+			return ts_inset_path(d.value
+						.filter(function(e) { return e.key !== "State"})
+					) 
+		}) 
+		.attr("stroke", "#003e5f")
+		.attr("stroke-opacity",1)
+		.attr("fill", "none")
+	}else if(ticket_clicked){
+		var selected = ticket_paths.filter(function(d){
+			return d.key === abbreviation;
+		})
+		g.append("path").attr("class", "path_inset " + abbreviation)
+		g.select("path.path_inset." + abbreviation).data(selected).attr("d", function(d) { 
+			return ts_ticket_inset_path(d.value
+						.filter(function(e) { return e.key !== "State"})
+					) 
+		}) 
+		.attr("stroke", "#003e5f")
+		.attr("stroke-opacity",1)
+		.attr("fill", "none")
+		if(abbreviation === "CA"){
+			time_inset.style("top", "51px")
+		}else{
+			time_inset.style("top", "-9px")
+		}
+	}else{
+		var selected = states_paths.filter(function(d){
+			return d.key === abbreviation;
+		})
+		g.append("path").attr("class", "path_inset " + abbreviation)
+		g.select("path.path_inset." + abbreviation).data(selected).attr("d", function(d) { 
+			return ts_inset_path(d.value
+						.filter(function(e) { return e.key !== "State"})
+					) 
+		}) 
+		.attr("stroke", "#003e5f")
+		.attr("stroke-opacity",1)
+		.attr("fill", "none")
+	}
 	// var scale = 0.2
 	// 	var translate = [145,60]
 	// 	g.call(zoom.translate(translate).scale(scale).event)
@@ -363,9 +461,39 @@ function show_selected(abbreviation, state){
 	g.call(zoom.translate(translate).scale(scale).event)
 }
 
-function selected_text(state){
+function selected_text(state){	
 	d3.select(".inset." + state.properties.abbreviation).append("h4").attr("class", "state_name " + state.properties.abbreviation).text(state.properties.name).style({"position":"absolute", "left":"10px", "top":"70px"})
-	d3.select(".inset." + state.properties.abbreviation).append("h4").attr("class", "price " + state.properties.abbreviation).text("$" + airfares[state.properties.abbreviation][column_name]).style({"position":"absolute", "left":"250px", "top":"80px"})
+	if(fare_clicked){
+		var selected = d3.entries(airfares).filter(function(d){
+			return d.key === state.properties.abbreviation;
+		})
+		d3.select(".inset." + state.properties.abbreviation)
+			.data(selected)
+			.append("h4")
+			.attr("class", "label " + state.properties.abbreviation)
+			.text(function(d){ return "$" + d.value[quarters_array[slider_index]]; })
+			.style({"position":"absolute", "left":"250px", "top":"99px"})
+	}else if(ticket_clicked){
+		var selected = d3.entries(ticket_percent).filter(function(d){
+			return d.key === state.properties.abbreviation;
+		})
+		d3.select(".inset." + state.properties.abbreviation)
+			.data(selected)
+			.append("h4")
+			.attr("class", "label " + state.properties.abbreviation)
+			.text(function(d){ return d.value[quarters_array[slider_index]] + "%"; })
+			.style({"position":"absolute", "left":"250px", "top":"99px"})
+	}else{
+		var selected = d3.entries(airfares).filter(function(d){
+			return d.key === state.properties.abbreviation;
+		})
+		d3.select(".inset." + state.properties.abbreviation)
+			.data(selected)
+			.append("h4")
+			.attr("class", "label " + state.properties.abbreviation)
+			.text(function(d){ return "$" + d.value[quarters_array[slider_index]]; })
+			.style({"position":"absolute", "left":"250px", "top":"99px"})
+	}
 }
 
 function remove_selected(abbreviation){
@@ -533,25 +661,26 @@ function create_price_scale(states_to_draw){
 function create_ticket_scale(states_to_draw){
 	all_tickets = states_to_draw.map(function(d) {
 		return d3.values(d.value)
-			.map(function(e) { return +e })
+			.map(function(e, i) { return +e;/*+e !== NaN && i !== 0  ? Math.round(+e/tickets["US"][quarters_array[i]] * 10000) / 100 : NaN;*/})
 	})
 	
+	//all_tickets = all_tickets.splice(0,51)
 	ticket_min = d3.min(d3.min(all_tickets))
 	ticket_max = d3.max(d3.max(all_tickets))
 	
-	ticket_scale = d3.scale.linear().range([ts_height, 0]).domain([ticket_min, ticket_max])
+	ticket_scale = d3.scale.linear().range([ts_height * 0.40, 0]).domain([ticket_min, ticket_max])
 }
 
 /*
 	Generates time series paths for each state in an array
 */
 
-function generate_state_paths_array(states_to_draw){
+function generate_state_paths_array(states_to_draw, tickets_to_draw){
 	//states_paths = key is state, value is array of objects with key as "title" and value as "price"
-	console.log(states_to_draw)
 	var US_total_tickets = d3.sum(d3.values(ticket_data[US_row_index]))
 	states_to_draw.splice(51,1)
 	states_paths = states_to_draw.map(function(d, i) { return {key: d.key, value: d3.entries(d.value), percent: (d3.sum(d3.values(ticket_data[i]))/US_total_tickets) }})
+	ticket_paths = tickets_to_draw.map(function(d, i) { return {key: d.key, value: d3.entries(d.value), percent: (d3.sum(d3.values(ticket_data[i]))/US_total_tickets) }})
 }
 
 /*
@@ -571,14 +700,16 @@ function create_time_markers(states_to_draw){
 		.attr("cy", function(d) { return price_scale(+d.value[quarters_array[slider_index]]) })
 }
 
-function create_ticket_time_markers(states_to_draw){
-	d3.selectAll("circle.time_marker")
+function create_ticket_time_markers(tickets_to_draw){
+	time_series_svg.selectAll("circle.time_marker")
+		.data(tickets_to_draw)
 		.attr("cx", function(d) { return time_scale(quarters_array[slider_index]) } )
 		.attr("cy", function(d) { return ticket_scale(+d.value[quarters_array[slider_index]]) } )
 }
 
 function create_price_time_markers(states_to_draw){
-	d3.selectAll("circle.time_marker")
+	time_series_svg.selectAll("circle.time_marker")
+		.data(states_to_draw)
 		.attr("cx", function(d) { return time_scale(quarters_array[slider_index]) } )
 		.attr("cy", function(d) { return price_scale(+d.value[quarters_array[slider_index]]) } )
 }
@@ -640,6 +771,7 @@ function create_time_series_paths(){
 
 function create_ticket_time_paths(){
 	time_series_svg.selectAll("path.ts")
+		.data(ticket_paths)
 		.attr("d", function(d){
 			return ts_ticket_path(d.value
 				.filter(function(e) { return e.key !== "State"})
@@ -649,8 +781,9 @@ function create_ticket_time_paths(){
 
 function create_price_time_paths(){
 	time_series_svg.selectAll("path.ts")
+		.data(states_paths)
 		.attr("d", function(d){
-			return ts_ticket_path(d.value
+			return ts_path(d.value
 				.filter(function(e) { return e.key !== "State"})
 			)
 		})
@@ -660,11 +793,13 @@ function create_price_time_paths(){
 	Draws time series using d3.entries(airfares) with key as state and fare_median_states as values
 	x-axis is the year, path is the prices, y-axis is the states
 */
-function draw_time_series(states_to_draw) {
+function draw_time_series(states_to_draw, tickets_to_draw) {
 	//states_to_draw = d3.entries(airfares)
 	create_price_scale(states_to_draw);
+	create_ticket_scale(tickets_to_draw);
 	create_inset_price_scale();
-	generate_state_paths_array(states_to_draw);
+	create_inset_ticket_scale();
+	generate_state_paths_array(states_to_draw, tickets_to_draw);
 	create_time_markers(states_to_draw);
 	create_time_series_paths();	
 	draw_bars(states_to_draw)
@@ -703,6 +838,7 @@ function match_states_with_tickets(ticket_data){
 	ticket_data.forEach(function(d) { tickets[d.State] = d });
 }
 
+
 //match total_pass_state using "yoys" object
 function match_states_with_yoy(yoy_data){
 	yoy_data.forEach(function(d) { yoys[d.State] = d });
@@ -718,12 +854,30 @@ function display_year_and_avg_us_fare(evt, value){
 	var text = d3.select(".d3-slider-handle").style("bottom").split("px");
 	//console.log(text)
 	d3.select("#slider h3.year").text(quarters_array[value]).style("bottom", (parseInt(text[0]) - 12) + "px");
-	if(select_states_abbreviation.length === 0){
-		d3.select("#title").text("Avg US Fare:") 
-		d3.select("#price").text("$" + Math.round(airfares["US"][quarters_array[slider_index]]))
+	if(fare_clicked){
+		if(select_states_abbreviation.length === 0){
+			d3.select("#title").text("Avg US Fare:") 
+			d3.select("#price").text("$" + Math.round(airfares["US"][quarters_array[slider_index]]))
+		}else{
+			d3.select("#title").html("Median " + select_states_name[select_states_name.length - 1] + "<br/>airfare:")
+			d3.select("#price").text("$" + airfares[select_states_abbreviation[select_states_abbreviation.length - 1]][quarters_array[slider_index]])
+		}
+	}else if(ticket_clicked){
+		if(select_states_abbreviation.length === 0){
+			d3.select("#title").text("Total US Tickets:") 
+			d3.select("#price").text(Math.round(tickets["US"][quarters_array[slider_index]]))
+		}else{
+			d3.select("#title").html(select_states_name[select_states_name.length - 1] + " Ticket" + "<br/>Volume:")
+			d3.select("#price").text(tickets[select_states_abbreviation[select_states_abbreviation.length - 1]][quarters_array[slider_index]])
+		}
 	}else{
-		d3.select("#title").html("Median " + select_states_abbreviation[select_states_abbreviation.length - 1] + "<br/>airfare:")
-		d3.select("#price").text("$" + airfares[select_states_abbreviation[select_states_abbreviation.length - 1]][quarters_array[slider_index]])
+		if(select_states_abbreviation.length === 0){
+			d3.select("#title").text("Avg US Fare:") 
+			d3.select("#price").text("$" + Math.round(airfares["US"][quarters_array[slider_index]]))
+		}else{
+			d3.select("#title").html("Median " + select_states_name[select_states_name.length - 1] + "<br/>airfare:")
+			d3.select("#price").text("$" + airfares[select_states_abbreviation[select_states_abbreviation.length - 1]][quarters_array[slider_index]])
+		}
 	}
 		// + "<br/> (YOY: " 
 		// + Math.round(yoys["US"][quarters_array[slider_index]] * 100) 
@@ -749,7 +903,7 @@ function change_state_color(){
 				if(d.properties.abbreviation === "HI"){
 					return 0;
 				}else{
-					return color(get_percent(d));
+					return color(ticket_percent[d.properties.abbreviation][quarters_array[slider_index]]);
 				}
 			})
 			.on("mouseover", mouseover_state)
@@ -803,15 +957,48 @@ function change_text_on_state(){
 }
 
 function move_selected_time_marker(){
-	d3.selectAll("circle.inset_time_marker")
-		.attr("cx", function(d) { return inset_time_scale(quarters_array[slider_index]) })
-		.attr("cy", function(d) { return inset_price_scale(d.value[quarters_array[slider_index]]) })
+	if(fare_clicked){
+		d3.selectAll("circle.inset_time_marker")
+			.attr("cx", function(d) { return inset_time_scale(quarters_array[slider_index]) })
+			.attr("cy", function(d) { return inset_price_scale(d.value[quarters_array[slider_index]]) })
+	}else if(ticket_clicked){
+		d3.selectAll("circle.inset_time_marker")
+			.attr("cx", function(d) { return inset_time_scale(quarters_array[slider_index]) })
+			.attr("cy", function(d) { return inset_ticket_scale(d.value[quarters_array[slider_index]]) })
+	}else{
+		d3.selectAll("circle.inset_time_marker")
+			.attr("cx", function(d) { return inset_time_scale(quarters_array[slider_index]) })
+			.attr("cy", function(d) { return inset_price_scale(d.value[quarters_array[slider_index]]) })
+	}
+}
+
+function change_text_label(){
+	if(fare_clicked){
+		d3.selectAll("h4.label")
+			.text(function(d){ return "$" + d.value[quarters_array[slider_index]];})
+	}else if(ticket_clicked){
+		d3.selectAll("h4.label")
+			.text(function(d){ return d.value[quarters_array[slider_index]] + "%";})
+	}else{
+		d3.selectAll("h4.label")
+			.text(function(d){ return "$" + d.value[quarters_array[slider_index]];})
+	}
 }
 
 function move_time_marker(){
-	time_series_svg.selectAll("circle.time_marker")
-		.attr("cx", function(d) { return time_scale(quarters_array[slider_index]) } )
-		.attr("cy", function(d) { return price_scale(+d.value[quarters_array[slider_index]]) })
+	if(fare_clicked){
+		time_series_svg.selectAll("circle.time_marker")
+			.attr("cx", function(d) { return time_scale(quarters_array[slider_index]) } )
+			.attr("cy", function(d) { return price_scale(+d.value[quarters_array[slider_index]]) })
+	}else if(ticket_clicked){
+		time_series_svg.selectAll("circle.time_marker")
+			.attr("cx", function(d) { return time_scale(quarters_array[slider_index]) } )
+			.attr("cy", function(d) { return ticket_scale(+d.value[quarters_array[slider_index]]) })
+	}else{
+		time_series_svg.selectAll("circle.time_marker")
+			.attr("cx", function(d) { return time_scale(quarters_array[slider_index]) } )
+			.attr("cy", function(d) { return price_scale(+d.value[quarters_array[slider_index]]) })
+	}
 		
 }
 
@@ -826,7 +1013,9 @@ function hide_marker_tooltip(){
 	})
 }
 
+
 function create_slider(data){
+	console.log(data)
 	slider = d3.select("#container").append("div").attr("class", "slider")	
 	slider.call(d3.slider().min(1).max(quarters_array.length-1).value(1).step(1).orientation("vertical").on("slide", function(evt,value){
 		//console.log(evt.y)
@@ -839,6 +1028,7 @@ function create_slider(data){
 		create_marker_tooltip();	
 		hide_marker_tooltip();
 		move_selected_time_marker();
+		change_text_label();
 	}))
 }
 
@@ -921,24 +1111,188 @@ function show_no_time_series(){
 // 	}
 // }
 
+function calculate_ticket_percentage_array(ticket_data){
+	ticket_data.forEach(function(d, i){
+		var obj = {}
+		d3.keys(d).forEach(function(e){
+			obj[e] = e !== "State" ? Math.round(+d[e] / tickets["US"][e] * 10000) / 100 : d[e]; 
+		})
+		modifed_ticket_data.push(obj)
+	})
+	
+	modifed_ticket_data.forEach(function(d){
+		ticket_percent[d.State] = d;
+	})
+}
 
-function show_ticket_data(states_to_draw){
+function correct_time_series(){
+	// if(fare_clicked){
+	// 	for(var  i = 0; i < select_states_abbreviation.length; i++){
+	// 		var selected = states_paths.filter(function(d){
+	// 			return d.key === select_states_abbreviation[i];
+	// 		})
+	// 		var selection = g.select("path.path_inset." + select_states_abbreviation[i]).data(selected).attr("d", function(d) { 
+	// 			return ts_inset_path(d.value
+	// 						.filter(function(e) { return e.key !== "State"})
+	// 					) 
+	// 		})
+	// 		console.log(selection)
+	// 		time_inset.style("top", "34px")
+	// 	}
+	// }else if(ticket_clicked){
+	// 	for(var  i = 0; i < select_states_abbreviation.length; i++){
+	// 		var selected = ticket_paths.filter(function(d){
+	// 			return d.key === select_states_abbreviation[i];
+	// 		})
+	// 		console.log(select_states_abbreviation[i])
+	// 		var selection = g.select("path.path_inset." + select_states_abbreviation[i]).data(selected).attr("d", function(d) { 
+	// 			return ts_ticket_inset_path(d.value
+	// 				.filter(function(e) { return e.key !== "State"})
+	// 			) 
+	// 		})
+	// 		console.log(selection)
+	// 		if(select_states_abbreviation[i] === "CA"){
+	// 			time_inset.style("top", "51px")
+	// 		}else{
+	// 			time_inset.style("top", "-9px")
+	// 		}
+	// 	}
+	// }
+	if(ticket_clicked){
+		var selected = [];
+		ticket_paths.forEach(function(d){
+			if(select_states_abbreviation.indexOf(d.key) !== -1){
+				selected[select_states_abbreviation.indexOf(d.key)] = d;
+			}
+		})
+		
+		d3.selectAll("path.path_inset").data(selected).attr("d", function(d){
+			console.log(d)
+				return ts_ticket_inset_path(d.value
+					.filter(function(e) { return e.key !== "State"})
+				)
+		})
+		
+		d3.selectAll(".inset_time").style("top", "-9px")
+		if(select_states_abbreviation[select_states_abbreviation.indexOf("CA")] === "CA"){
+			d3.select(".inset_time.CA").style("top", "51px")
+		}
+	}else if(fare_clicked){
+		var selected = [];
+		states_paths.forEach(function(d){
+			if(select_states_abbreviation.indexOf(d.key) !== -1){
+				selected[select_states_abbreviation.indexOf(d.key)] = d;
+			}
+		})
+		
+		d3.selectAll("path.path_inset").data(selected).attr("d", function(d){
+			console.log(d)
+				return ts_inset_path(d.value
+					.filter(function(e) { return e.key !== "State"})
+				)
+		})
+		d3.selectAll(".inset_time").style("top", "34px")
+	}
+}
+
+function correct_time_markers(){
+	if(ticket_clicked){
+		var selected = [];
+		d3.entries(ticket_percent).forEach(function(d){
+			if(select_states_abbreviation.indexOf(d.key) !== -1){
+				selected[select_states_abbreviation.indexOf(d.key)] = d;
+			}
+		})
+		
+		d3.selectAll("circle.inset_time_marker")
+			.data(selected)
+			.attr("cx", function(d) { return inset_time_scale(quarters_array[slider_index]) })
+			.attr("cy", function(d) { return inset_ticket_scale(d.value[quarters_array[slider_index]])})
+		
+		// d3.selectAll(".inset_time").style("top", "-9px")
+		// if(select_states_abbreviation[select_states_abbreviation.indexOf("CA")] === "CA"){
+		// 	d3.select(".inset_time.CA").style("top", "51px")
+		// }
+	}else if(fare_clicked){
+		var selected = [];
+		d3.entries(airfares).forEach(function(d){
+			if(select_states_abbreviation.indexOf(d.key) !== -1){
+				selected[select_states_abbreviation.indexOf(d.key)] = d;
+			}
+		})
+		
+		d3.selectAll("circle.inset_time_marker")
+			.data(selected)
+			.attr("cx", function(d) { return inset_time_scale(quarters_array[slider_index]) })
+			.attr("cy", function(d) { return inset_price_scale(d.value[quarters_array[slider_index]]) })
+			
+		//d3.selectAll(".inset_time").style("top", "34px")
+	}
+}
+
+function correct_labels(){
+	if(ticket_clicked){
+		var selected = [];
+		d3.entries(ticket_percent).forEach(function(d){
+			if(select_states_abbreviation.indexOf(d.key) !== -1){
+				selected[select_states_abbreviation.indexOf(d.key)] = d;
+			}
+		})
+		
+		d3.selectAll("h4.label")
+			.data(selected)
+			.text(function(d){return d.value[quarters_array[slider_index]] + "%"})
+		
+		// d3.selectAll(".inset_time").style("top", "-9px")
+		// if(select_states_abbreviation[select_states_abbreviation.indexOf("CA")] === "CA"){
+		// 	d3.select(".inset_time.CA").style("top", "51px")
+		// }
+	}else if(fare_clicked){
+		var selected = [];
+		d3.entries(airfares).forEach(function(d){
+			if(select_states_abbreviation.indexOf(d.key) !== -1){
+				selected[select_states_abbreviation.indexOf(d.key)] = d;
+			}
+		})
+		
+		d3.selectAll("h4.label")
+			.data(selected)
+			.text(function(d){return "$" + d.value[quarters_array[slider_index]]})
+			
+		//d3.selectAll(".inset_time").style("top", "34px")
+	}
+}
+
+function show_ticket_data(tickets_to_draw){
 	d3.select("#tickets").on("click", function(){
 		ticket_clicked = true;
 		fare_clicked = false;
 		color_scale_based_ticket_quantiles();
 		change_text_on_state();
 		change_state_color();
+		create_ticket_time_markers(tickets_to_draw);
+		create_ticket_time_paths();
+		show_text_for_US();
+		correct_time_series();
+		correct_time_markers();
+		correct_labels();
 	})
 }
 
 function show_fare_data(states_to_draw){
+	states_to_draw.splice(51,1)
 	d3.select("#fares").on("click", function(){
 		fare_clicked = true;
 		ticket_clicked = false;
 		color_scale_based_price_quantiles();
 		change_text_on_state(); 
 		change_state_color();
+		create_price_time_markers(states_to_draw);
+		create_price_time_paths();
+		show_text_for_US();
+		correct_time_series();
+		correct_time_markers();
+		correct_labels();
 	})
 }
 /*
@@ -955,16 +1309,17 @@ q.awaitAll(function(error, results){
 	yoy_data = results[1];
 	match_states_with_prices(results[2]);
 	match_states_with_tickets(ticket_data);
+	calculate_ticket_percentage_array(ticket_data)
 	match_states_with_yoy(yoy_data)
 	create_time_scale(results[2]);
 	create_inset_time_scale();
 	initial_draw_map(results[2]);
-	draw_time_series(d3.entries(airfares));
+	draw_time_series(d3.entries(airfares), d3.entries(ticket_percent));
 	create_slider(results[2]); 
 	show_all_time_series();
 	show_weighted_time_series();
 	show_no_time_series();
-	show_ticket_data(d3.entries(tickets));
+	show_ticket_data(d3.entries(ticket_percent));
 	show_fare_data(d3.entries(airfares));
 })
 
