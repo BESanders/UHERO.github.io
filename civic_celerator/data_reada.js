@@ -141,12 +141,15 @@ function get_pack_sizes(svg, r_scale, contributor_types) {
 		
 	pack_sizes = contributor_types.map(function(contributor_type) {
 		return candidate_data.map(function(d) { 
+			console.log(d.value)
 			return contribution_pack
-			.nodes({"children" : d.value.filter(function(e) { return e.contributor_type === contributor_type })}) 
+			.nodes({"children" : d.value.filter(function(e) { return e.contributor_type === contributor_type[1] })}) 
 			.filter(function (e) {return e.depth === 0})[0].r
 		}) 
 	})
 	
+	console.log("Pack Sizes")
+	console.log(pack_sizes)
 	var col_widths = pack_sizes.map( function(d) { 
 		var min_width = d3.max(d) * 2
 		if (min_width === 0) return 0
@@ -161,18 +164,19 @@ function get_pack_sizes(svg, r_scale, contributor_types) {
 
 }
 
-function pack_contribution_group(svgs, contributor_type, offset, r_scale, row_heights, col_width) {
+function pack_contribution_group(svgs, contributor_type, contributor_code, offset, r_scale, row_heights, col_width) {
 
 	contribution_pack = d3.layout.pack()
 		//.size([200, 100])
 		.value(function(d) { return d.amount })
 		.radius(function(d) { return r_scale(d) / 2 })
 		
-	contributions = svgs.selectAll("." + class_ify(contributor_type))
+	contributions = svgs.selectAll("." + class_ify(contributor_code))
 		.data(function(d, i) { 
 			contribution_pack.size([col_width, row_heights[i] ])
+			console.log(contribution_pack.size())
 			contributor_type_node_array = contribution_pack
-				.nodes({"children" : d.value.filter(function(e) { return e.contributor_type === contributor_type })}) 
+				.nodes({"children" : d.value.filter(function(e) { return e.contributor_type === contributor_code })}) 
 				.filter(function (e) {return !e.children && e.depth > 0})	
 				
 			return contributor_type_node_array;
@@ -181,7 +185,7 @@ function pack_contribution_group(svgs, contributor_type, offset, r_scale, row_he
  	contributions
 		.enter()
 		.append("circle")
-		.attr("class", "contribution " + class_ify(contributor_type))
+		.attr("class", "contribution " + class_ify(contributor_code))
 		
 	contributions
 		.transition()
@@ -190,13 +194,13 @@ function pack_contribution_group(svgs, contributor_type, offset, r_scale, row_he
 		.attr("cx", function(d) { return d.x + offset})
 		.attr("cy", function(d) { return d.y })
 		
-	type_label = svgs.selectAll("text.type_" + class_ify(contributor_type))
+	type_label = svgs.selectAll("text.type_" + class_ify(contributor_code))
 		.data(function(d,i) {return [i]})
 		
 	type_label
 		.enter()
 		.append("text")
-		.attr("class", "contribution_type type_" + class_ify(contributor_type))
+		.attr("class", "contribution_type type_" + class_ify(contributor_code))
 		.attr("x", col_width / 2+offset)
 		.attr("y", function(d,i) { return row_heights[d] })
 		.attr("fill-opacity", 0)
@@ -212,25 +216,27 @@ function pack_contribution_group(svgs, contributor_type, offset, r_scale, row_he
 }
 
 function show_candidate_contribution_groupings(svgs) {
+
 	clear_timeline_context(svgs)
 	r_scale = bubble_scale;
-	contributor_types = ["Candidate", "Immediate Family", "Individual", "Noncandidate Committee", "Other Entity", "Political Party"  ]
+	contributor_types = [["Candidate", "CAN"], ["Immediate Family", "IMM"], ["Individual", "IND"], ["Noncandidate Committee", "NCC"], ["Other Entity","OTH"], ["Political Party","PP"]  ]
 	
+
 	ps = get_pack_sizes(svgs, r_scale, contributor_types)
+	console.log(ps)
 	var baseline = 0
 	v_offsets = ps.row_heights.map(function(d) {
 		var offset = baseline
 		baseline = d + baseline;
 		return offset;
 	})
-	
 	baseline = 150
 	h_offsets = ps.col_widths.map(function(d) {
 		var offset = baseline
 		baseline = d + baseline;
 		return offset;
 	})
-
+	console.log(h_offsets)
 	d3.select("#svgs svg")
 		.transition()
 		.duration(1000)
@@ -245,7 +251,9 @@ function show_candidate_contribution_groupings(svgs) {
 		.on("mouseover", update_readout_for_type)
 	
 	contributor_types.forEach(function(contributor_type, i) {
-		pack_contribution_group(svgs, contributor_type, h_offsets[i], r_scale, ps.row_heights, ps.col_widths[i])
+		console.log(contributor_type)
+		console.log(ps.col_widths[i])
+		pack_contribution_group(svgs, contributor_type[0], contributor_type[1], h_offsets[i], r_scale, ps.row_heights, ps.col_widths[i])
 	})
 
 }
