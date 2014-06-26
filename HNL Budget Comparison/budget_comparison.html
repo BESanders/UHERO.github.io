@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Honolulu City Budget Comparison</title>
+<style title="sankey_style">
+	@import url(style.css);
+	#budget1, #budget2 { width: 40%; margin-right:4%; float:left; border:1px solid gray; padding:10px;}
+	#differences {border: 1px solid gray;}
+	
+	#headers { position:relative; height: 45px; }
+	#label_header,
+	#main_budget_header,  #comparison_budget_header, #vs 
+	{position:absolute; text-align:center; cursor:pointer }
+	
+	#main_budget_header,  #comparison_budget_header {
+		height:60px;
+		top:-25px;
+	}
+
+	#main_budget_header h2,  #comparison_budget_header h2 { 
+		position:absolute;
+		bottom:0px;
+	}
+	
+	#label_header {left:0px;}
+	#viz { border: 1px solid #DDD}
+	#position_container { position:relative; margin-top:40px;}
+	
+	.arrow_box { position: relative; background: #EEE; border: 1px solid #999; } .arrow_box:after, .arrow_box:before { top: 100%; left: 50%; border: solid transparent; content: " "; height: 0; width: 0; position: absolute; pointer-events: none; } .arrow_box:after { border-color: rgba(238, 238, 238, 0); border-top-color: #EEE; border-width: 10px; margin-left: -10px; } .arrow_box:before { border-color: rgba(153, 153, 153, 0); border-top-color: #999; border-width: 11px; margin-left: -11px; }
+
+	#main_budget_selector, 
+	#comparison_budget_selector { 
+		position: absolute; border: 
+		1px solid #999; 
+		background-color: #EEE; 
+		padding:10px;
+		bottom:55px;
+		width:250px;
+		left:-50px;
+		display:none;
+	}
+
+	#main_budget_selector ul, 
+	#comparison_budget_selector ul { 
+		padding: 0px; margin:0
+	}
+	 
+	#main_budget_selector li, 
+	#comparison_budget_selector li { 
+		text-align:left; 
+		float:left;  
+		width: 240px; 
+		font-size: 12px; 
+		/*margin-left:10px;*/
+		list-style-type:none;
+	}
+	#view_selector h3 { float:left; font-size:14px; width: 180px; border-right: 1px solid gray; text-align:center;}
+	#view_selector a:hover { color:red;}
+	
+	h2 {margin:0; font-size:18px;}
+	h1 {padding-top:30px}
+</style>
+
+
+<script src="d3.v2.min.js"></script>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.svg.js"></script>
+
+<body>
+
+<h1>Honolulu City Budget Comparison</h1>
+<div id="position_container">
+<div id="headers">
+	<div id="label_header">Dept</div>
+	<div id="main_budget_header" class="header">
+		<h2>Budget 1</h2>
+		<div id="main_budget_selector" class="selector arrow_box"></div>
+	</div>
+	<div id="vs">vs</div>
+	<div id="comparison_budget_header" class="header">
+		<h2>Budget 2</h2>
+		<div id="comparison_budget_selector" class="selector arrow_box"></div>
+	</div>
+</div>
+<div id="viz"></div>
+<div id="view_selector"></div>
+</div>
+
+
+
+<script>
+
+var svg
+var main_budget
+var comparison_budget
+var data13, data14;
+var all_keys = {}
+var master_budgets = {}
+var height = 400,
+ 	width = 800,
+	margin_top = 10,
+	margin_bottom = 10;
+var label_adjustment = 50;
+var view_styles = ["Show Budget Amounts", "Show Diffs in $", "Show Diffs in %"]
+var view_style = view_styles[0];
+var x1 = 150
+var x_pos = { 
+				label_end: x1,
+				//label_header: x1 / 2,
+				main_budget: (width-x1) / 4 + x1,
+				center: (width-x1) / 2 + x1,
+				main_budget_boundary: (width-x1) / 8 * 3 + x1,
+				comparison_budget: (width-x1) / 4 * 3 + x1,
+				comparison_budget_boundary: (width-x1) / 8 * 7 + x1,
+			}
+
+var font_size = 10;
+var category = "Department Name";
+var initial_budget = "Rick Carlisle 2013 Proposed Budget";
+var initial_comp_budget = "City Council 2013 Approved Budget"
+var cat_scale = d3.scale.ordinal().rangePoints([margin_top,height-margin_bottom])
+var dollar_scale = d3.scale.linear().range([0, x_pos.comparison_budget_boundary - x_pos.label_end - label_adjustment])
+var perc_scale = d3.scale.linear().range([0, x_pos.comparison_budget_boundary - x_pos.center]).domain([0, 50])
+var font_size = 10;
+
+
+
+
+function sum_column(leaves, column) {
+	return leaves ? d3.sum(leaves, function(d) { return d[column]}) : 0
+}
+
+function aggregate_these_columns(category, column_hash, data_file) {
+	if (!master_budgets[category]) master_budgets[category] = {}
+	d3.entries(column_hash).forEach(function(d) {
+		master_budgets[category][d.key] = d3.nest()
+			.key(function(e) { return e[category] })
+			.rollup(function(leaves) { return d3.sum(leaves.map( function(e) { return e[d.value] })) })
+			.map(data_file)
+	})
+	
+}
+function set_all_keys_from_master_data(category) {
+	all_keys[category] = {}
+	d3.values(master_budgets[category]).forEach(function(budget) {
+		d3.entries(budget).forEach(function(cat_item) {
+			if (all_keys[category][cat_item.key])
+				all_keys[category][cat_item.key] += parseFloat(cat_item.value)
+			else
+				all_keys[category][cat_item.key] = parseFloat(cat_item.value)
+		})	
+	})	
+}
+function set_up_master_data() {
+	["Department Name", "Division Name", "Fund Name", "Object Name"].forEach(function(category) {
+
+		//separate into actuals, budgets, and proposed?
+		aggregate_these_columns( category, {
+			"Fiscal 2010 Actual": "FY 2010 Actual", 
+			"Rick Carlisle 2011 Expenditures": "FY 2011 Actual" , 
+			"City Council 2012 Approved Budget": "FY 2012 Budget", 
+			"Rick Carlisle 2013 Proposed Budget": "FY 2013 Proposed Budget"}, data13)
+	
+		aggregate_these_columns( category, {
+			"Rick Carlisle 2012 Expenditures": "FY 2011 Actual" , 
+			"City Council 2013 Approved Budget": "FY 2012 Budget", 
+			"Kirk Caldwell 2014 Proposed Budget": "FY 2013 Proposed Budget"}, data14)
+		
+		set_all_keys_from_master_data(category)
+	})
+	
+	var max_dollar_value = d3.max(d3.values(master_budgets[category]), function(d) { return d3.max(d3.values(d))})
+	dollar_scale.domain([0, max_dollar_value])
+	cat_scale.domain(d3.entries(all_keys[category]).sort(function(a,b) { return d3.ascending(a.value,b.value)} ).map(function(d) {return d.key}))
+
+}
+
+function show_budget_list(d,i) {
+	var selector_div = d3.select(this)
+	selector_div.select("h2").style("color", "red")
+	selector_div.select("div").style("display", "block")
+}
+function hide_budget_list() {
+	var selector_div = d3.selectAll(".selector")
+	d3.selectAll("div.header h2").style("color", "black")	
+	selector_div.style("display", "none")
+}
+
+function set_up_view_style_navigation() {
+
+	var b_nav = d3.select("#view_selector")
+	b_nav.selectAll("a")
+		.data(view_styles)
+		.enter()
+		.append("a")
+		.attr("href", "javascript:;")
+		.on("click", function(d) { 
+			view_style = d;
+			redraw(1000);
+		})
+		.append("h3")
+		.text(function(d) {return d})
+}
+
+function set_up_budget_selection_navigation() {
+	var label_width = (x_pos.main_budget_boundary - x_pos.main_budget) * 2
+	d3.select("#label_header").style("width", x_pos.label_end+"px")
+	d3.select("#vs")
+		.style("width", (x_pos.comparison_budget_boundary - x_pos.main_budget_boundary)+"px")
+		.style("left", x_pos.main_budget_boundary + "px")
+		
+	d3.select("#main_budget_header")
+		.style("width", label_width+"px")
+		.style("left", (x_pos.main_budget - label_width/2)+"px")
+		.on("mouseover", show_budget_list)
+		.on("mouseout", hide_budget_list)
+
+	d3.select("#main_budget_selector")
+		.style("display", "none")
+		.append("ul")
+		.selectAll("li")
+		.data(d3.keys(master_budgets[category]))
+		.enter()
+		.append("li")
+		.text(function(d) { return d;})
+		.on("mouseover", preview_main_budget)
+		.on("mouseout", clear_main_budget_preview)
+		.on("click", set_main_budget)
+	
+	d3.select("#comparison_budget_header")
+		.style("width", label_width+"px")
+		.style("left", x_pos.comparison_budget_boundary+"px")
+		.on("mouseover", show_budget_list)
+		.on("mouseout", hide_budget_list)
+		
+	d3.select("#comparison_budget_selector")
+		.style("display", "none")
+		.append("ul")
+		.selectAll("li")
+		.data(d3.keys(master_budgets[category]))
+		.enter()
+		.append("li")
+		.text(function(d) { return d;})
+		.on("mouseover", preview_comparison_budget)
+		.on("mouseout", clear_comparison_budget_preview)
+		.on("click", set_comparison_budget)
+		
+}
+
+
+function set_up_viz_elements() {
+
+	svg = d3.select("#viz")
+		.append("svg")
+		.attr("height", height)
+		.attr("width", width + 100)
+		
+	var font_size = 10
+	var data = d3.entries(master_budgets[category][initial_budget])
+	var budget_categories = svg.selectAll("g.budget_category")
+		.data(data)
+		
+	var new_bc = budget_categories
+		.enter()
+		.append("g")
+		.attr("class", "budget_category")
+		
+	budget_categories
+		.attr("transform", function(d) {return "translate("+x_pos.label_end+","+cat_scale(d.key)+")" })
+			
+	//new_bc.append("circle").attr("class","elem").attr("r", 2)
+	new_bc.append("line").attr("class","elem")
+
+	new_bc.append("text").attr("class","elem value_label")
+		.attr("font-size", font_size)
+		.attr("y", font_size / 3)		
+
+	new_bc.append("text").attr("class","elem comp_value_label")
+		.attr("x", x_pos.comparison_budget-label_adjustment)
+		.attr("fill", "black")
+		.attr("y", font_size / 3)
+		
+
+	new_bc.append("text").attr("class", "elem category_label")
+		.attr("font-size", font_size)
+		.attr("y", font_size / 3)
+		.attr("text-anchor", "end")	
+		.attr("x", -5)
+		.text(function(d) { return d.key })
+
+	new_bc.append("rect").attr("class", "diff")
+		.attr("height", font_size)
+		.attr("y", -font_size / 2)
+		.attr("fill", "red")
+		.attr("fill-opacity", .3)
+
+	new_bc.append("text").attr("class", "diff_label")
+		.attr("y", font_size / 3)
+		.attr("font-size", font_size)
+		.attr("text-anchor", "middle")
+	
+}
+
+function labelize_amount(dollar_amount) {
+	if (dollar_amount < 100000)
+		return "$" + Math.round(dollar_amount/1000) + "K"
+	if (dollar_amount < 10000000)
+		return "$" + Math.round(dollar_amount/100000)/10 + "M"
+	return "$" + Math.round(dollar_amount/1000000) + "M"	
+}
+
+function labelize_perc(perc) {
+	return Math.round(perc*10)/10 + "%"
+}
+function perc_diff(d) {
+	return d.diff / d.value * 100
+}
+
+
+function update_main_bindings(data) {
+	var budget_categories = svg.selectAll("g.budget_category")
+		.data(data, function(d) { return d.key })
+	
+	budget_categories.select("circle").datum(function(d) { return d;})
+	budget_categories.select("line").datum(function(d) { return d;})
+	budget_categories.select("text.value_label").datum(function(d) { return d;})	
+	budget_categories.select("rect.diff").datum(function(d) { return d;})	
+	budget_categories.select("text.diff_label").datum(function(d) { return d;})	
+	budget_categories.select("text.comp_value_label").datum(function(d) { return d;})	
+	
+}
+
+function update_diff_bindings(diff_budget_name) {
+	var name = diff_budget_name
+	function calculate_and_set_diff(d) {
+		d.diff = master_budgets[category][name][d.key] - d.value; 
+		d.comp = master_budgets[category][name][d.key]
+		return d
+	}
+
+	var budget_categories = svg.selectAll("g.budget_category")
+	var budget_diffs = budget_categories.select("rect.diff")
+		.datum(calculate_and_set_diff)
+
+	var budget_diff_labels = budget_categories.select("text.diff_label")
+		.datum(calculate_and_set_diff)
+
+	var budget_diff_labels = budget_categories.select("text.comp_value_label")
+		.datum(calculate_and_set_diff)
+		
+	// var comp_budget_labels = svg.selectAll("text.comp_value_label")
+	// 	.data(master_budgets[category][name])
+	
+}
+function preview_main_budget(name) {
+	var data = d3.entries(master_budgets[category][name])
+	update_main_bindings(data)
+	update_diff_bindings(comparison_budget.name)
+	redraw(100)
+	d3.select("#main_budget_header h2").text(name)
+	d3.select(this).style("color", "red")
+	
+}
+
+function clear_main_budget_preview(name) {
+	var data = d3.entries(main_budget.data)
+	update_main_bindings(data)
+	d3.select("#main_budget_header h2").text(main_budget.name)
+	clear_comparison_budget_preview("")
+	d3.selectAll("#main_budget_selector li").style("color", "black")
+	
+}
+
+function preview_comparison_budget(name) {
+	d3.select("#comparison_budget_header h2").text(name)
+	update_diff_bindings(name)
+	redraw(100);
+	d3.select(this).style("color", "red")
+	
+}
+
+function clear_comparison_budget_preview(name) {
+	d3.select("#comparison_budget_header h2").text(comparison_budget.name)
+	update_diff_bindings(comparison_budget.name)
+	redraw(1000);
+	d3.selectAll("#comparison_budget_selector li").style("color", "black")
+	
+}
+
+function redraw(duration) {
+	if (view_style === view_styles[0]) { redraw_amounts(duration) } 
+	else if (view_style === view_styles[1]) { redraw_dollar_diffs(duration) } 
+	else if (view_style === view_styles[2]) { redraw_perc_diffs(duration) } 
+}
+
+
+function redraw_perc_diffs(duration) {
+	budget_categories = svg.selectAll("g.budget_category")
+	budget_categories.selectAll("line")
+		.attr("x2",0)
+		
+	budget_categories.selectAll("text.value_label")		
+		.text(function(d) { return labelize_amount(d.value)})
+		.transition()
+		.duration(duration)
+		.attr("x", x_pos.main_budget - x_pos.label_end)
+	
+	var center = x_pos.center - label_adjustment // fix later
+	budget_categories.selectAll("rect.diff")
+		.transition()
+		.duration(duration)
+		.attr("width", function(d) { return perc_scale(Math.abs(perc_diff(d))) })
+		.attr("x", function(d) { return d.diff > 0 ? center : center - perc_scale(Math.abs(perc_diff(d))) })
+		.attr("fill", function(d) { return d.diff > 0 ? "green" : "red" })
+
+	svg.selectAll("text.diff_label")
+		.transition()
+		.duration(duration)
+		.attr("x", function(d) {
+			return d.diff > 0 
+				? (center + perc_scale(Math.abs(perc_diff(d))) + 10)
+				: (center - perc_scale(Math.abs(perc_diff(d))) - 10)
+		})
+		.attr("text-anchor", function(d) { return d.diff > 0 ? "start" : "end" })
+		.attr("fill", function(d) { return d.diff > 0 ? "black" : "red" })
+		.text(function(d) { return labelize_perc(Math.abs(perc_diff(d))) })
+		
+	svg.selectAll("text.comp_value_label")
+		.transition()
+		.duration(duration)
+		.attr("fill-opacity", 1)
+		.attr("fill", "black")
+		.text(function(d) { return labelize_amount(Math.abs(d.comp)) })
+			
+}
+
+function redraw_dollar_diffs(duration) {
+
+	budget_categories = svg.selectAll("g.budget_category")
+	budget_categories.selectAll("line")
+		.attr("x2",0)
+		
+	budget_categories.selectAll("text.value_label")		
+		.text(function(d) { return labelize_amount(d.value)})
+		.transition()
+		.duration(duration)
+		.attr("x", x_pos.main_budget - x_pos.label_end)
+	
+	var center = x_pos.center - label_adjustment // fix later
+	budget_categories.selectAll("rect.diff")
+		.transition()
+		.duration(duration)
+		.attr("width", function(d) { return dollar_scale(Math.abs(d.diff)) })
+		.attr("x", function(d) { return d.diff > 0 ? center : center - dollar_scale(Math.abs(d.diff)) })
+		.attr("fill", function(d) { return d.diff > 0 ? "green" : "red" })
+
+	svg.selectAll("text.diff_label")
+		.transition()
+		.duration(duration)
+		.attr("x", function(d) {
+			return d.diff > 0 
+				? (center + dollar_scale(Math.abs(d.diff)) + 10)
+				: (center - dollar_scale(Math.abs(d.diff)) - 10)
+		})
+		.attr("text-anchor", function(d) { return d.diff > 0 ? "start" : "end" })
+		.attr("fill", function(d) { return d.diff > 0 ? "black" : "red" })
+		.text(function(d) { return labelize_amount(Math.abs(d.diff)) })
+		
+	svg.selectAll("text.comp_value_label")
+		.transition()
+		.duration(duration)
+		.attr("fill-opacity", 1)
+		.attr("fill", "black")
+		.text(function(d) { return labelize_amount(Math.abs(d.comp)) })
+	
+	
+}
+
+function redraw_amounts(duration) {
+
+	budget_categories = svg.selectAll("g.budget_category")
+	budget_categories.selectAll("circle")
+		.transition()
+		.duration(duration)	
+		.attr("cx", function(d) { return dollar_scale(d.value) })
+		
+	budget_categories.selectAll("line")
+		.attr("stroke", "black")
+		.transition()
+		.duration(duration)
+		.attr("x1", 0)
+		.attr("x2", function(d) { return dollar_scale(d.value) })
+		
+	budget_categories.selectAll("text.value_label")		
+		.attr("font-size", font_size)
+		.attr("y", font_size / 3)
+		.text(function(d) { return labelize_amount(d.value)})
+		.transition()
+		.duration(duration)
+		.attr("x", function(d) { return dollar_scale(d.value) + 10})
+		
+	budget_categories.select("rect.diff")
+		.transition()
+		.duration(duration)
+		.attr("width", function(d) { return dollar_scale(Math.abs(d.diff)) })
+		.attr("x", function(d) { return d.diff > 0 ? dollar_scale(d.value) : dollar_scale(d.value+d.diff) })
+		.attr("fill", function(d) { return d.diff > 0 ? "green" : "red" })
+		
+	svg.selectAll("text.diff_label")
+		.transition()
+		.duration(duration)
+		.attr("text-anchor", "start")
+		.attr("x", x_pos.comparison_budget-label_adjustment)
+		.attr("fill", function(d) { return d.diff > 0 ? "black" : "red" })
+		.text(function(d) { 
+			var sign = d.diff > 0 ? "+" : "-"
+			return sign+labelize_amount(Math.abs(d.diff)) 
+		})
+
+	svg.selectAll("text.comp_value_label")
+		.transition()
+		.duration(duration)
+		.attr("x", x_pos.comparison_budget)
+		.attr("fill", function(d) { return d.diff > 0 ? "black" : "red" })
+		.text(function(d) { 
+			var sign = d.diff > 0 ? "+" : "-"
+			return "("+sign+ labelize_perc(Math.abs(perc_diff(d))) + ")" 
+		})
+		.attr("fill-opacity", 0.5)	
+	
+}
+
+
+function clear_comparison_budget() {	
+}
+
+
+function set_main_budget(budget_name) {
+	main_budget = { name: budget_name, data: master_budgets[category][budget_name] }
+	d3.select("#main_budget_header h2").text(main_budget.name)
+	redraw(1000);	
+	//clear_comparison_budget();
+	hide_budget_list();
+}
+
+function set_comparison_budget(budget_name) {
+	comparison_budget = { name: budget_name, data: master_budgets[category][budget_name]  }
+	d3.select("#comparison_budget_header h2").text(comparison_budget.name)
+	update_diff_bindings(budget_name)
+	redraw(1000);
+	hide_budget_list();
+}
+
+
+d3.csv("fy14prop.csv", function(csvdata14) {
+	d3.csv("fy13oper.csv", function(csvdata13) { 
+		data13 = csvdata13;
+		data14 = csvdata14;
+		set_up_master_data();
+		set_up_budget_selection_navigation();
+		set_up_view_style_navigation();
+		set_up_viz_elements();
+		set_main_budget(initial_budget)
+		set_comparison_budget(initial_comp_budget,1000)
+		
+	})	
+});
+
+
+// FY13 Operating Names
+// FY 2010 Actual : Fiscal 2010 Actual
+// FY 2011 Actual : Fiscal 2011 Actual
+// FY 2012 Budget : Fiscal 2012 Budget
+// FY 2013 Current Services : <Don't Use>
+// FY 2013 Budget Issues: <Don't Use>
+// FY 2013 Proposed: Fiscal 2013 Proposed
+//
+// FY14 Proposed Names
+// FY 2010 Actual : Fiscal 2011 Actual <Don't Use>
+// FY 2011 Actual : Fiscal 2012 Actual
+// FY 2012 Budget : Fiscal 2013 Budget
+// FY 2013 Current Services : <Don't Use>
+// FY 2013 Budget Issues : <Don't Use>
+// FY 2013 Proposed: Fiscal 2014 Proposed
+//
+
+
+//possible differences
+//b1 has additional categories
+//b2 has additional categories
+//b1 and b2 have same categories but different values
+//difference between 0 and non-existent?
+
+</script>
+</body>

@@ -1,0 +1,103 @@
+/*.link.police { stroke: #83A9D6; }
+.link.fire { stroke: #4EA6D6; }
+.link.royal-hawaiian-band { stroke: #45A6DB; }
+.link.human-resources { stroke: #4CA5DD; }
+.link.mayor { stroke: #8069AD; }
+.link.medical-examiner { stroke: #49AAD7; }
+.link.managing-director { stroke: #8970B4; }
+.link.parks-and-recreation { stroke: #4EA6D6; }
+.link.planning-and-permitting { stroke: #4CA6D8; }
+.link.design-and-construction { stroke: #4FA5D8; }
+.link.emergency-services { stroke: #4EA6D6; }
+.link.neighborhood-commission { stroke: #44A3D3; }
+.link.prosecuting-attorney { stroke: #4EA5DA; }
+.link.information-technology { stroke: #4CA8D9; }
+.link.budget-and-fiscal-services { stroke: #50A8D8; }
+.link.corporation-counsel { stroke: #4CA7D3; }
+.link.customer-services { stroke: #E786B9; }
+.link.emergency-management { stroke: #A97CB5; }
+.link.facility-maintenance { stroke: #A779B9; }
+.link.enterprise-services { stroke: #4CB4B5; }
+.link.community-services { stroke: #F46F66; }
+.link.transportation-services { stroke: #FFE051; }
+.link.environmental-services { stroke: #9CD495; }*/
+
+
+rect.police { fill: #83A9D6; }
+rect.fire { fill: #4EA6D6; }
+rect.royal-hawaiian-band { fill: #45A6DB; }
+rect.human-resources { fill: #4CA5DD; }
+rect.mayor { fill: #8069AD; }
+rect.medical-examiner { fill: #49AAD7; }
+rect.managing-director { fill: #8970B4; }
+rect.parks-and-recreation { fill: #4EA6D6; }
+rect.planning-and-permitting { fill: #4CA6D8; }
+rect.design-and-construction { fill: #4FA5D8; }
+rect.emergency-services { fill: #4EA6D6; }
+rect.neighborhood-commission { fill: #44A3D3; }
+rect.prosecuting-attorney { fill: #4EA5DA; }
+rect.information-technology { fill: #4CA8D9; }
+rect.budget-and-fiscal-services { fill: #50A8D8; }
+rect.corporation-counsel { fill: #4CA7D3; }
+rect.customer-services { fill: #E786B9; }
+rect.emergency-management { fill: #A97CB5; }
+rect.facility-maintenance { fill: #A779B9; }
+rect.enterprise-services { fill: #4CB4B5; }
+rect.community-services { fill: #F46F66; }
+rect.transportation-services { fill: #FFE051; }
+rect.environmental-services { fill: #9CD495; }
+
+
+/*.link.general-fund {stroke: #4DA9DA; }
+.link.zoo-animal-purchase-fund {stroke: #666FBA; }
+.link.liquor-commission-fund {stroke: #E38CBF; }
+.link.hanauma-bay-nature-preserve-fund {stroke: #EC5BA8}
+.link.highway-beautification-fund {stroke: #E38CBF; }
+.link.highway-fund {stroke: #E38CBF; }
+.link.special-events-fund {stroke: #E38CBF; }
+.link.golf-fund {stroke: #9AD173; }
+.link.housing-development-special-fund{ stroke:#7D6EA7;}
+.link.sewer-fund {stroke: #90D7CF; }
+.link.sld-wst-dis-fac-acct--swsf {stroke: #BDDD94; }
+.link.refuse-genl-operating-acct-swsf {stroke: #4DBE90; }
+.link.housing--comm-dev-sec-8-fund {stroke: #CA635E; }
+.link.recycling-account--swsf {stroke: #45B4E1;}
+.link.community-development-fund {stroke: #66BAD4; }
+.link.glass-incentive-account--swsf {stroke: #66BAD4; }
+.link.special-projects-fund {stroke: #F45E84 }
+.link.housing--comm-dev-rehab-fund {stroke: #EF6E94 }
+.link.leasehold-conversion-fund {stroke: #F68682 }
+.link.rental-assistance-fund {stroke: #F39685 }
+.link.federal-grants-fund {stroke: #F7A073; }
+.link.bus-transportation-fund {stroke: #FEF64D; }
+.link.bikeway-fund {stroke: #FEE13F; }*/
+
+
+/*rect.general-fund {fill: #4DA9DA; }*/
+rect.zoo-animal-purchase-fund {fill: #666FBA; }
+rect.liquor-commission-fund {fill: #E38CBF; }
+rect.hanauma-bay-nature-preserve-fund {fill: #EC5BA8}
+rect.highway-beautification-fund {fill: #E38CBF; }
+rect.highway-fund {fill: #E38CBF; }
+rect.special-events-fund {fill: #E38CBF; }
+rect.golf-fund {fill: #9AD173; }
+rect.housing-development-special-fund{ fill:#7D6EA7;}
+rect.sewer-fund {fill: #90D7CF; }
+rect.sld-wst-dis-fac-acct--swsf {fill: #BDDD94; }
+rect.refuse-genl-operating-acct-swsf {fill: #4DBE90; }
+rect.housing--comm-dev-sec-8-fund {fill: #CA635E; }
+rect.recycling-account--swsf {fill: #45B4E1;}
+rect.community-development-fund {fill: #66BAD4; }
+rect.glass-incentive-account--swsf {fill: #66BAD4; }
+rect.special-projects-fund {fill: #F45E84 }
+rect.housing--comm-dev-rehab-fund {fill: #EF6E94 }
+rect.leasehold-conversion-fund {fill: #F68682 }
+rect.rental-assistance-fund {fill: #F39685 }
+rect.federal-grants-fund {fill: #F7A073; }
+rect.bus-transportation-fund {fill: #FEF64D; }
+rect.bikeway-fund {fill: #FEE13F; }
+
+/*
+rect.police {fill: #73C69C; fill-opacity: .2 }
+rect.environmental-services {fill: #090; fill-opacity: .2 }
+*/

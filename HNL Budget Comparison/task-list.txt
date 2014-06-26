@@ -1,0 +1,42 @@
+- Color and Fade Interactions
+	- text labels coloring
+	- nodes with class for highlighting
+	- reverse colors on node labels
+- Column Labels
+- Text Area with Department Descriptions
+
+
+
+
+# 1.) Full Class Labeling
+# - text labels
+# - nodes (should have link endpoints)
+# 2.) Rollover rule for links 
+# - replace hover with mouseover, mouseout. Same effect for now
+# 3.) CSS rule for fading labels
+
+4.) Style side section in HTML
+
+5.) Mouseover / Mouseout rules for side section
+- override link text. Store somewhere
+- also include definition if done
+
+6.) Attribution styles on bottom
+- CanDo or API
+- Mike Bostock / D3
+- Michelle / Misa / Ben
+- email
+
+7.) How does this work? rollover
+- instructions on side
+- fade all
+- add column labels
+
+
+
+- Title
+- size graphic to window
+- reposition nodes
+- connect to API
+- poster version
+- Honolulu City Budget

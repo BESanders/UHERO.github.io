@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Sankey Diagram</title>
+<style title="sankey_style">
+@import url(style.css);
+#budget1, #budget2 { width: 40%; margin-right:4%; float:left; border:1px solid gray; padding:10px;}
+#differences {border: 1px solid gray;}
+</style>
+<body>
+
+<h1>Honolulu City Budget</h1>
+<div id="selections"><span id="b1"></span> <br/> <span id="b2"></span></div>
+<div id="controls"></div>
+<div id="diff_viz"></div>
+<div id="differences"></div>
+<div id="budget1"></div>
+<div id="budget2"></div>
+<script src="d3.v2.min.js"></script>
+<script src="sankey.js"></script>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.svg.js"></script>
+
+
+
+
+<script>
+function get_keys(data, column) {
+	return d3.keys(d3.nest().key(function(d) { return d[column] } ).map(data))
+}
+function add_sub_section(data, div, column) {
+	var keys = get_keys(data, column)
+	div.append("h4").text(column + " (" + keys.length + ")")
+	div.append("p").text( get_keys(data, column).sort().join(", "))
+}
+
+function get_budget_cols(data) {
+	return d3.keys(data[0]).filter(function(d) { return d.slice(0,2) === "FY" })
+}
+function populate_div(div_id, b) {
+	var data = b.data
+	var data_file_name = b.name
+	var column = b.col
+	
+	var budget_box = d3.select(div_id)
+	budget_box.html("")
+	budget_box.append("h3").text(data_file_name + " | " + column )
+	budget_box.append("h4").text("Columns")
+	budget_box.append("p").text(get_budget_cols(data).join(", "))
+	add_sub_section(data, budget_box, "Department Name")
+	add_sub_section(data, budget_box, "Division Name")
+	add_sub_section(data, budget_box, "Fund Name")
+	add_sub_section(data, budget_box, "Object Code Name")
+}
+
+function sum_column(leaves, column) {
+	return leaves ? d3.sum(leaves, function(d) { return d[column]}) : 0
+}
+
+function get_all_keys() {
+	return d3.keys(d3.nest().key(function(d) { return d}).map(d3.keys(b1.lookup).concat(d3.keys(b2.lookup))))	
+}
+function display_differences() {
+
+	var column1 = b1.col
+	var column2 = b2.col
+
+	all_keys = get_all_keys()
+	var diff_data = all_keys.map(function(d) { 
+		col1_sum = sum_column(b1.lookup[d], column1)
+		col2_sum = sum_column(b2.lookup[d], column2)
+		return {
+			category: d,
+			budget_1: col1_sum,
+			budget_2: col2_sum,
+			diff: col2_sum - col1_sum,
+			perc_diff: (col2_sum - col1_sum) / col1_sum  *100
+		}
+	})
+
+	var diff_div = d3.select("#differences").html("")
+	var diffs = diff_div.append("table")
+	var rows = diffs.selectAll("tr")
+		.data(diff_data)
+		.enter()
+		.append("tr")
+
+	rows.selectAll("td")
+		.data(function(d) {return d3.values(d) })
+		.enter()
+		.append("td")
+		.text(function(d) {return d})
+	
+}
+
+function draw_bars() {
+	b1.scale = d3.scale.linear().domain([0,250000000]).range([0, width-get_mid()-m_right])
+	cat_scale = d3.scale.ordinal().domain(all_keys).rangePoints([m_top, height-m_bottom])
+	var data = d3.entries(b1.lookup) 
+	var font_size = 10;
+	var bars = svg.selectAll("rect.cat")
+		.data(data)
+	
+	bars.enter()
+		.append("rect")
+		.attr("class", "cat")
+	
+	bars.attr("x", get_mid() )
+		.attr("y", function(d) {return cat_scale(d.key)})
+		.attr("width", function(d) { return b1.scale(sum_column(d.value, b1.col)) })
+		.attr("height", bar_height)
+		.attr("fill", "black")
+		.attr("fill-opacity", .5)
+		
+	var labels = svg.selectAll("text.cat_label")
+		.data(data)
+	
+	labels.enter()
+		.append("text")
+		.attr("class", "cat_label")
+	
+	labels
+		.attr("x", get_mid() - 5 )
+		.attr("y", function(d) { return cat_scale(d.key) + font_size /2})
+		.attr("text-anchor", "end")
+		.attr("font-size", font_size)
+		.text(function(d) { return d.key }) 
+}
+
+function get_diff_data(shown, comparison) {
+	var keys = get_all_keys()
+	return keys.map(function(d) { 
+		shown_val = sum_column(shown.lookup[d], shown.col)
+		compare_val = sum_column(comparison.lookup[d], comparison.col)
+		return {key: d, diff: compare_val - shown_val, shown_val: shown_val, compare_val: compare_val }
+	})
+}
+
+function show_diffs(d) {
+	var data = get_diff_data(b1, d)
+	
+	var diff_rects = svg.selectAll("rect.diff")
+	 .data(data)
+	
+	diff_rects.enter()
+		.append("rect")
+		.attr("class","diff")
+	
+	diff_rects
+		.attr("fill", "red")
+		.attr("fill-opacity", .5)
+		.attr("x", function(d) {
+			if (d.diff < 0)
+				return get_mid() + b1.scale(d.shown_val) + b1.scale(d.diff) // or d.compare_val
+			else
+				return get_mid() + b1.scale(d.shown_val) 
+		})
+		.attr("y", function(d) { return cat_scale(d.key)})
+		.attr("width", function(d) {return b1.scale(Math.abs(d.diff))})
+		.attr("height", bar_height)
+	
+}
+
+function hide_diffs() {
+	var diff_rects = svg.selectAll("rect.diff").attr("width", 0)
+}
+function get_data_lookup(data) {
+	return d3.nest().key(function(d) { return d[category]}).map(data)
+}
+
+function insert_budget_controls() {
+
+	var controls = d3.select("#controls")
+	controls.append("h4").text(b1.name)
+	controls
+		.append("p")
+		.selectAll("a")
+		.data(get_budget_cols(b1.data).map(function(d) { 
+			return { data: b1.data, col: d, name: b1.name, lookup: get_data_lookup(b1.data) } 
+		}))
+		.enter()
+		.append("a")
+		.text(function(d) {return d.col + " | "})
+		.attr("href", "javascript:;")
+		.on("click", function(d) {
+			b1 = b2
+			b2 = {data: d.data, col: d.col, name: d.name, lookup: get_data_lookup(d.data) }
+			update_budget_selections()
+			display_differences()
+			draw_bars()
+		})
+		.on("mouseover", show_diffs)
+		.on("mouseout", hide_diffs)
+
+	controls.append("h4").text(b2.name)
+	controls
+		.append("p")
+		.selectAll("a")
+		.data(get_budget_cols(b2.data).map(function(d) { 
+			return { data: b2.data, col: d, name: b2.name, lookup: get_data_lookup(b2.data) } 
+		}))		
+		.enter()
+		.append("a")
+		.text(function(d) {return d.col + " | "})
+		.attr("href", "javascript:;")
+		.on("click", function(d) {
+			b1 = b2
+			b2 = {data: d.data, col: d.col, name: d.name, lookup: get_data_lookup(d.data) }
+			update_budget_selections()
+			display_differences()
+			draw_bars()
+		})
+		.on("mouseover", show_diffs)
+		.on("mouseout", hide_diffs)
+
+}
+
+var svg
+var b1
+var b2
+var all_keys
+var height = 400,
+ 	width = 800,
+ 	m_left = 50,
+	m_right = 50,
+	m_top = 50,
+	m_bottom = 50;
+var category = "Department Name"
+var cat_scale
+var bar_height = 5;
+	
+function update_budget_selections() {
+	d3.selectAll("#selections span")
+		.data([b1,b2])
+		.text(function(d,i) { return "Budget" + (i+1) + ": " + d.name + " | " + d.col})
+}
+
+function get_mid() {
+	return (width - m_left - m_right) / 4 + m_left
+}
+
+function initialize_svg() {
+	svg = d3.select("#diff_viz")
+		.append("svg")
+		.attr("height", height)
+		.attr("width", width)
+	
+	svg.append("line")
+		.attr("class", "divider")
+		.attr("x1", get_mid())
+		.attr("y1", m_top)
+		.attr("x2", get_mid())
+		.attr("y2", height - m_bottom)
+		.attr("stroke", "black")
+	
+}
+d3.csv("fy14prop.csv", function(csvdata14) {
+	d3.csv("fy13oper.csv", function(csvdata13) { 
+		initialize_svg();
+		b1 = {data:csvdata14, col: "FY 2010 Actual", name: "FY14 Proposed", lookup: get_data_lookup(csvdata14)}
+		b2 = {data:csvdata13, col: "FY 2011 Actual", name: "FY13 Operating", lookup: get_data_lookup(csvdata13)}
+		update_budget_selections();
+		populate_div("#budget1", b1)
+		populate_div("#budget2", b2)
+		display_differences()
+		insert_budget_controls()
+		draw_bars()
+	})	
+});
+
+
+// FY13 Operating Names
+// FY 2010 Actual : FY 2010 Actual
+// FY 2011 Actual : FY 2011 Actual
+// FY 2012 Budget : FY 2012 Budget
+// FY 2013 Current Services : <Don't Use>
+// FY 2013 Budget Issues: <Don't Use>
+// FY 2013 Proposed: FY 2013 Proposed
+//
+// FY14 Proposed Names
+// FY 2010 Actual : FY 2011 Actual
+// FY 2011 Actual : FY 2012 Actual
+// FY 2012 Budget : FY 2013 Budget
+// FY 2013 Current Services : <Don't Use>
+// FY 2013 Budget Issues : <Don't Use>
+// FY 2013 Proposed: FY 2014 Proposed
+//
+
+
+//possible differences
+//b1 has additional categories
+//b2 has additional categories
+//b1 and b2 have same categories but different values
+//difference between 0 and non-existent?
+
+</script>
+</body>
