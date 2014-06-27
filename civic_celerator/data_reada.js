@@ -219,7 +219,8 @@ function show_candidate_contribution_groupings(svgs) {
 
 	clear_timeline_context(svgs)
 	r_scale = bubble_scale;
-	contributor_types = [["Candidate", "CAN"], ["Immediate Family", "IMM"], ["Individual", "IND"], ["Noncandidate Committee", "NCC"], ["Other Entity","OTH"], ["Political Party","PP"]  ]
+	//contributor_types = [["Candidate", "CAN"], ["Immediate Family", "IMM"], ["Individual", "IND"], ["Noncandidate Committee", "NCC"], ["Other Entity","OTH"], ["Political Party","PP"]  ]
+	contributor_types = [["Candidate", "Candidate"], ["Immediate Family", "Immediate Family"], ["Individual", "Individual"], ["Noncandidate Committee", "Noncandidate Committee"], ["Other Entity","Other Entity"], ["Political Party","Political Party"]  ]
 	
 
 	ps = get_pack_sizes(svgs, r_scale, contributor_types)
