@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script type="text/javascript" src="js/d3.v3.min.js"></script>
+</head>
+<body>
+	<script>
+		d3.selectAll("p")
+			.data([0,1,2,3])
+			.enter()
+			.append("p")
+			.text(function(d){ return d + "hello"})
+		
+		d3.selectAll("p")
+			.data(function(d){
+				return [
+					{key: d, val: 0}
+				}]
+			}) 
+	</script>
+</body>
+</html>
