@@ -11,9 +11,36 @@
 		<style>
 		.pcp, .lifecycle { float:left; width: 100px; height:139px;}
 		.pcp h5 { margin:0 0 20px 0; padding:0;}
-		h3.section_header {clear:both;}
-		h3.year{position:absolute; left:650px; top:2px}
+		h3{ font-family: Helvetica, sans-serif;}
+		h5{ font-size: 12px;font-family: Helvetica, sans-serif; text-transform: uppercase; font-weight:normal;}
+		div{ font-family: Helvetica, sans-serif; font-weight:normal;}
+		div#headers h3{ font-size: 14px;font-weight:normal;}
+		h3.country_header { font-size: 16px; text-transform: uppercase;}
+		h3.section_header { font-size: 16px; clear:both; font-weight:normal;}
+		h3.year{ font-size: 16px; position:absolute; left:650px; top:2px;}
 		div#headers {position:relative;}
+		.x_axis path,
+		.x_axis line {
+		    fill: none;
+		    stroke: black;
+		    shape-rendering: crispEdges;
+		}
+		
+		.axis path{
+			 fill: none;
+			 stroke: none;
+		}
+		
+		.axis line{
+			fill: none;
+		    stroke: black;
+		    shape-rendering: crispEdges;
+		}
+		
+		.axis text {
+		    font-family: sans-serif;
+		   	font-size: 11px;
+		}
 		</style>
 	</head>
   	<body>
@@ -21,20 +48,15 @@
 <div id="slider"></div>
 <h3 class="year">2018</h3>
 <div style="position:relative; top:-30px; width: 950px">
-	<div id="headers">
-		<h3 style="margin-left: 75px">Per Captia Profile</h3>
+	<div id="headers" style="left:40px">
+		<h3 style="margin-left: 75px">Per Capita Profile</h3>
 		<h3 style="position:absolute; left: 428px; top:-16px">Population</h3>
 		<h3 style="position:absolute; left: 728px; top:-16px">Lifecycle</h3>
 	</div>
 	<svg id="pcp_selected"></svg>
 	<svg id="population_distributions"></svg>
 	<svg id="lifecycle_selected"></svg>
-	<div id="files_loaded"></div>
 	<div id="link_states" style="padding-top:15px"></div>
-	<!-- <br/>
-	<a href = "javascript:;" id="pcp">PCP</a>
-	<a href = "javascript:;" id="lifecycle">Lifecycle</a>
-	<a href = "javascript:;" id="population">Population</a> -->
 
 	<h3 class="section_header">Per Capita Profiles</h3>
 	<div id="per_capita_profiles"></div>
@@ -48,6 +70,9 @@ var chart_height = 200
 var margin_top = 10
 var pop_distributions_width = 300
 var margin_left = 10
+
+var x_axis_space = 20;
+var y_axis_space = 60;
 
 var pcp_height = 100
 var pcp_width = 100
@@ -89,22 +114,25 @@ var y_pcp = d3.scale.linear().range([pcp_height,0]).domain([0,50000])
 var x_pcp = d3.scale.linear().domain([0,100]).range([0, pcp_width])
 var y_pop = d3.scale.linear().range([margin_top+chart_height, margin_top])
 var y_pop_small = d3.scale.linear().range([pcp_height,0])
-var x = d3.scale.linear().domain([0,100]).range([margin_left,margin_left+pop_distributions_width])
+var x = d3.scale.linear().domain([0,100]).range([margin_left+y_axis_space,margin_left+pop_distributions_width])
 var y_pcp_selected = d3.scale.linear().range([margin_top+chart_height, margin_top])
 var y_lifecycle_selected = d3.scale.linear().range([margin_top+chart_height, margin_top])
 
 var svg = d3.select("#population_distributions")
-	.attr("height", chart_height+margin_top)
+	.attr("height", chart_height+margin_top+x_axis_space+20)
 	.attr("width", pop_distributions_width+margin_left)
 
 var pcp_selected_svg = d3.select("#pcp_selected")
-	.attr("height", chart_height+margin_top)
+	.attr("height", chart_height+margin_top+x_axis_space+20)
 	.attr("width", pop_distributions_width+margin_left)
 	
 var lifecycle_selected_svg = d3.select("#lifecycle_selected")
-	.attr("height", chart_height+margin_top)
+	.attr("height", chart_height+margin_top+x_axis_space+20)
 	.attr("width", pop_distributions_width+margin_left)
-	
+
+var pcp_g = pcp_selected_svg.append('g')
+var pop_g = svg.append("g")
+var lifecycle_g = lifecycle_selected_svg.append("g")	
 function replace_underscore_with_space(item){
 	return item.replace(/ /g, "_");
 }
@@ -128,12 +156,14 @@ function change_year_title(new_year){
 
 function update_year(new_year) {
 	year = new_year
-	create_population_distributions()
+	//create_population_distributions()
 	update_life_cycles()
 	update_selected_lifecycle()
-	d3.select("path."+country_selected.replace(/ /g, ".")).attr("fill", "red")
+	update_country_population()
 	update_pop_divs()
+	create_income_axes();
 	change_year_title(new_year);
+	d3.selectAll("g.tick text").attr("fill","#BBBBBB")
 }
 
 var pop_path = d3.svg.area()
@@ -205,8 +235,9 @@ function create_pcp_times_population_and_age_array(country, data, given_year) {
 	else
 		console.log("NOTHING for " + country)
 	var pop_lookup = d3.nest().key(function(d) {return d.key}).rollup(function(leaves) {return leaves[0].value}).map(pop_array)
-	return age_array.map(function(d) { 
-		var val = (pop_lookup[d.key] === undefined) ? 0 : intify(d.value) * intify(pop_lookup[d.key]);
+	var pop_lookup = shorten_population_array(pop_lookup)
+	return age_array.map(function(d, i) { 
+		var val = (pop_lookup[i] === undefined) ? 0 : intify(d.value) * intify(pop_lookup[i]);
 		return {key : d.key, value: val} 
 	})
 	
@@ -261,7 +292,13 @@ function update_life_cycles(){
 }
 
 function update_selected_lifecycle(){
-	d3.select("#lifecycle_selected").selectAll("path")
+	var max_consum = d3.max(lifecycle_storage[year][country_selected]["consumption"], function(d){ return d.value; })
+	var max_prod = d3.max(lifecycle_storage[year][country_selected]["production"], function(d){ return d.value; }) 
+	var max_lifecycle = d3.max([max_consum, max_prod])
+	
+	y_lifecycle_selected.domain([0, max_lifecycle])
+	
+	d3.select("#lifecycle_selected").selectAll("path.lifecycle")
 		.data(function(){
 			return [
 				{key: "consumption", data: lifecycle_storage[year][country_selected]["consumption"]},
@@ -271,52 +308,136 @@ function update_selected_lifecycle(){
 		.attr("d", function(d) { return lifecycle_selected_path(d.data) })
 }
 
-function highlight_country_population(pop, d){
-	pop.attr("fill", "red")
-	y_pop.domain([0, d3.max(pop_vals(lifecycle_storage[year][d]["population"]))])
-	svg.selectAll("path")
-			.transition()
+function update_country_population(){
+	var population = lifecycle_storage[year][country_selected]["population"]
+	var max_pop = d3.max(pop_vals(population))
+	y_pop.domain([0, max_pop])
+	svg.selectAll("path.country")
+			.data(function(){ return [{key: "population", data: population}]})
 			.attr("d", function(d) { 
-				if(d !== "taiwan"){
-					return pop_path(lifecycle_storage[year][d]["population"]) 
-				}
+				return pop_path(d.data) 
 			})
 
-	d3.select("#files_loaded").text(d)
 }
 
-function create_population_distributions() {
-	svg.selectAll("path").remove()
+function highlight_country_population(state){
+	var population = lifecycle_storage[year][state]["population"]
+	var max_pop = d3.max(pop_vals(lifecycle_storage[year][state]["population"]))
+	y_pop.domain([0, max_pop])
+	svg.selectAll("path.country")
+			.data(function(){ return [{key: "population", data: population}] })
+			.attr("country", state)
+			.transition()
+			.attr("d", function(d) { 
+				return pop_path(d.data) 
+			})
+			// .attr("fill-opacity", function(d){
+			// 	if(d !== state){
+			// 		return 0;
+			// 	}else{
+			// 		return 0.2;
+			// 	}
+			// })
+			// .attr("fill", "blue")
+}
+
+function highlight_country_pcp(state){
+	var pcp = countries_loaded[replace_underscore_with_space(state)]
+	var consumption_data = create_age_and_value_pair_array(pcp[1]);
+	var production_data = create_age_and_value_pair_array(pcp[10]);
+	
+	var max_consum = d3.max(pcp_vals(consumption_data))
+	var max_prod = d3.max(pcp_vals(production_data))
+	var max_pcp = d3.max([max_consum, max_prod])
+	
+	y_pcp_selected.domain([0, max_pcp])
+	
+	pcp_selected_svg.selectAll("path.pcp")
+		.data(function(){ 			
+				return [
+					{key: "consumption", data: consumption_data },
+					{key: "production", data: production_data }
+				]
+		})
+		.attr("country", state)	
+		.transition()
+		.attr("d", function(d){
+			return pcp_selected_path(d.data)
+		})
+	
+}
+
+function highlight_country_lifecycle(state){
+	var max_consum = d3.max(lifecycle_storage[year][state]["consumption"], function(d){ return d.value; })
+	var max_prod = d3.max(lifecycle_storage[year][state]["production"], function(d){ return d.value; }) 
+	var max_lifecycle = d3.max([max_consum, max_prod])
+
+	y_lifecycle_selected.domain([0, max_lifecycle])
+
+	lifecycle_selected_svg.selectAll("path.lifecycle")
+		.data(function(){
+			return [
+				{key: "consumption", data: lifecycle_storage[year][state]["consumption"] },
+				{key: "production", data: lifecycle_storage[year][state]["production"] }
+			]
+		})
+		.attr("country", state)
+		.transition()
+		.attr("d", function(d){
+			return lifecycle_selected_path(d.data)
+		})
+}
+
+function create_population_distributions(d) {
+	var population = lifecycle_storage[year][d]["population"]
+	var pop_max = d3.max(pop_vals(population))
+	y_pop.domain([0, pop_max])
+	
 	var pop_dists = svg.selectAll("path")
-		.data(country_names)
-				
+	 	.data(function(){ return [{key:"population", data: population}] })
+	
 	pop_dists
 		.enter()
 		.append("path")
 		.attr("stroke", "none")
 		.attr("fill", "blue")
 		.attr("fill-opacity", .2)
-		.attr("class", function(d) { return d; })
-		.on("mouseover", function(d) { 
-			var pop = d3.select(this) 
-			highlight_country_population(pop, d)
-		})
-		.on("mouseout", function(d) {
-			var pop = d3.select(this)
-			pop.attr("fill", "blue")
-			pop = d3.select("path."+country_selected.replace(/ /g, "."))
-			highlight_country_population(pop, country_selected)
-		})
-		
-	pop_dists
-		.attr("d", function(d) { 
-			return pop_path(lifecycle_storage[year][d]["population"]) 
-		})
+		.attr("class", "country "+d)
+		.attr("country", d)
+	
+	pop_dists.attr("d", function(d) { 
+			return pop_path(d.data) 
+	})
+	// svg.selectAll("path").remove()
+	// var pop_dists = svg.selectAll("path")
+	// 	.data(country_names)
+	// 			
+	// pop_dists
+	// 	.enter()
+	// 	.append("path")
+	// 	.attr("stroke", "none")
+	// 	.attr("fill", "blue")
+	// 	.attr("fill-opacity", .2)
+	// 	.attr("class", function(d) { return "country "+d; })
+	// 	// .on("mouseover", function(d) { 
+	// 	// 	var pop = d3.select(this) 
+	// 	// 	highlight_country_population(pop, d)
+	// 	// })
+	// 	// .on("mouseout", function(d) {
+	// 	// 	var pop = d3.select(this)
+	// 	// 	pop.attr("fill", "blue")
+	// 	// 	pop = d3.select("path."+country_selected.replace(/ /g, "."))
+	// 	// 	highlight_country_population(pop, country_selected)
+	// 	// })
+	// 	// 
+	// pop_dists
+	// 	.attr("d", function(d) { 
+	// 		return pop_path(lifecycle_storage[year][d]["population"]) 
+	// 	})
 				
 }
 
 function create_pcp_distributions(d){
-	pcp_selected_svg.selectAll("path").remove();
 	var pcp = countries_loaded[replace_underscore_with_space(d)]
 	var consumption_data = create_age_and_value_pair_array(pcp[1]);
 	var production_data = create_age_and_value_pair_array(pcp[10]);
@@ -342,6 +463,7 @@ function create_pcp_distributions(d){
 		.attr("fill", "red")
 		.attr("fill-opacity", .2)
 		.attr("country", d)
+		.attr("class", "pcp "+d)
 	
 	pcp_dists
 		.attr("d", function(d){
@@ -350,11 +472,10 @@ function create_pcp_distributions(d){
 }
 
 function create_lifecycle_distributions(d){
-	lifecycle_selected_svg.selectAll("path").remove();
 	var max_consum = d3.max(lifecycle_storage[year][d]["consumption"], function(d){ return d.value; })
 	var max_prod = d3.max(lifecycle_storage[year][d]["production"], function(d){ return d.value; }) 
 	var max_lifecycle = d3.max([max_consum, max_prod])
-	
+
 	y_lifecycle_selected.domain([0, max_lifecycle])
 	
 	var lifecycle_dists = lifecycle_selected_svg.selectAll("path")
@@ -372,6 +493,7 @@ function create_lifecycle_distributions(d){
 		.attr("fill", "green")
 		.attr("fill-opacity", .2)
 		.attr("country", d)
+		.attr("class", "lifecycle "+d)
 	
 	lifecycle_dists
 		.attr("d", function(d){
@@ -422,18 +544,125 @@ function change_country_name(country){
 	d3.select("h3.country_header").text(country)
 }
 
+function create_age_axes(){
+	var age_axis = d3.svg.axis()
+	var age_scale = x;
+	age_scale.domain([0,90]).range([margin_left+y_axis_space, pop_distributions_width-margin_left-3])
+	age_axis.scale(age_scale)
+		.orient("bottom")
+		.tickSize(0)
+		
+	svg.append('g')
+		.attr("class","x_axis axis")
+		.attr("transform", "translate(0," + (chart_height+margin_top) + ")")
+		.call(age_axis)
+	
+	pcp_selected_svg.append('g')
+			.attr("class","x_axis axis")
+			.attr("transform", "translate(0," + (chart_height+margin_top) + ")")
+			.call(age_axis)
+	
+	lifecycle_selected_svg.append("g")
+			.attr("class","x_axis axis")
+			.attr("transform", "translate(0," + (chart_height+margin_top) + ")")
+			.call(age_axis)
+	
+}
+
+function create_age_label(){
+	svg.append("text")
+		.attr("x", 165)
+		.attr("y", 240)
+		.style({"text-anchor":"middle", "font-size":"14px"})
+		.text("Age")
+		
+	pcp_selected_svg.append("text")
+			.attr("x", 165)
+			.attr("y", 240)
+			.style({"text-anchor":"middle", "font-size":"14px"})
+			.text("Age")
+	
+	lifecycle_selected_svg.append("text")
+			.attr("x", 165)
+			.attr("y", 240)
+			.style({"text-anchor":"middle", "font-size":"14px"})
+			.text("Age")
+}
+
+function create_income_axes(){
+	var pcp_axis = d3.svg.axis()
+	var num_format = d3.format("s");
+	
+	pcp_axis.scale(y_pcp_selected)
+		.orient("left")
+		.tickFormat(function(d){ return "$" + num_format(d)})
+		.ticks(5)
+		
+	pcp_g
+		.attr("class","axis")
+		.attr("transform", "translate(" + (margin_left+y_axis_space) + ",0)")
+		.call(pcp_axis)
+	
+	var pop_axis = d3.svg.axis()
+	
+	pop_axis.scale(y_pop)
+		.orient("left")
+		.tickFormat(function(d){ 
+			if(d !== 0)
+				return (d/1000) + "M"
+			else{
+				return 0;
+			}
+		})
+		.ticks(5)
+		
+	pop_g.attr("class","axis")
+		.attr("transform", "translate(" + (margin_left+y_axis_space) + ",0)")
+		.call(pop_axis)
+	
+	var lifecycle_axis = d3.svg.axis()
+	
+	lifecycle_axis.scale(y_lifecycle_selected)
+				.orient("left")
+				.tickFormat(function(d){ return "$" + num_format(d)})
+				.ticks(5)
+				
+	lifecycle_g.attr("class","axis")
+		.attr("transform", "translate(" + (margin_left+y_axis_space) + ",0)")
+		.call(lifecycle_axis)
+}
+
+function create_pop_label(){
+	svg.append("text")
+	   .attr("transform", "rotate(-90)")
+       .attr("y", 0)
+       .attr("x", -100)
+       .attr("dy", "1em")
+       .style({"text-anchor":"middle", "font-size":"14px"})
+       .text("People");
+}
+
 function initialize_page() {
-	create_lifecycle_storage();
+	create_lifecycle_storage();	
 	sort_country_names_by_population();
+	
 	var max_pop = d3.max(pop_vals(lifecycle_storage[year][country_names[0]]["population"]))
-	y_pop.domain([0,max_pop]);	
+	//y_pop.domain([0,max_pop]);	
 	y_pop_small.domain([0, max_pop]);
-	create_population_distributions()
+	
+	create_population_distributions("united states of america")
 	create_pcp_distributions("united states of america");
 	create_lifecycle_distributions("united states of america");
+	
 	var pop = d3.select("path.united.states.of.america")
-	highlight_country_population(pop, "united states of america")
+	//highlight_country_population("united states of america")
 	create_empty_array(lifecycle_storage[year][country_names[0]]["production"])
+	
+	create_age_axes();
+	create_income_axes();
+	create_age_label();
+	create_pop_label();
+	d3.selectAll("g.tick text").attr("fill","#BBBBBB")
 	
 	var pcp_divs = d3.select("#per_capita_profiles")
 		.selectAll("div.pcp")
@@ -447,13 +676,15 @@ function initialize_page() {
 		.attr("height", pcp_height)
 		.attr("width", pcp_width)
 		.on("click", function(d){
-			d3.select("path."+country_selected.replace(/ /g, ".")).attr("fill","blue")
+			//var pop = d3.select("path."+country_selected.replace(/ /g, "."))
+			//pop.attr("fill","blue")
 			country_selected = d;
-			create_pcp_distributions(d);
-			create_lifecycle_distributions(d);
-			var pop = d3.select("path."+d.replace(/ /g, "."))
-			highlight_country_population(pop, d)
+			highlight_country_pcp(d);
+			highlight_country_lifecycle(d);
+			highlight_country_population(d)
 			change_country_name(d)
+			create_income_axes();
+			d3.selectAll("g.tick text").attr("fill","#BBBBBB")
 		})
 	
 	pcp_divs.append("h5").text(function(d) { return d})
