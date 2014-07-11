@@ -41,9 +41,26 @@
 		    font-family: sans-serif;
 		   	font-size: 11px;
 		}
+		div#legend{
+			position:absolute;
+			left:1200px;
+			top:0px;
+		}
+		
+		#legend_svg{
+			position:absolute;
+			left:-250px;
+		}
+		
+		#legend_title{
+			position:relative;
+			left:-150px;
+			font-weight:normal;
+			font-size:14px;
+		}
 		</style>
-	</head>
-  	<body>
+</head>
+<body>
 <h3 class="country_header">united states of america</h3>
 <div id="slider"></div>
 <h3 class="year">2018</h3>
@@ -57,7 +74,9 @@
 	<svg id="population_distributions"></svg>
 	<svg id="lifecycle_selected"></svg>
 	<div id="link_states" style="padding-top:15px"></div>
-
+	<div id="legend">
+		<h3 id="legend_title">Legend</h3>
+	</div>
 	<h3 class="section_header">Per Capita Profiles</h3>
 	<div id="per_capita_profiles"></div>
 </div>
@@ -460,7 +479,9 @@ function create_pcp_distributions(d){
 		.enter()
 		.append("path")
 		.attr("stroke", "none")
-		.attr("fill", "red")
+		.attr("fill", function(d){
+			return d.key === "consumption" ? "red": "green";
+		})
 		.attr("fill-opacity", .2)
 		.attr("country", d)
 		.attr("class", "pcp "+d)
@@ -490,7 +511,9 @@ function create_lifecycle_distributions(d){
 		.enter()
 		.append("path")
 		.attr("stroke", "none")
-		.attr("fill", "green")
+		.attr("fill", function(d){
+			return d.key === "consumption" ? "red" : "green";
+		})
 		.attr("fill-opacity", .2)
 		.attr("country", d)
 		.attr("class", "lifecycle "+d)
@@ -642,6 +665,53 @@ function create_pop_label(){
        .text("People");
 }
 
+function create_legend(){
+	var legend_svg = d3.select("#legend")
+		.append("svg")
+		.attr("width", 500)
+		.attr("height", 300)
+		.attr("id", "legend_svg")
+	
+	legend_svg.append("rect")
+		.attr("fill", "red")
+		.attr("fill-opacity", 0.2)
+		.attr("x", 50)
+		.attr("y", 10)
+		.attr("width", 30)
+		.attr("height", 30)
+	
+	legend_svg.append("text")
+		.attr("x", 110)
+		.attr("y", 35)
+		.text("Consumption")
+	
+	legend_svg.append("rect")
+		.attr("fill", "green")
+		.attr("fill-opacity", 0.2)
+		.attr("x", 50)
+		.attr("y", 70)
+		.attr("width", 30)
+		.attr("height", 30)
+	
+	legend_svg.append("text")
+		.attr("x", 110)
+		.attr("y", 95)
+		.text("Production")
+	
+	legend_svg.append("rect")
+		.attr("fill", "blue")
+		.attr("fill-opacity", 0.2)
+		.attr("x", 50)
+		.attr("y", 130)
+		.attr("width", 30)
+		.attr("height", 30)
+	
+	legend_svg.append("text")
+		.attr("x", 110)
+		.attr("y", 155)
+		.text("Population")
+}
+
 function initialize_page() {
 	create_lifecycle_storage();	
 	sort_country_names_by_population();
@@ -663,6 +733,8 @@ function initialize_page() {
 	create_age_label();
 	create_pop_label();
 	d3.selectAll("g.tick text").attr("fill","#BBBBBB")
+	
+	create_legend();
 	
 	var pcp_divs = d3.select("#per_capita_profiles")
 		.selectAll("div.pcp")
@@ -704,7 +776,15 @@ function initialize_page() {
 		.attr("class", function(d){
 			return d.state;
 		})
-		.attr("fill", "red")
+		.attr("fill", function(d){
+			if(d.key === "consumption"){
+				return "red";
+			}else if(d.key === "production"){
+				return "green";
+			}else if(d.key === "population"){
+				return "blue";
+			}
+		})
 		.attr("fill-opacity", .1)
 		.attr("d", function(d) { 
 			if(d.state === "pcp active"){
@@ -767,6 +847,15 @@ function switch_paths(target_state){
 		.transition()
 		.duration(1000)
 		.attr("d", function(d){ return lifecycle_path(d.data)})
+		.attr("fill", function(d){
+			if(d.key === "consumption"){
+				return "red";
+			}else if(d.key === "production"){
+				return "green";
+			}else if(d.key === "population"){
+				return "blue";
+			}
+		})
 	
 	d3.selectAll("div.pcp")
 		.selectAll("svg")
@@ -795,6 +884,15 @@ function switch_paths(target_state){
 				return pcp_path(d.data)
 			}else if(target_state === "population"){
 				return pop_path_small(d.data)
+			}
+		})
+		.attr("fill", function(d){
+			if(d.key === "consumption"){
+				return "red";
+			}else if(d.key === "production"){
+				return "green";
+			}else if(d.key === "population"){
+				return "blue";
 			}
 		})
 
@@ -832,6 +930,15 @@ function switch_current_paths(target_state){
 				return pop_path_small(d.data)
 			}else if(target_state === "lifecycle"){
 				return lifecycle_path(d.data)
+			}
+		})
+		.attr("fill", function(d){
+			if(d.key === "consumption"){
+				return "red";
+			}else if(d.key === "production"){
+				return "green";
+			}else if(d.key === "population"){
+				return "blue";
 			}
 		})
 	
