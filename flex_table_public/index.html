@@ -64,6 +64,7 @@
 	<h1>Public Flex Table</h1>
 	<div id="detail_view">
 		<div id="detail_slider_container">
+			<!--
 			<h3>Detail View Slider</h3>
 			<div id="a_detail_slider_div" class="slider">
 				<input id="a_detail_slider" type="slider" name="a_detail_slider" value="0;0" />
@@ -74,6 +75,7 @@
 			<div id="m_detail_slider_div" class="slider">
 				<input id="m_detail_slider" type="slider" name="m_detail_slider" value="0;0" />
 		    </div>
+		-->
 		
 		</div>
 	</div>
@@ -100,6 +102,7 @@
 		</div>
 		<div id="history_controls">
 			<div id="history_slider_container">
+				<!--
 				<h3>History Slider</h3>
 				<div id="a_history_slider_div" class="slider">
 					<input id="a_history_slider" type="slider" name="a_history_slider" value="0;0" />
@@ -110,7 +113,7 @@
 				<div id="m_history_slider_div" class="slider">
 					<input id="m_history_slider" type="slider" name="m_history_slider" value="0;0" />
 			    </div>
-			
+				-->
 			</div>
 		</div>
 	</div>
@@ -126,7 +129,7 @@
 				<div id="yoy_header">Growth Rate</div>
 			</div>
 		</div>
-		<div id="series_history"><h3>Table Display</h3></div>
+		<!-- <div id="series_history"><h3>Table Display</h3></div> -->
 	</div>
 
 <script>
@@ -238,9 +241,9 @@
 	}
 	
 	function set_up_sliders() {
-		reset_date_slider("detail_slider", 0, all_dates.length-1, function(value) { })
+		//reset_date_slider("detail_slider", 0, all_dates.length-1, function(value) { })
 		reset_date_slider("sparkline_slider", 0, all_dates.length-1, function(value) { trim_sparklines(parse_slider_value(value)) })
-		reset_date_slider("history_slider", all_dates.length-11, all_dates.length-1, function(value) { })		
+		//reset_date_slider("history_slider", all_dates.length-11, all_dates.length-1, function(value) { })		
 	}
 	
 	function trim_sparklines(extent) {
