@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>UHERO Data Manager</title>
+<!--
+  <link href="stylesheets/humblefinance.css?1367532231" media="screen" rel="stylesheet" type="text/css" />
+-->
+<link href="stylesheets/jquery-ui.css?1398736766" media="screen" rel="stylesheet" type="text/css" />
+<link href="stylesheets/scaffold.css?1380149397" media="screen" rel="stylesheet" type="text/css" />
+
+<!--Load the AJAX API-->
+<!--
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script src="javascripts/rails.js?1326245747" type="text/javascript"></script>
+<script src="javascripts/application.js?1326245747" type="text/javascript"></script>
+<meta name="csrf-param" content="authenticity_token"/>
+<meta name="csrf-token" content="RdDDdZ816XHP6G9yD0CoHtLGDGLwjD0Anf2aGc2n3yc="/>
+-->
+
+<script src="javascripts/jquery.js?1326245747" type="text/javascript"></script>
+<link rel="stylesheet" href="stylesheets/jquery-ui.css">
+<script src="javascripts/ui/jquery-ui.js"></script>
+<script type="text/javascript" src="javascripts/jquery.slider.min.js"></script>
+<link rel="stylesheet" href="stylesheets/jquery.slider.min.css">
+<script type="text/javascript" src="javascripts/d3.v2.js"></script>
+
+<style>
+/*div {border: 1px solid #CCC; margin-bottom:10px;}*/
+#sliders { width: 600px; }
+.slider { /*height: 50px; */}
+#sparkline_controls, #series_display { float:left; width: 600px;}
+#history_controls, #series_history { float:left; width: 400px;}
+#sparkline_slider_container, 
+#history_slider_container {padding:10px; }
+#detail_view {width:980px; padding:0 10px; }
+#controls {clear:both; width:1000px; }
+#table_view {clear:both; width:1000px; }
+#series_display {}
+#history_display {}
+.category { clear:both;}
+.cat_label {float:left; background-color:#CCC; clear:both; margin-bottom:5px; text-align:center}
+.cat_label, #category_header { width:150px; }
+.series {float:left; width:450px; text-align:center; font-size:10px; overflow:hidden;}
+.series_label, .sparkline, .selected_value, .selected_perc,
+#category_header, #series_header, #sparkline_header, #level_header, #yoy_header {float:left}
+.series_label, #series_header { width: 180px; padding: 0 5px;}
+.series_label span { display: inline-block; vertical-align:middle; line-height:normal;}
+.sparkline, #sparkline_header { width:150px; }
+.selected_value, #level_header { width:70px; }
+.selected_perc, #yoy_header { width: 40px; }
+
+#sparkline_header {font-weight:bold; font-size:9px}
+#table_header { height: 20px; text-align:center; font-size:8px; line-height: 10px}
+
+#buttons a { text-decoration:none;}
+#geo, #freq { float:left; margin-top:10px;}
+#geo { width :300px; }
+#freq {width :100px; }
+
+</style>
+
+</head>
+<body>
+	<h1>Public Flex Table</h1>
+	<div id="detail_view">
+		<div id="detail_slider_container">
+			<h3>Detail View Slider</h3>
+			<div id="a_detail_slider_div" class="slider">
+				<input id="a_detail_slider" type="slider" name="a_detail_slider" value="0;0" />
+		    </div>
+			<div id="q_detail_slider_div" class="slider">
+				<input id="q_detail_slider" type="slider" name="q_detail_slider" value="0;0" />
+		    </div>
+			<div id="m_detail_slider_div" class="slider">
+				<input id="m_detail_slider" type="slider" name="m_detail_slider" value="0;0" />
+		    </div>
+		
+		</div>
+	</div>
+	<div id="controls">
+		<div id="buttons"></div>
+		<div id="sparkline_controls">
+			<div id="color_range"></div>
+			<div id="sparkline_slider_container">
+				<h3>Sparkline Slider</h3>
+				<div id="a_sparkline_slider_div" class="slider">
+					<input id="a_sparkline_slider" type="slider" name="a_sparkline_slider" value="0;0" />
+			    </div>
+				<div id="q_sparkline_slider_div" class="slider">
+					<input id="q_sparkline_slider" type="slider" name="q_sparkline_slider" value="0;0" />
+			    </div>
+				<div id="m_sparkline_slider_div" class="slider">
+					<input id="m_sparkline_slider" type="slider" name="m_sparkline_slider" value="0;0" />
+			    </div>
+				<div id= "buttons">
+					<div id="freq"></div>
+					<div id="geo"></div>
+				</div>
+			</div>
+		</div>
+		<div id="history_controls">
+			<div id="history_slider_container">
+				<h3>History Slider</h3>
+				<div id="a_history_slider_div" class="slider">
+					<input id="a_history_slider" type="slider" name="a_history_slider" value="0;0" />
+			    </div>
+				<div id="q_history_slider_div" class="slider">
+					<input id="q_history_slider" type="slider" name="q_history_slider" value="0;0" />
+			    </div>
+				<div id="m_history_slider_div" class="slider">
+					<input id="m_history_slider" type="slider" name="m_history_slider" value="0;0" />
+			    </div>
+			
+			</div>
+		</div>
+	</div>
+	
+	<div id="table_view">
+		<div id="series_display">
+			<h3>Series Display</h3>
+			<div id="table_header">
+				<div id="category_header">&nbsp;</div>
+				<div id="series_header">&nbsp;</div>
+				<div id="sparkline_header">&nbsp;</div>
+				<div id="level_header">Level</div>
+				<div id="yoy_header">Growth Rate</div>
+			</div>
+		</div>
+		<div id="series_history"><h3>Table Display</h3></div>
+	</div>
+
+<script>
+	var freq = "a"
+	var filenames = {a: "176.csv", q: "178.csv", m: "179.csv"}
+	var series_data, all_series_names, all_dates, all_geos, trimmed_dates, series_by_category;
+	var geo = "MAU"
+	var point;
+	var series_height = 45;
+
+	function set_series_by_category_to_geo() {
+		series_by_category = d3.nest()
+			.key(function(d) { return d.category })
+			.entries(series_data.filter(function(d) { 
+				return d.geo === geo
+			}))		
+	}
+	function initialize_data(data) {
+		all_series_names = d3.keys(data[0]).slice(1)
+		trimmed_dates = all_dates = data.slice(5).map(get_date_string)
+		var data_only = data.slice(5)
+		point = data_only.length-1
+
+		series_data = all_series_names.map(function(d) {
+			var data_array = data_only.map(function(row) {return row[d] === "" ? null : parseFloat(row[d]) } )
+			return {
+				series_name: d,
+				category: data[1][d],
+				primary: data[2][d],
+				display_name: data[0][d],
+				geo: data[3][d],
+				full_name: data[4][d],
+				data: data_array,
+				yoy: data_array.map(yoy)
+			}
+		})
+		
+		all_geos = d3.keys(d3.nest().key(function(d) { return d.geo}).map(series_data))
+		set_series_by_category_to_geo()
+	}
+	
+	function get_date_string(row) {
+		var date_string = row.series_name
+		var date_parts = date_string.split("/") 
+		switch(freq) {
+			case "a": 
+				return date_parts[2]
+			case "q":
+				return date_parts[2]+"Q"+(parseInt(date_parts[0])+2)/3
+			case "m":
+				return date_parts[2]+"M"+date_parts[0]
+			default:
+				return date_string
+		}
+		
+	}
+
+	function yoy(d,i,array) {
+		if (d === null || i === 0) return null
+		var last = array[i-1]
+		if (last === null) return null
+		return (d-last)/last * 100
+	}
+	
+	function parse_slider_value(value) {
+		return value.split(";").map(function(d) { return parseInt(d)})
+	}
+	
+	function reset_date_slider(div_id, handle1_pos, handle2_pos, onchange) {
+		
+		var container = d3.select("#"+freq+"_"+div_id+"_div")
+
+		if (container.select("span").node() === null) {
+			$("#"+freq+"_"+div_id).slider({ 
+				from: 0, 
+				to: all_dates.length-1, 
+				step: 1, 
+				skin: "plastic",
+				calculate: function(value) { return all_dates[value] },
+				onstatechange: onchange,
+			});
+	
+			
+		}
+		$("#"+freq+"_"+div_id).slider("value", handle1_pos, handle2_pos)
+		d3.selectAll("#" + div_id + "_container .slider").style("display","none")
+		d3.select("#"+freq+"_"+div_id+"_div").style("display","block")
+	}
+	
+	function set_up_buttons() {
+		d3.select("#geo")
+			.selectAll("a")
+			.data(all_geos)
+			.enter()
+			.append("a")
+			.attr("href", "javascript:;")
+			.text(function(d) { return d+" "})
+			.on("click", change_geo)
+			
+		
+		d3.select("#freq")
+			.selectAll("a")
+			.data(d3.keys(filenames))
+			.enter()
+			.append("a")
+			.attr("href", "javascript:;")
+			.text(function(d) { return d+" "})
+			.on("click", change_frequency)
+	}
+	
+	function set_up_sliders() {
+		reset_date_slider("detail_slider", 0, all_dates.length-1, function(value) { })
+		reset_date_slider("sparkline_slider", 0, all_dates.length-1, function(value) { trim_sparklines(parse_slider_value(value)) })
+		reset_date_slider("history_slider", all_dates.length-11, all_dates.length-1, function(value) { })		
+	}
+	
+	function trim_sparklines(extent) {
+		var start_i = extent[0]
+		var end_i = extent[1]
+		
+		x.domain([0, end_i - start_i])
+		trimmed_dates = all_dates.slice(start_i, end_i+1)
+
+		d3.select("#sparkline_header").text(trimmed_dates[end_i-start_i])
+		
+		var cat_series = d3.selectAll("div.series")
+		
+		cat_series
+			.select("svg")
+			.datum(function(d) { return d.data.slice(start_i, end_i+1) })
+
+		d3.selectAll("svg.sparkline")
+			.select("path.spark_area")
+			.attr("d", d_spark_area)
+					
+		d3.selectAll("svg.sparkline")
+			.select("path.spark")
+			.attr("d", d_spark_line)
+			
+		d3.selectAll("svg.sparkline")
+			.select("circle")
+			.attr("cx", function(d) { return x(end_i-start_i)})
+			.attr("cy", function(d) { 
+				y.domain(d3.extent(d));
+				return y(d[end_i-start_i])
+			})
+			
+		cat_series
+			.select(".selected_value")
+			.datum(function(d) { return d.data.slice(start_i, end_i+1) })
+			.text(function(d) { return display_num(d[end_i-start_i])})
+
+		cat_series
+			.select(".selected_perc")
+			.datum(function(d) { return d.yoy.slice(start_i, end_i+1) })
+			.text(function(d) { return display_num(d[end_i-start_i])})			
+			
+	}
+	
+	var x = d3.scale.linear()
+		.clamp(true)
+		.range([0,145])
+		
+	var y = d3.scale.linear()
+		.range([series_height,5]);
+
+	var spark_line = d3.svg.line()
+		.x(function(d,i) { return x(i) })
+		.y(function(d) { return y(d) })
+
+	var spark_area = d3.svg.area()
+		.x(function(d,i) { return x(i) })
+		.y(function(d) { return y(d) })
+		.y0(series_height);
+		
+	function expand(cat) {
+		cat
+			.transition()
+			.style("height", function(d) { return (d.values.length * series_height) + "px"})
+			.style("line-height", function(d) { return (d.values.length * series_height) + "px"})
+			.attr("state", "expanded")
+
+		d3.select(cat.node().parentNode)
+			.selectAll("div.series")
+			.transition()
+			.style("height", series_height+"px")
+
+	}
+	
+	function collapse(cat) {
+		cat
+			.transition()			
+			.style("height", series_height+"px")
+			.style("line-height", series_height+"px")
+			.attr("state", "collapsed")
+			
+		d3.select(cat.node().parentNode)
+			.selectAll("div.series")
+			.transition()
+			.style("height", function(d) { 
+				return d.primary === "Primary" ? series_height+"px" : "0px"
+			})
+	}
+	
+	function addCommas(nStr)
+	{
+	    nStr += '';
+	    var x = nStr.split('.');
+	    var x1 = x[0];
+	    var x2 = x.length > 1 ? '.' + x[1] : '';
+	    var rgx = /(\d+)(\d{3})/;
+	    while (rgx.test(x1)) {
+	        x1 = x1.replace(rgx, '$1' + ',' + '$2');
+	    }
+	    return x1 + x2;
+	}
+	
+	function display_num(num) {
+		if (num < 100) return Math.round(num*100) /100
+		else return addCommas(Math.round(num))
+	}
+	
+	function rebind_data(series_by_category, start_i, end_i) {
+		var cat_divs = d3.select("#series_display")
+			.selectAll("div.category")
+			.data(series_by_category, function(d) { return d.key })
+		
+		var cat_series = cat_divs
+			.select("div.cat_series")
+			.selectAll("div.series")
+			.data(function(d) { return d.values }, function(d) { return d.display_name })	
+
+		var spark_paths = cat_series.select("svg")
+			.datum(function(d) { return d.data.slice(start_i, end_i+1) })
+
+		spark_paths
+			.select("path.spark_area")
+			.transition()
+			.duration(1000)
+			.attr("d", d_spark_area)
+
+		spark_paths
+			.select("path.spark")
+			.transition()
+			.duration(1000)
+			.attr("d", d_spark_line)
+			
+		spark_paths
+			.select("circle")
+			.transition()
+			.duration(1000)
+			.attr("cy", cy_spark)
+
+		cat_series.select("div.selected_value")
+			.datum(function(d) { return d.data.slice(start_i, end_i+1) })
+			.text(function(d) { return display_num(d[point]) })
+
+		cat_series.select("div.selected_perc")
+			.datum(function(d) { return d.yoy.slice(start_i, end_i+1) })
+			.text(function(d) { return display_num(d[point])+"%" })
+	}
+	
+	function change_geo(new_geo) {
+		geo = new_geo
+
+		var start_i = all_dates.indexOf(trimmed_dates[0])
+		var end_i = all_dates.indexOf(trimmed_dates[trimmed_dates.length-1])
+		point = end_i-start_i
+		
+		set_series_by_category_to_geo()
+		console.log(series_by_category)
+		rebind_data(series_by_category, start_i, end_i)
+			
+	}
+	
+	function change_frequency(new_freq) {
+		freq = new_freq
+		
+		d3.csv(filenames[freq], function(data) {
+			initialize_data(data)			
+			x.domain([0, all_dates.length-1])	
+			console.log(series_by_category)
+			rebind_data(series_by_category, 0, all_dates.length-1)
+			reset_date_slider("sparkline_slider", 0, all_dates.length-1, function(value) { trim_sparklines(parse_slider_value(value)) })
+		})
+	}
+	
+	function d_spark_area(d) {
+		y.domain(d3.extent(d));
+		return spark_area(d)		
+	}
+	function d_spark_line(d) {
+		y.domain(d3.extent(d));
+		return spark_line(d)
+	}
+	function cy_spark(d) {
+		y.domain(d3.extent(d));
+		return y(d[point])
+	}
+	
+	function create_series_display() {
+		
+		x.domain([0, all_dates.length-1])
+				
+		var cat_divs = d3.select("#series_display")
+			.selectAll("div.category")
+			.data(series_by_category)
+			.enter()
+			.append("div")
+			.attr("class", "category")
+			
+		var cat_labels = cat_divs
+			.append("div")
+			.attr("class", "cat_label")
+			.attr("state", "expanded")
+			.text(function(d) { return d.key })
+			.style("height", function(d) { return (d.values.length * series_height) + "px"})
+			.style("line-height", function(d) { return (d.values.length * series_height) + "px"})
+			.on("mouseover", function(d,i) { d3.select(this).style("background-color", "#999")})
+			.on("mouseout", function(d,i) { d3.selectAll(".cat_label").style("background-color", "#CCC")})
+			.on("click", function(d,i) { 
+				var cat = d3.select(this)
+				if (cat.attr("state") === "expanded") collapse(cat)
+				else expand(cat)
+			})
+		var cat_series = cat_divs
+			.append("div")
+			.attr("class", "cat_series")
+			.selectAll("div.series")
+			.data(function(d) { return d.values })
+			.enter()
+			.append("div")
+			.attr("class", "series")
+			.style("height", series_height+"px")
+			.on("mouseover", function(d) {
+				var this_cat = d3.select(this)
+					.style("background-color", "#EEE")
+				
+				this_cat.selectAll(".selected_value").style("font-weight", "bold")
+				this_cat.selectAll(".selected_perc").style("font-weight", "bold")
+			})
+			.on("mouseout", function(d) {
+				d3.selectAll(".series")
+					.style("background-color", "#FFF")
+					.selectAll("div")
+					.style("font-weight", "normal")
+			})
+		
+		cat_series.append("div")
+			.attr("class", "series_label")
+			.style("line-height", series_height+"px")
+			.append("span")
+			.text(function(d) { return d.display_name})
+			
+		var spark_paths = cat_series
+			.append("svg").attr("class", "sparkline")
+			.attr("height", series_height)
+			.attr("width", 150)
+			.on("mousemove", function(d) {
+				pos = d3.mouse(this)
+				var mouse_i = Math.round(x.invert(pos[0]))
+				//console.log(mouse_i)
+				d3.selectAll(".point")
+					.attr("cx", x(mouse_i))
+					.attr("cy", function(d) {
+						y.domain(d3.extent(d));
+						return y(d[mouse_i])
+					})
+				d3.select("#sparkline_header").text(trimmed_dates[mouse_i])
+				d3.selectAll(".selected_value").text(function(d) { return display_num(d[mouse_i])})
+				d3.selectAll(".selected_perc").text(function(d) { return display_num(d[mouse_i])+"%"})
+			})
+			.on("mouseout", function(d) {
+				var mouse_i = x.domain()[1]
+				d3.selectAll(".point")
+					.attr("cx", x(mouse_i))
+					.attr("cy", function(d) {
+						y.domain(d3.extent(d));
+						return y(d[mouse_i])
+					})
+				d3.select("#sparkline_header").text(trimmed_dates[mouse_i])	
+				d3.selectAll(".selected_value").text(function(d) { return display_num(d[mouse_i])})
+				d3.selectAll(".selected_perc").text(function(d) { return display_num(d[mouse_i])+"%"})
+			})
+
+		spark_paths
+			.append("path").attr("class", "spark_area")
+			.datum(function(d) { return d.data })
+			.attr("d", d_spark_area)
+			.attr("stroke", "none")
+			.attr("fill", "red")
+			.attr("fill-opacity", .1);
+			
+		spark_paths
+			.append("path").attr("class", "spark")
+			.datum(function(d) { return d.data })
+			.attr("d", d_spark_line)
+			.attr("stroke", "red")
+			.attr("fill", "none");
+			
+		spark_paths
+			.append("circle").attr("class", "point")
+			.datum(function(d) { return d.data })
+			.attr("cx", function(d) { return x(point)})
+			.attr("cy", cy_spark)
+			.attr("r", 2)
+			.attr("fill", "red")
+						
+		cat_series.append("div")
+			.datum(function(d) { return d.data })
+			.attr("class", "selected_value")
+			.style("line-height", series_height+"px")
+			.text(function(d) { return display_num(d[point]) })
+			
+		cat_series.append("div")
+			.datum(function(d) { return d.yoy })
+			.attr("class", "selected_perc")
+			.style("line-height", series_height+"px")
+			.text(function(d) { return display_num(d[point])+"%" })
+		
+		
+	}
+	
+	d3.csv(filenames[freq], function(data) {
+		initialize_data(data)
+		set_up_buttons()
+		set_up_sliders()
+		create_series_display();
+	})
+	
+</script>
+</body>
