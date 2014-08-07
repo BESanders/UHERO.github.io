@@ -2,621 +2,344 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
 	    <title>New Visualization</title>
-		<script type="text/javascript" src="js/dat.gui.min.js"></script>
 	    <script type="text/javascript" src="js/d3.v3.min.js"></script>
 		<script type="text/javascript" src="js/jquery.min.js"></script>
 		<script type="text/javascript" src="js/jquery.svg.js"></script>
-		<script src="js/d3.slider.js"></script>
-		<link rel="stylesheet" href="js/d3.slider.css" type="text/css">
-		<style>
-		.pcp, .lifecycle { float:left; width: 100px; height:139px;}
-		.pcp h5 { margin:0 0 20px 0; padding:0;}
-		h3{ font-family: Helvetica, sans-serif;}
-		h5{ font-size: 12px;font-family: Helvetica, sans-serif; text-transform: uppercase; font-weight:normal;}
-		div{ font-family: Helvetica, sans-serif; font-weight:normal;}
-		div#headers h3{ font-size: 14px;font-weight:normal;}
-		h3.country_header { font-size: 16px; text-transform: uppercase;}
-		h3.section_header { font-size: 16px; clear:both; font-weight:normal;}
-		h3.year{ font-size: 16px; position:absolute; left:650px; top:2px;}
-		div#headers {position:relative;}
-		.x_axis path,
-		.x_axis line {
-		    fill: none;
-		    stroke: black;
-		    shape-rendering: crispEdges;
-		}
-		
-		.axis path{
-			 fill: none;
-			 stroke: none;
-		}
-		
-		.axis line{
-			fill: none;
-		    stroke: black;
-		    shape-rendering: crispEdges;
-		}
-		
-		.axis text {
-		    font-family: sans-serif;
-		   	font-size: 11px;
-		}
-		div#legend{
-			position:absolute;
-			left:1200px;
-			top:0px;
-		}
-		
-		#legend_svg{
-			position:absolute;
-			left:-250px;
-		}
-		
-		#legend_title{
-			position:relative;
-			left:-150px;
-			font-weight:normal;
-			font-size:14px;
-		}
-		</style>
+		<script src="js/queue.min.js"></script>
+		<script src="js/jquery-ui.js"></script>
+		<script src="js/jquery.ui.touch-punch.min.js"></script>
+		<link rel="stylesheet" href="js/jquery-ui.css">
+		<link rel="stylesheet" href="viz.css" type="text/css">
 </head>
 <body>
-<h3 class="country_header">united states of america</h3>
-<div id="slider"></div>
-<h3 class="year">2018</h3>
-<div style="position:relative; top:-30px; width: 950px">
-	<div id="headers" style="left:40px">
-		<h3 style="margin-left: 75px">Per Capita Profile</h3>
-		<h3 style="position:absolute; left: 428px; top:-16px">Population</h3>
-		<h3 style="position:absolute; left: 728px; top:-16px">Lifecycle</h3>
+<div style="height:902px; width: 1160px">
+	<h1>Population, Consumption, and Labor Income Profile by Country</h1>
+	<h3 id="country_header">
+		<span id="country">United States</span>
+		<span id="age_title"> age profile for</span> 
+		<span id="year">2014</span>
+	</h3>
+	<div id="top_selection_div">
+		<div id="pcp">
+			<h6 id="pcp_title">Per Capita<br/>
+				<span id="pcp_consumption">Consumption</span> &
+				<span id="pcp_labor_income">Labor Income</span>
+				<br/> <span id="pcp_age">by Age</span>
+			</h6>
+			<svg id="pcp_selected">
+				<path class="pcp"></path>
+				<path class="pcp"></path>
+			</svg>
+		</div> <!--pcp closing-->
+		
+		<div id="support_and_slider">
+			<div id="support_ratio_container">
+				Support Ratio = <span id="support_ratio"></span>
+				<div id="controls">
+					<svg id="support_ratio_viz">
+						<path id="support_ratio_time_series"></path>
+						<circle id="support_ratio_marker"></circle>
+					</svg>
+				</div>
+				<br/>
+				<br/>
+				<div id="support_ratio_answer">
+					support ratio = 
+				</div>
+				<div id="support_ratio_equation">
+					<span id="support_labor_income">Labor Income</span>
+					<hr>
+					<span id="support_consumption">Consumption</span>
+				</div>
+			</div>
+			<div id="slider_container">
+				<div id="slider"></div>	
+				<span id="slider_desc"><em>display dynamic profile by country</em></span>
+				<span id="play_desc">drag slider to change timeframe or</span>
+				<div id="play">
+					<a id="play_button" href="javascript:;">
+						<img id="play_button_image" src="Blue+Triangle.png" alt="play button" width="20" height="20"></img>
+						play
+					</a>
+				</div>
+			</div>
+		</div>
+		<!--slider closing-->
+		
+		<div id="population">
+			<h3 id="population_title">Population</h3>
+			<svg id="population_selected">
+				<path class="population"></path>
+				<path class="population"></path>
+			</svg>
+		</div><!--population closing-->
+			
+		<div id="aggregate">
+			<h3 id="aggregate_title">Aggregate<br/>
+				<span id="aggregate_consumption">Consumption</span> & 
+				<span id="aggregate_labor_income">Labor Income</span> by Age
+			</h3>
+			<svg id="aggregate_profile_selected">
+				<path class="aggregate_profile"></path>
+				<path class="aggregate_profile"></path>
+			</svg>
+		</div><!--aggregate closing-->
+		
+		
 	</div>
-	<svg id="pcp_selected"></svg>
-	<svg id="population_distributions"></svg>
-	<svg id="lifecycle_selected"></svg>
-	<div id="link_states" style="padding-top:15px"></div>
-	<div id="legend">
-		<h3 id="legend_title">Legend</h3>
+
+
+	<div id="link_states">
+		
+
+		<h3>Country Previews:</h3>
+		<p class="display_parameters">
+		<a href="javascript:;" class="preview_mode">Per Capita Profiles</a>
+		<a href="javascript:;" class="preview_mode">Population</a>
+		<a href="javascript:;" class="preview_mode selected">Aggregate Totals</a>
+		</p>
+		<h3>Display Parameters:</h3>
+		<p class="display_parameters">Scale:
+		<a href="javascript:;" class="scale selected">Normalized</a>
+		<a href="javascript:;" class="scale">Fixed</a>
+		</p>	
+		
+		<p class="display_parameters">Fertility Scenario:
+		<a href="javascript:;" class="pop_scenario">Constant</a>
+		<a href="javascript:;" class="pop_scenario">Low</a>	
+		<a href="javascript:;" class="pop_scenario selected">Medium</a>	
+		<a href="javascript:;" class="pop_scenario">High</a>	
+		</p>
+		
+		<h3 class="instructions">Click on a country thumbnail to load it into the main view</h3>
+		
 	</div>
-	<h3 class="section_header">Per Capita Profiles</h3>
+	
 	<div id="per_capita_profiles"></div>
 </div>
-<!-- <h3 class="section_header">Lifecycles</h3>
-<div id="lifecycles"></div> -->
 
 </body>
 <script>
-var chart_height = 200
+var chart_height = 120
 var margin_top = 10
-var pop_distributions_width = 300
+var pop_distributions_width = 180
+
+var support_height = 200;
+var support_width = 290;
+
+var pop_width = 220;
+var pop_height = 180;
+
 var margin_left = 10
 
 var x_axis_space = 20;
-var y_axis_space = 60;
+var y_axis_space = 30;
 
-var pcp_height = 100
-var pcp_width = 100
+var pcp_height = 50
+var pcp_width = 80
 
-var year = 2018
-var countries_loaded = {}
-var population_projections = {}
-var countries = [
-"austria.csv", 
-"brazil.csv", 
-"costa_rica.csv", 
-"finland.csv", 
-"germany.csv", 
-"hungary.csv", 
-"india.csv", 
-"indonesia.csv", 
-"japan.csv", 
-"kenya.csv",
-"mexico.csv",
-"nigeria.csv",
-"philippines.csv",
-"republic_of_korea.csv",
-"slovenia.csv",
-"spain.csv",
-"sweden.csv",
-"thailand.csv",
-"united_states_of_america.csv"]
-var country_names = [];
+var year = 2014
+
+var pcp_max = 60000
+var pop_max = 40000
+var aggregate_max = 250000000
+
 var pop_csv = [];
-var lifecycle_storage;
+var aggregate_profile_storage;
 var date_column_header = "Reference date (as of 1 July)";
 var country_column_header = "Major area, region, country or area *";
-var country_selected = "united states of america";
-var current_state = "pcp";
+var country_selected = "US";
+var current_state = "aggregate_profile";
 var zero_data_array = [];
+var no_data_binding = [
+	{key: "no data", data: zero_data_array, color: "#6600CC", fill_opacity: 0.5}, 
+	{key: "no data", data: zero_data_array, color: "#000066", fill_opacity: 0.7}
+]
+var current_scale = "normalized";
+var consumption = 0;
+var labor_income = 1;
+var pop_scenarios =["Constant fertility", "Low fertility", "Medium fertility", "High fertility"]
+var pop_scenario = "Medium fertility"
+var all_pop_data = {}
+var slider;
+var selected_data;
 
-var y_lifecycle = d3.scale.linear().range([pcp_height,0]).domain([0,200000000])
-var y_pcp = d3.scale.linear().range([pcp_height,0]).domain([0,50000])
-var x_pcp = d3.scale.linear().domain([0,100]).range([0, pcp_width])
-var y_pop = d3.scale.linear().range([margin_top+chart_height, margin_top])
-var y_pop_small = d3.scale.linear().range([pcp_height,0])
-var x = d3.scale.linear().domain([0,100]).range([margin_left+y_axis_space,margin_left+pop_distributions_width])
-var y_pcp_selected = d3.scale.linear().range([margin_top+chart_height, margin_top])
-var y_lifecycle_selected = d3.scale.linear().range([margin_top+chart_height, margin_top])
+var x_small = d3.scale.linear().domain([0,100]).range([0, pcp_width])
+var x_main = {
+	pcp: d3.scale.linear().domain([0,100]).range([margin_left+y_axis_space,margin_left+pop_width]),
+	population: d3.scale.linear().domain([0,100]).range([margin_left+y_axis_space,margin_left+pop_width]),
+	aggregate_profile: d3.scale.linear().domain([0,100]).range([margin_left+y_axis_space,margin_left+pop_width])
+}
 
-var svg = d3.select("#population_distributions")
-	.attr("height", chart_height+margin_top+x_axis_space+20)
-	.attr("width", pop_distributions_width+margin_left)
+var y_small = d3.scale.linear().range([pcp_height,0])
+var y_main = {
+	population : d3.scale.linear().range([margin_top+pop_height, margin_top]),
+	pcp : d3.scale.linear().range([margin_top+chart_height, margin_top]), 
+	aggregate_profile : d3.scale.linear().range([margin_top+pop_height, margin_top]), 
+}
+
+support_ratio_x = d3.scale.linear().domain([1950,2100]).range([180,310])
+support_ratio_y = d3.scale.linear().domain([.5,1]).range([220,190])
+
+var support_ratio_path = d3.svg.line()
+	.x(function(d, i) { return support_ratio_x(1950+i) })
+	.y(function(d) { return support_ratio_y(d) })
+
+var small_path = d3.svg.area()
+	.x(function(d, i) { return x_small(i) })
+	.y(function(d) { return y_small(d)})
+	.y0(y_small(0))
+	
+var main_path = {
+	population : d3.svg.area()
+		.x(function(d, i) { return x_main["population"](i) })
+		.y(function(d) { return y_main["population"](d) })
+		.y0(y_main["population"](0)), 
+
+	pcp : d3.svg.area()
+		.x(function(d, i){ return x_main["pcp"](i) })
+		.y(function(d){ return y_main["pcp"](d) })
+		.y0(y_main["pcp"](0)), 
+		
+	aggregate_profile : d3.svg.area()
+		.x(function(d, i){ return x_main["aggregate_profile"](i) })
+		.y(function(d){ return y_main["aggregate_profile"](d) })
+		.y0(y_main["aggregate_profile"](0))
+}
+
+
+var pop_selected_svg = d3.select("#population_selected")
+	.attr("height", pop_height+margin_top+x_axis_space+20)
+	.attr("width", pop_width+margin_left+10)
 
 var pcp_selected_svg = d3.select("#pcp_selected")
 	.attr("height", chart_height+margin_top+x_axis_space+20)
-	.attr("width", pop_distributions_width+margin_left)
+	.attr("width", pop_distributions_width+margin_left+10)
 	
-var lifecycle_selected_svg = d3.select("#lifecycle_selected")
-	.attr("height", chart_height+margin_top+x_axis_space+20)
-	.attr("width", pop_distributions_width+margin_left)
+var aggregate_profile_selected_svg = d3.select("#aggregate_profile_selected")
+	.attr("height",	pop_height+margin_top+x_axis_space+20)
+	.attr("width", pop_width+margin_left+10)
 
+d3.select("#support_ratio_viz")
+	.attr("height", support_height+margin_top+x_axis_space+20)
+	.attr("width", support_width+margin_left+30)
+	
 var pcp_g = pcp_selected_svg.append('g')
-var pop_g = svg.append("g")
-var lifecycle_g = lifecycle_selected_svg.append("g")	
-function replace_underscore_with_space(item){
+var pop_g = pop_selected_svg.append("g")
+var aggregate_profile_g = aggregate_profile_selected_svg.append("g")	
+
+
+function shuffle(array) {
+  var currentIndex = array.length
+    , temporaryValue
+    , randomIndex
+    ;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
+function replace_space_with_underscore(item){
 	return item.replace(/ /g, "_");
 }
 
+function numify(float_string) {
+	var num = parseFloat(float_string.replace(',','').replace(/\s/g,''),10)
+	return isNaN(num) ? 0 : num
+}
 function intify(int_string) {
   var num = parseInt(int_string.replace(',','').replace(/\s/g,''),10)
   return isNaN(num) ? 0 : num
 }
 
-function pcp_vals(pcp_data){
-	return pcp_data.map(function(d) { return intify(d.value) })
+function two_decimals(f) {
+	return Math.round(f*100)/100
 }
-
 function pop_vals(pop_data) { 
 	return pop_data.map(function(d) { return intify(d) })
 }
 
 function change_year_title(new_year){
-	d3.select("h3.year").text(new_year)
+	d3.select("#year").text(new_year)
 }
+
 
 function update_year(new_year) {
 	year = new_year
-	//create_population_distributions()
-	update_life_cycles()
-	update_selected_lifecycle()
-	update_country_population()
-	update_pop_divs()
-	create_income_axes();
+	load_main_view(selected_data, 0)
 	change_year_title(new_year);
-	d3.selectAll("g.tick text").attr("fill","#BBBBBB")
+	if(current_state === "population" || current_state === "aggregate_profile")
+		render_small_multiple_country(d3.selectAll("div.pcp svg"), 0)
 }
 
-var pop_path = d3.svg.area()
-	.x(function(d, i) { return x(i) })
-	.y(function(d) { return y_pop(intify(d)) })
-	.y0(y_pop(0))
+function age_array(object_type, data_object) {
+	if (object_type === "pcp") {
+		multiplier = data_object.Units === "Thousands" ? 1000 : 1
+		return d3.entries(data_object)
+			.filter(function(d) { return d.key.slice(0,3) === "age"})
+			.sort(function(a,b) { return d3.ascending( parseInt(a.key.slice(3)), parseInt(b.key.slice(3)) ) })
+			.map(function(d) { return numify(d.value) * multiplier})
+	}
 	
-var pop_path_small = d3.svg.area()
-	.x(function(d, i) { return x_pcp(i) })
-	.y(function(d) { return y_pop_small(intify(d))})
-	.y0(y_pop_small(0))
-	
-var pcp_path = d3.svg.area()
-	.x(function(d) { return x_pcp(intify(d.key)) })
-	.y(function(d) { return y_pcp(intify(d.value)) })
-	.y0(y_pcp(0))
-
-var lifecycle_path = d3.svg.area()
-	.x(function(d) { return x_pcp(intify(d.key)) })
-	.y(function(d) { return y_lifecycle(d.value) })
-	.y0(y_lifecycle(0))
-
-var pcp_selected_path = d3.svg.area()
-	.x(function(d){ return x(intify(d.key)) })
-	.y(function(d){ return y_pcp_selected(intify(d.value)) })
-	.y0(y_pcp_selected(0))
-
-var lifecycle_selected_path = d3.svg.area()
-	.x(function(d){ return x(intify(d.key)) })
-	.y(function(d){ return y_lifecycle_selected(d.value) })
-	.y0(y_lifecycle_selected(0))
-	
-function create_age_and_value_pair_array(data) {
-	return  d3.entries(data)
-		.filter(function(d) { return !isNaN(parseInt(d.key,10)) })
-		.sort(function(a,b) {return d3.ascending(intify(a.key), intify(b.key))})
-}
-
-function shorten_population_array(data){
-	var array = d3.entries(data)
-		.filter(function(d) { return !isNaN(parseInt(d.key,10)) })
-		.sort(function(a,b) {return d3.ascending(intify(a.key), intify(b.key))})
-		
-	array = array.map(function(d){
-		return d.value;
-	})
-	
-	var value = 0;
-	array.forEach(function(d, i){
-		if(i >= 90){
-			value += parseInt(d);
-			array[90] = value.toString();
-		}
-	})
-	
-	array = array.filter(function(d, i){ return i <= 90;})
-	
-	return array;
-	
-}
-
-function create_pcp_times_population_and_age_array(country, data, given_year) {
-	var pop_array = []
-	var age_array = create_age_and_value_pair_array(data)
-	var matches = population_projections[given_year]
-		.filter(function(d) { return d[country_column_header].toLowerCase() === country.replace(/_/g, " ") })
-	if (matches.length > 0)
-		pop_array = create_age_and_value_pair_array(matches[0])
-	else
-		console.log("NOTHING for " + country)
-	var pop_lookup = d3.nest().key(function(d) {return d.key}).rollup(function(leaves) {return leaves[0].value}).map(pop_array)
-	var pop_lookup = shorten_population_array(pop_lookup)
-	return age_array.map(function(d, i) { 
-		var val = (pop_lookup[i] === undefined) ? 0 : intify(d.value) * intify(pop_lookup[i]);
-		return {key : d.key, value: val} 
-	})
-	
-}
-
-function create_empty_array(data){
-	zero_data_array = d3.entries(data)
-						.map(function(d){
-							return {key: d.key, value: 0}
-					  })
-}
-
-function update_pop_divs(){
-	if(current_state === "population"){
-		d3.selectAll("div.pcp")
-			.selectAll("svg")
-			.selectAll("path."+current_state+".active")
-			.data(function(d){
-				return [
-					{key: "population", data: lifecycle_storage[year][d]["population"]},
-					{key: "population", data: lifecycle_storage[year][d]["population"]}
-				]
-			})
-			.attr("d", function(d){ return pop_path_small(d.data)})
+	if (object_type === "pop") {
+		return d3.entries(data_object)
+			.filter(function(d) { return !isNaN(parseInt(d.key,10))})
+			.sort(function(a,b) {return d3.ascending(intify(a.key), intify(b.key))})
+			.map(function(d) {return numify(d.value) })
 	}
 }
 
-// function update_life_cycles() {
-// 	d3.selectAll(".lifecycle svg").selectAll("path")
-// 		.data(function(d) {   
-// 			return [
-// 				{key: "consumption", data: lifecycle_storage[year][d]["consumption"]},
-// 				{key: "production", data: lifecycle_storage[year][d]["production"]}
-// 			]
-// 		})
-// 		.attr("d", function(d) { return lifecycle_path(d.data) })
-// }
-
-function update_life_cycles(){
-	if(current_state === "lifecycle"){
-		d3.selectAll("div.pcp")
-			.selectAll("svg")
-			.selectAll("path.active")
-			.data(function(d) {   
-				return [
-					{key: "consumption", data: lifecycle_storage[year][d]["consumption"]},
-					{key: "production", data: lifecycle_storage[year][d]["production"]}
-				]
-			})
-			.attr("d", function(d) { return lifecycle_path(d.data) })
-	}
+function create_aggregate_totals(pcp_age_array, pop_age_array) {
+	return d3.zip(pcp_age_array, pop_age_array)
+		.map(function(d) {return d[0] * d[1]})
 }
 
-function update_selected_lifecycle(){
-	var max_consum = d3.max(lifecycle_storage[year][country_selected]["consumption"], function(d){ return d.value; })
-	var max_prod = d3.max(lifecycle_storage[year][country_selected]["production"], function(d){ return d.value; }) 
-	var max_lifecycle = d3.max([max_consum, max_prod])
-	
-	y_lifecycle_selected.domain([0, max_lifecycle])
-	
-	d3.select("#lifecycle_selected").selectAll("path.lifecycle")
-		.data(function(){
-			return [
-				{key: "consumption", data: lifecycle_storage[year][country_selected]["consumption"]},
-				{key: "production", data: lifecycle_storage[year][country_selected]["production"]}
-			]
-		})
-		.attr("d", function(d) { return lifecycle_selected_path(d.data) })
-}
-
-function update_country_population(){
-	var population = lifecycle_storage[year][country_selected]["population"]
-	var max_pop = d3.max(pop_vals(population))
-	y_pop.domain([0, max_pop])
-	svg.selectAll("path.country")
-			.data(function(){ return [{key: "population", data: population}]})
-			.attr("d", function(d) { 
-				return pop_path(d.data) 
-			})
-
-}
-
-function highlight_country_population(state){
-	var population = lifecycle_storage[year][state]["population"]
-	var max_pop = d3.max(pop_vals(lifecycle_storage[year][state]["population"]))
-	y_pop.domain([0, max_pop])
-	svg.selectAll("path.country")
-			.data(function(){ return [{key: "population", data: population}] })
-			.attr("country", state)
-			.transition()
-			.attr("d", function(d) { 
-				return pop_path(d.data) 
-			})
-			// .attr("fill-opacity", function(d){
-			// 	if(d !== state){
-			// 		return 0;
-			// 	}else{
-			// 		return 0.2;
-			// 	}
-			// })
-			// .attr("fill", "blue")
-}
-
-function highlight_country_pcp(state){
-	var pcp = countries_loaded[replace_underscore_with_space(state)]
-	var consumption_data = create_age_and_value_pair_array(pcp[1]);
-	var production_data = create_age_and_value_pair_array(pcp[10]);
-	
-	var max_consum = d3.max(pcp_vals(consumption_data))
-	var max_prod = d3.max(pcp_vals(production_data))
-	var max_pcp = d3.max([max_consum, max_prod])
-	
-	y_pcp_selected.domain([0, max_pcp])
-	
-	pcp_selected_svg.selectAll("path.pcp")
-		.data(function(){ 			
-				return [
-					{key: "consumption", data: consumption_data },
-					{key: "production", data: production_data }
-				]
-		})
-		.attr("country", state)	
-		.transition()
-		.attr("d", function(d){
-			return pcp_selected_path(d.data)
-		})
-	
-}
-
-function highlight_country_lifecycle(state){
-	var max_consum = d3.max(lifecycle_storage[year][state]["consumption"], function(d){ return d.value; })
-	var max_prod = d3.max(lifecycle_storage[year][state]["production"], function(d){ return d.value; }) 
-	var max_lifecycle = d3.max([max_consum, max_prod])
-
-	y_lifecycle_selected.domain([0, max_lifecycle])
-
-	lifecycle_selected_svg.selectAll("path.lifecycle")
-		.data(function(){
-			return [
-				{key: "consumption", data: lifecycle_storage[year][state]["consumption"] },
-				{key: "production", data: lifecycle_storage[year][state]["production"] }
-			]
-		})
-		.attr("country", state)
-		.transition()
-		.attr("d", function(d){
-			return lifecycle_selected_path(d.data)
-		})
-}
-
-function create_population_distributions(d) {
-	var population = lifecycle_storage[year][d]["population"]
-	var pop_max = d3.max(pop_vals(population))
-	y_pop.domain([0, pop_max])
-	
-	var pop_dists = svg.selectAll("path")
-	 	.data(function(){ return [{key:"population", data: population}] })
-	
-	pop_dists
-		.enter()
-		.append("path")
-		.attr("stroke", "none")
-		.attr("fill", "blue")
-		.attr("fill-opacity", .2)
-		.attr("class", "country "+d)
-		.attr("country", d)
-	
-	pop_dists.attr("d", function(d) { 
-			return pop_path(d.data) 
-	})
-	// svg.selectAll("path").remove()
-	// var pop_dists = svg.selectAll("path")
-	// 	.data(country_names)
-	// 			
-	// pop_dists
-	// 	.enter()
-	// 	.append("path")
-	// 	.attr("stroke", "none")
-	// 	.attr("fill", "blue")
-	// 	.attr("fill-opacity", .2)
-	// 	.attr("class", function(d) { return "country "+d; })
-	// 	// .on("mouseover", function(d) { 
-	// 	// 	var pop = d3.select(this) 
-	// 	// 	highlight_country_population(pop, d)
-	// 	// })
-	// 	// .on("mouseout", function(d) {
-	// 	// 	var pop = d3.select(this)
-	// 	// 	pop.attr("fill", "blue")
-	// 	// 	pop = d3.select("path."+country_selected.replace(/ /g, "."))
-	// 	// 	highlight_country_population(pop, country_selected)
-	// 	// })
-	// 	// 
-	// pop_dists
-	// 	.attr("d", function(d) { 
-	// 		return pop_path(lifecycle_storage[year][d]["population"]) 
-	// 	})
-				
-}
-
-function create_pcp_distributions(d){
-	var pcp = countries_loaded[replace_underscore_with_space(d)]
-	var consumption_data = create_age_and_value_pair_array(pcp[1]);
-	var production_data = create_age_and_value_pair_array(pcp[10]);
-	
-	var max_consum = d3.max(pcp_vals(consumption_data))
-	var max_prod = d3.max(pcp_vals(production_data))
-	var max_pcp = d3.max([max_consum, max_prod])
-	
-	y_pcp_selected.domain([0, max_pcp])
-	
-	var pcp_dists = pcp_selected_svg.selectAll("path")
-		.data(function(){ 			
-				return [
-					{key: "consumption", data: consumption_data },
-					{key: "production", data: production_data }
-				]
-			})
-	
-	pcp_dists
-		.enter()
-		.append("path")
-		.attr("stroke", "none")
-		.attr("fill", function(d){
-			return d.key === "consumption" ? "red": "green";
-		})
-		.attr("fill-opacity", .2)
-		.attr("country", d)
-		.attr("class", "pcp "+d)
-	
-	pcp_dists
-		.attr("d", function(d){
-			return pcp_selected_path(d.data)
-		})
-}
-
-function create_lifecycle_distributions(d){
-	var max_consum = d3.max(lifecycle_storage[year][d]["consumption"], function(d){ return d.value; })
-	var max_prod = d3.max(lifecycle_storage[year][d]["production"], function(d){ return d.value; }) 
-	var max_lifecycle = d3.max([max_consum, max_prod])
-
-	y_lifecycle_selected.domain([0, max_lifecycle])
-	
-	var lifecycle_dists = lifecycle_selected_svg.selectAll("path")
-		.data(function(){
-			return [
-				{key: "consumption", data: lifecycle_storage[year][d]["consumption"] },
-				{key: "production", data: lifecycle_storage[year][d]["production"] }
-			]
-		})
-	
-	lifecycle_dists
-		.enter()
-		.append("path")
-		.attr("stroke", "none")
-		.attr("fill", function(d){
-			return d.key === "consumption" ? "red" : "green";
-		})
-		.attr("fill-opacity", .2)
-		.attr("country", d)
-		.attr("class", "lifecycle "+d)
-	
-	lifecycle_dists
-		.attr("d", function(d){
-			return lifecycle_selected_path(d.data)
-		})
-}
-
-function add_country(name, data) {
-	if(name !== "taiwan"){
-		countries_loaded[name] = data;	
-		country_names.push(name.replace(/_/g, " "))
-	}
-}
-
-function year_key(d){
-	return d[date_column_header]
-}
-
-function country_key(d){
-	return d[country_column_header].toLowerCase()
-}
-
-function return_pcp_and_population_arrays(leaves){
-	var data = leaves[0]
-	var country = replace_underscore_with_space(data[country_column_header].toLowerCase())
-	var year = data[date_column_header]
-	var pcp = countries_loaded[country]; 
-	return pcp !== undefined ? {
-		consumption: create_pcp_times_population_and_age_array(country, pcp[1], year), 
-		production: create_pcp_times_population_and_age_array(country, pcp[10], year), 
-		population: shorten_population_array(data)//create_age_and_value_pair_array(data)
-		} : {population: shorten_population_array(data)};//create_age_and_value_pair_array(data)};
-}
-
-function create_lifecycle_storage(){
-	lifecycle_storage = d3.nest()
-			.key(year_key)
-			.key(country_key)
-			.rollup(return_pcp_and_population_arrays)
-			.map(pop_csv)
-}
-
-function sort_country_names_by_population(){
-	country_names.sort(function(a,b){return d3.descending(d3.sum(pop_vals(lifecycle_storage[year][a]["population"])), d3.sum(pop_vals(lifecycle_storage[year][b]["population"])) )})
-}
-
-function change_country_name(country){
-	d3.select("h3.country_header").text(country)
-}
 
 function create_age_axes(){
-	var age_axis = d3.svg.axis()
-	var age_scale = x;
-	age_scale.domain([0,90]).range([margin_left+y_axis_space, pop_distributions_width-margin_left-3])
-	age_axis.scale(age_scale)
+	var age_axis_pcp = d3.svg.axis()
+	var age_axis_pop = d3.svg.axis()
+	age_axis_pcp.scale(x_main["pcp"])
+		.orient("bottom")
+		.tickSize(0)
+	
+	age_axis_pop.scale(x_main["population"])
 		.orient("bottom")
 		.tickSize(0)
 		
-	svg.append('g')
+	pop_selected_svg.append('g')
 		.attr("class","x_axis axis")
-		.attr("transform", "translate(0," + (chart_height+margin_top) + ")")
-		.call(age_axis)
+		.attr("transform", "translate(0," + (pop_height+margin_top) + ")")
+		.call(age_axis_pop)
 	
 	pcp_selected_svg.append('g')
 			.attr("class","x_axis axis")
 			.attr("transform", "translate(0," + (chart_height+margin_top) + ")")
-			.call(age_axis)
+			.call(age_axis_pcp)
 	
-	lifecycle_selected_svg.append("g")
+	aggregate_profile_selected_svg.append("g")
 			.attr("class","x_axis axis")
-			.attr("transform", "translate(0," + (chart_height+margin_top) + ")")
-			.call(age_axis)
+			.attr("transform", "translate(0," + (pop_height+margin_top) + ")")
+			.call(age_axis_pop)
 	
 }
 
-function create_age_label(){
-	svg.append("text")
-		.attr("x", 165)
-		.attr("y", 240)
-		.style({"text-anchor":"middle", "font-size":"14px"})
-		.text("Age")
-		
-	pcp_selected_svg.append("text")
-			.attr("x", 165)
-			.attr("y", 240)
-			.style({"text-anchor":"middle", "font-size":"14px"})
-			.text("Age")
-	
-	lifecycle_selected_svg.append("text")
-			.attr("x", 165)
-			.attr("y", 240)
-			.style({"text-anchor":"middle", "font-size":"14px"})
-			.text("Age")
-}
-
-function create_income_axes(){
+function update_income_axes(){
 	var pcp_axis = d3.svg.axis()
 	var num_format = d3.format("s");
 	
-	pcp_axis.scale(y_pcp_selected)
+	pcp_axis.scale(y_main["pcp"])
 		.orient("left")
 		.tickFormat(function(d){ return "$" + num_format(d)})
 		.ticks(5)
@@ -628,7 +351,7 @@ function create_income_axes(){
 	
 	var pop_axis = d3.svg.axis()
 	
-	pop_axis.scale(y_pop)
+	pop_axis.scale(y_main["population"])
 		.orient("left")
 		.tickFormat(function(d){ 
 			if(d !== 0)
@@ -643,394 +366,353 @@ function create_income_axes(){
 		.attr("transform", "translate(" + (margin_left+y_axis_space) + ",0)")
 		.call(pop_axis)
 	
-	var lifecycle_axis = d3.svg.axis()
+	var aggregate_profile_axis = d3.svg.axis()
 	
-	lifecycle_axis.scale(y_lifecycle_selected)
+	aggregate_profile_axis.scale(y_main["aggregate_profile"])
 				.orient("left")
 				.tickFormat(function(d){ return "$" + num_format(d)})
 				.ticks(5)
 				
-	lifecycle_g.attr("class","axis")
+	aggregate_profile_g.attr("class","axis")
 		.attr("transform", "translate(" + (margin_left+y_axis_space) + ",0)")
-		.call(lifecycle_axis)
+		.call(aggregate_profile_axis)
 }
 
-function create_pop_label(){
-	svg.append("text")
-	   .attr("transform", "rotate(-90)")
-       .attr("y", 0)
-       .attr("x", -100)
-       .attr("dy", "1em")
-       .style({"text-anchor":"middle", "font-size":"14px"})
-       .text("People");
-}
+function load_main_component(d, view, duration_time) {
 
-function create_legend(){
-	var legend_svg = d3.select("#legend")
-		.append("svg")
-		.attr("width", 500)
-		.attr("height", 300)
-		.attr("id", "legend_svg")
+	var consumption = d[year][view][0]; // 0 is consumption data
+	var labor_income = d[year][view][1] // 1 is labor income data
+
+	//var max = d3.max(consumption.data.concat(labor_income.data))
+	y_main[view].domain([0, consumption.normalized])
 	
-	legend_svg.append("rect")
+	var paths = d3.select("#" + view + "_selected")
+		.selectAll("path."+view)
+		.data(d[year][view])
+		.attr("fill", function(d) { return d.color;})
+		.attr("fill-opacity", function(d){ return d.fill_opacity})
+		
+	paths
+		.transition()
+		.duration(duration_time)	
+		.attr("d", function(d){ return main_path[view](d.data) })
+}
+
+
+function load_main_and_play(d, duration) {
+	load_main_view(d,duration)
+	//setTimeout(play_back_all_years, duration)
+}
+
+function load_main_view(d, duration){
+	selected_data = d;
+	country_selected = d.country
+	
+	d3.select("#support_ratio").text(two_decimals(d.support_ratios[year-1950]))
+	d3.select("#support_ratio_marker")
+		.datum(d.support_ratios[year-1950])
+		.attr("cx", function(d) { return support_ratio_x(year)})
+		.attr("cy", function(d) { return support_ratio_y(d) })
+		.attr("r", 4)
 		.attr("fill", "red")
-		.attr("fill-opacity", 0.2)
-		.attr("x", 50)
-		.attr("y", 10)
-		.attr("width", 30)
-		.attr("height", 30)
+		
+	d3.select("#support_ratio_time_series")
+		.datum(d.support_ratios)
+		.attr("stroke", "black")
+		.attr("fill", "none")
+		.attr("d", support_ratio_path)
 	
-	legend_svg.append("text")
-		.attr("x", 110)
-		.attr("y", 35)
-		.text("Consumption")
+	d3.select("#country").text(d.country)
 	
-	legend_svg.append("rect")
-		.attr("fill", "green")
-		.attr("fill-opacity", 0.2)
-		.attr("x", 50)
-		.attr("y", 70)
-		.attr("width", 30)
-		.attr("height", 30)
+	load_main_component(d, "population", duration);
+	load_main_component(d, "pcp", duration);
+	load_main_component(d, "aggregate_profile", duration);
+	update_income_axes();
 	
-	legend_svg.append("text")
-		.attr("x", 110)
-		.attr("y", 95)
-		.text("Production")
-	
-	legend_svg.append("rect")
-		.attr("fill", "blue")
-		.attr("fill-opacity", 0.2)
-		.attr("x", 50)
-		.attr("y", 130)
-		.attr("width", 30)
-		.attr("height", 30)
-	
-	legend_svg.append("text")
-		.attr("x", 110)
-		.attr("y", 155)
-		.text("Population")
+
 }
 
-function initialize_page() {
-	create_lifecycle_storage();	
-	sort_country_names_by_population();
+
+function year_for_country(d, info, normalized) {
+			
+	return {
+		support_ratio: info.support_ratio,
+		pcp: [
+			{data: d.consumption, color: "#CC6699", fill_opacity: 0.5, fixed: pcp_max, normalized: normalized.pcp},
+			{data: d.labor_income, color: "#660066", fill_opacity: 0.7, fixed: pcp_max, normalized: normalized.pcp}
+		],	
+		aggregate_profile: [
+			{data: info.aggregate_consumption, color: "#6600CC", fill_opacity: 0.5, fixed: aggregate_max, normalized: normalized.aggregate}, 
+			{data: info.aggregate_labor_income, color: "#000066", fill_opacity: 0.7, fixed: aggregate_max, normalized: normalized.aggregate}
+		],
+		population: [
+			{data: info.pop_array, color: "#0066CC", fill_opacity:1, fixed: pop_max, normalized: normalized.pop }, 
+			{data: info.pop_array, color: "#0066CC", fill_opacity:1, fixed: pop_max, normalized: normalized.pop }
+		]
+	}
+}
+
+function avg_peak(age_array) { 
+	return (age_array[39] + age_array[40] + age_array[41]) / 3 * 1.2 // in case other points go higher
+}
+
+function svg_bound_data(d) {
+	var pop_data = all_pop_data[d.country]//d.all_pop
+	var data_object = {country: d.country}
+	var info = []
+	var normalized = {}
+		
+	var pop_years = pop_data
+		.filter(function(e) { return e["Variant"] === pop_scenario || e["Variant"] === "Estimates" })
 	
-	var max_pop = d3.max(pop_vals(lifecycle_storage[year][country_names[0]]["population"]))
-	//y_pop.domain([0,max_pop]);	
-	y_pop_small.domain([0, max_pop]);
+	pop_years.forEach(function(pop_row, i) {
+		var pop_array = age_array("pop", pop_row) 
+		var labor_income = create_aggregate_totals(pop_array, d.labor_income)
+		var consumption = create_aggregate_totals(pop_array, d.consumption)
+
+		info.push({
+			pop_array: pop_array,
+			aggregate_consumption: consumption,
+			aggregate_labor_income: labor_income,
+			avg_peak: avg_peak(labor_income),
+			support_ratio: d3.sum(labor_income) / d3.sum(consumption)
+		})
+		
+	})
+	normalized.pcp = avg_peak(d.labor_income)
+	normalized.pop = d3.max(info.map(function(row) { return d3.max(row.pop_array) }))
+	normalized.aggregate = d3.max(info.map(function(row) { return row.avg_peak }))
 	
-	create_population_distributions("united states of america")
-	create_pcp_distributions("united states of america");
-	create_lifecycle_distributions("united states of america");
+	pop_years.forEach(function(pop_row, i) {
+		var year = pop_row["Reference date (as of 1 July)"]
+		data_object[year] = year_for_country(d, info[i], normalized)
+	})
+	data_object["support_ratios"] = info.map(function(d) { return d.support_ratio})	
+	return data_object
+}
+function add_main_view_dom_elements() {
 	
-	var pop = d3.select("path.united.states.of.america")
-	//highlight_country_population("united states of america")
-	create_empty_array(lifecycle_storage[year][country_names[0]]["production"])
+	var paths_to_add = ["population", "pcp", "aggregate_profile"]
 	
-	create_age_axes();
-	create_income_axes();
-	create_age_label();
-	create_pop_label();
-	d3.selectAll("g.tick text").attr("fill","#BBBBBB")
-	
-	create_legend();
-	
-	var pcp_divs = d3.select("#per_capita_profiles")
-		.selectAll("div.pcp")
-		.data(country_names)
+	paths_to_add.forEach(function(d) {
+		d3.select("#" + d + "_selected")
+			.selectAll("path." + d)
+			.attr("d", main_path[d](zero_data_array))		
+	})
+
+}
+
+function add_country_dom_elements(countries_pcp) {
+
+	var country_group_data = d3.nest().key(function(d) { return d.group }).entries(countries_pcp)
+	var country_groups = d3.select("#per_capita_profiles")
+		.selectAll("div.country_group")
+		.data(country_group_data)
 		.enter()
 		.append("div")
-		.attr("class", "pcp")
+		.attr("class", "country_group")
+		.attr("id", function(d) { return replace_space_with_underscore(d.key) })
 	
-	var pcp_svgs = pcp_divs
-		.append("svg")
+	country_groups
+		.append("h3")
+		.text(function(d) { return d.key })
+		
+	var divs = country_groups
+		.selectAll("div.pcp")
+		.data(function(d) { return d.values })
+		.enter()
+		.append("div")
+		.attr("class", function(d){ return replace_space_with_underscore(d.country) + " pcp"; })
+
+	var svgs = divs.append("svg")
 		.attr("height", pcp_height)
 		.attr("width", pcp_width)
-		.on("click", function(d){
-			//var pop = d3.select("path."+country_selected.replace(/ /g, "."))
-			//pop.attr("fill","blue")
-			country_selected = d;
-			highlight_country_pcp(d);
-			highlight_country_lifecycle(d);
-			highlight_country_population(d)
-			change_country_name(d)
-			create_income_axes();
-			d3.selectAll("g.tick text").attr("fill","#BBBBBB")
-		})
+		.on("click", function(d) { load_main_and_play(d, 1000) })
+		
 	
-	pcp_divs.append("h5").text(function(d) { return d})
-	
-	pcp_svgs.selectAll("path")
-		.data(function(d) { 
-			var pcp = countries_loaded[replace_underscore_with_space(d)]
-			return [
-				{key: "consumption", data: create_age_and_value_pair_array(pcp[1]), state: "pcp active"},
-				{key: "production", data: create_age_and_value_pair_array(pcp[10]), state: "pcp active"},
-				{key: "population", data: zero_data_array, state: "population dormant" },
-				{key: "population", data: zero_data_array, state: "population dormant"}
-			]
-		})
+	svgs.selectAll("path")
+		.data([
+			{css_class: "active", data: zero_data_array },
+		 	{css_class: "active", data: zero_data_array },
+			{css_class: "dormant", data: zero_data_array },
+			{css_class: "dormant", data: zero_data_array },
+		])
 		.enter()
 		.append("path")
-		.attr("class", function(d){
-			return d.state;
-		})
-		.attr("fill", function(d){
-			if(d.key === "consumption"){
-				return "red";
-			}else if(d.key === "production"){
-				return "green";
-			}else if(d.key === "population"){
-				return "blue";
-			}
-		})
-		.attr("fill-opacity", .1)
-		.attr("d", function(d) { 
-			if(d.state === "pcp active"){
-				return pcp_path(d.data)
-			}else if(d.state === "population dormant"){
-				return lifecycle_path(d.data)
-			}
-		 })
+		.attr("class", function(d) { return d.css_class })
+		.attr("fill", "#FFF")
+		.attr("d", small_multiple_path)		
 		
-	// var lifecycle_divs = d3.select("#lifecycles")
-	// 	.selectAll("div.lifecycle")
-	// 	.data(country_names)
-	// 	.enter()
-	// 	.append("div")
-	// 	.attr("class", "lifecycle")
-	// var lifecycle_svgs = lifecycle_divs
-	// 	.append("svg")
-	// 	.attr("height", pcp_height)
-	// 	.attr("width", pcp_width)
-	// 
-	// lifecycle_divs.append("h5").text(function(d) { return d})
-	// 
-	// lifecycle_svgs.selectAll("path")
-	// 	.data(function(d) { 
-	// 		return [
-	// 		{key: "consumption", data: lifecycle_storage[year][d]["consumption"]},
-	// 		{key: "production", data: lifecycle_storage[year][d]["production"]}
-	// 		]
-	// 	})
-	// 	.enter()
-	// 	.append("path")
-	// 	.attr("fill", "green")
-	// 	.attr("fill-opacity", .1)
-	// 	.attr("d", function(d) { return lifecycle_path(d.data) })
-	// 
-
+	divs.append("h5").text(function(d) { return d.country})
 }
 
-
-function switch_paths(target_state){
-	d3.selectAll("div.pcp")
-		.selectAll("svg")
-		.selectAll("path."+current_state+".active")
-		.data(function(){
-			if(current_state === "pcp"){
-				return [
-					{key: "consumption", data: zero_data_array},
-					{key: "production", data: zero_data_array}
-				]
-			}else if(current_state === "population"){
-				return [
-					{key: "population", data: zero_data_array},
-					{key: "population", data: zero_data_array}
-				]
-			}
-		})
-		.attr("class", function(){
-			return current_state + " dormant";
-		})
-		.transition()
-		.duration(1000)
-		.attr("d", function(d){ return lifecycle_path(d.data)})
-		.attr("fill", function(d){
-			if(d.key === "consumption"){
-				return "red";
-			}else if(d.key === "production"){
-				return "green";
-			}else if(d.key === "population"){
-				return "blue";
-			}
-		})
-	
-	d3.selectAll("div.pcp")
-		.selectAll("svg")
-		.selectAll("path."+target_state+".dormant")
-		.data(function(d){
-			if(target_state === "pcp"){
-				var pcp = countries_loaded[replace_underscore_with_space(d)]
-				return [
-					{key: "consumption", data: create_age_and_value_pair_array(pcp[1])},
-					{key: "production", data: create_age_and_value_pair_array(pcp[10])}
-				]
-			}else if(target_state === "population"){
-				return [
-					{key: "population", data: lifecycle_storage[year][d]["population"]},
-					{key: "population", data: lifecycle_storage[year][d]["population"]}
-				]
-			}
-		})
-		.attr("class", function(){
-			return target_state + " active";
-		})
-		.transition()
-		.duration(1000)
-		.attr("d", function(d) { 
-			if(target_state === "pcp"){
-				return pcp_path(d.data)
-			}else if(target_state === "population"){
-				return pop_path_small(d.data)
-			}
-		})
-		.attr("fill", function(d){
-			if(d.key === "consumption"){
-				return "red";
-			}else if(d.key === "production"){
-				return "green";
-			}else if(d.key === "population"){
-				return "blue";
-			}
-		})
-
+function small_multiple_path(d) {
+	y_small.domain([0, d[current_scale]])
+	return small_path(d.data)
 }
 
-function switch_current_paths(target_state){
-	d3.selectAll("div.pcp")
-		.selectAll("svg")
-		.selectAll("path.active")
-		.data(function(d){
-			var pcp = countries_loaded[replace_underscore_with_space(d)]
-			if(target_state === "pcp"){
-				return [
-					{key: "consumption", data: create_age_and_value_pair_array(pcp[1])},
-					{key: "production", data: create_age_and_value_pair_array(pcp[10])}
-				]
-			}else if(target_state === "population"){
-				return [
-					{key: "population", data: lifecycle_storage[year][d]["population"]},
-					{key: "population", data: lifecycle_storage[year][d]["population"]}
-				]
-			}else if(target_state === "lifecycle"){
-				return [
-					{key: "consumption", data: lifecycle_storage[year][d]["consumption"]},
-					{key: "production", data: lifecycle_storage[year][d]["production"]}
-				]
-			}
-		})
-		.transition()
-		.duration(1000)
-		.attr("d", function(d){
-			if(target_state === "pcp"){
-				return pcp_path(d.data)
-			}else if(target_state === "population"){
-				return pop_path_small(d.data)
-			}else if(target_state === "lifecycle"){
-				return lifecycle_path(d.data)
-			}
-		})
-		.attr("fill", function(d){
-			if(d.key === "consumption"){
-				return "red";
-			}else if(d.key === "production"){
-				return "green";
-			}else if(d.key === "population"){
-				return "blue";
-			}
-		})
-	
-	if(target_state === "pcp"){
-		d3.selectAll("div.pcp")
-			.selectAll("svg")
-			.selectAll("path.dormant")
-			.attr("class", function(){
-				return "population dormant"
-			})
+function render_small_multiple_country(svg, duration) {
+	if (duration === 0) {
+		var paths = svg.selectAll("path.active") 	
+			.data(function(d) { return d[year][current_state] })
+			.attr("d", small_multiple_path)
 			
-		d3.selectAll("div.pcp")
-			.selectAll("svg")
-			.selectAll("path.active")
-			.attr('class', function(){
-				return "pcp active"
-			})
-	}else if(target_state === "population"){
-		d3.selectAll("div.pcp")
-			.selectAll("svg")
-			.selectAll("path.dormant")
-			.attr("class", function(){
-				return "pcp dormant"
-			})
+	} else {
+		svg.selectAll("path.active")
+			.data(function(d) { return d[year][current_state] })
 			
-		d3.selectAll("div.pcp")
-			.selectAll("svg")
-			.selectAll("path.active")
-			.attr('class', function(){
-				return "population active"
-			})
+		svg.selectAll("path.dormant")
+			.data(function(d) { return no_data_binding })
+
+		var paths = svg.selectAll("path")
+		
+		paths.transition()
+			.duration(duration)
+			.attr("d", small_multiple_path)
+			.attr("fill-opacity", function(d) { return d.fill_opacity })
+			.attr("fill", function(d) { return d.color; })
+			
 	}
 }
 
-function redraw_small_multiples(d){
-	var target_state = d;
-	if(target_state === "lifecycle" || current_state === "lifecycle"){
-		switch_current_paths(d);
-	}else{
-		switch_paths(d);
-	}
-	current_state = d;
-	target_state = undefined
-	d3.select(".section_header").text(function(){ 
-		if(d === "population"){
-			return "Population";
-		}else if(d === "pcp"){
-			return "Per Capita Profiles";
-		}else if(d === "lifecycle"){
-			return "Lifecycles";
+function add_country_to_viz(country_d, callback) {
+	d3.csv("new_pop_data/"+country_d.country+".csv", function(error, pop_data){
+
+		//does this make it faster?
+		//country_d.all_pop = pop_data
+		all_pop_data[country_d.country] = pop_data
+			
+		var svg = d3.select("div." + replace_space_with_underscore(country_d.country) +" svg")
+			.datum(svg_bound_data)
+			
+		render_small_multiple_country(svg, 300)
+		 
+		if (country_d.country === country_selected) {
+			var d = d3.select("div.pcp."+country_selected+" svg").datum()
+			load_main_view(d, 1000)	
 		}
+		callback(null, pop_data)
 	})
+	 
 }
 
-d3.csv("nta_countries_pop_projections.csv", function(data) {
-	pop_csv = data;
-	population_projections = d3.nest().key(function(d) { return d[date_column_header] }).map(data)
+function selected_country_shuffle(countries_pcp, selected_country_index) {
+	selected_d = countries_pcp[selected_country_index]
+	countries_pcp.splice(selected_country_index,1)
+	shuffle(countries_pcp)
+	countries_pcp.unshift(selected_d)
 	
-	countries.forEach(function(country) {
-		d3.csv(country, function(data) {
-			var name = country.split(".")[0]
-			add_country(name, data)
-			if (d3.keys(countries_loaded).length === countries.length)
-				initialize_page();
-		})
-	})	
-	
-})
+	return countries_pcp
+}
 
-d3.select("#slider")
-	.style("width", pop_distributions_width+"px")
-	.attr("class", "slider")
-		.call(
-			d3.slider()
-				.min(2011)
-				.max(2100)
-				.value(2018)
-				.step(1)
-				.on("slide", function(evt, value) {
-					update_year(value)				
-				})
-			)
-			
-d3.select("#link_states").selectAll("a")
-	.data(["pcp", "lifecycle", "population"])
-	.enter()
-	.append("a")
-	.attr("href", "javascript:;")
-	.html(function(d){ return d})
-	.style({"padding-right": "20px"})
-	.on("click", redraw_small_multiples)
+function load_countries(){
 	
+	d3.csv("pcp_data/all_countries.csv", function(data) {
+		var selected_country_index = -1;
+		
+		var countries_pcp = d3.nest()
+			.key(function(d) { return d.country })
+			.key(function(d) { return d.Name })
+			.map(data)
+			
+		countries_pcp = d3.entries(countries_pcp)
+			//.filter(function(d) { return d.key !== "Taiwan" })
+			.map(function(d, i) {
+				if (d.key === country_selected) selected_country_index = i
+				return  {
+					country: d.key,
+					group: d.value["Consumption"][0].Group,
+					consumption: age_array("pcp", d.value["Consumption"][0]),
+					labor_income: age_array("pcp", d.value["Labor Income"][0])
+				}
+		})
+		
+		zero_data_array = countries_pcp[0].consumption.map(function(d) { return 0 })
+		no_data_binding[0].data = zero_data_array //clean this up
+		no_data_binding[1].data = zero_data_array //clean this up
+		
+		add_main_view_dom_elements();
+		add_country_dom_elements(countries_pcp)
+
+		var q = queue(1)
+		
+		selected_country_shuffle(countries_pcp, selected_country_index).forEach(function(d,i) {
+			q.defer(add_country_to_viz, d) 
+		})	
+		
+		
+		//q.awaitAll(function(error, pop_arrays) { play_back_all_years() })	
+			
+	})
+
+}
+
+function tweenYear() {
+  var year = d3.interpolateRound(1950, 2100);
+  return function(t) { 
+	update_year(year(t)); 
+	slider.slider("value", year(t))
+  };
+}
+
+function play_back_all_years() {
+	d3.select("svg#support_ratio_viz")
+		.transition()
+		.duration(5000)
+		.tween("slide", tweenYear)
+}
+
+function show_selected_link(link_class, selected_link) { 
+	d3.selectAll("#link_states ."+link_class).attr("class", link_class)
+	selected_link.attr("class", "selected "+link_class)
+}
+function add_page_elements() {
+	
+	slider = $("#slider").slider({
+		min: 1950,
+		max: 2100,
+		value: year,
+		slide: function(evt, value_obj) { 
+			update_year(value_obj.value) 
+		},
+	});
+		
+	d3.select("#play_button").on("click", play_back_all_years)
+	
+	d3.select("#link_states").selectAll("a.preview_mode")
+		.data(["pcp", "population", "aggregate profile"])
+		.on("click", function(d) {
+			show_selected_link("preview_mode", d3.select(this))
+			current_state = d.replace(" ", "_")
+			render_small_multiple_country(d3.selectAll("div.pcp svg"), 1000)
+		})
+	
+	d3.select("#link_states").selectAll("a.scale")
+		.data(["normalized", "fixed"])
+		.on("click", function(d) {
+			show_selected_link("scale", d3.select(this))
+			current_scale = d
+			render_small_multiple_country(d3.selectAll("div.pcp svg"), 1000)
+		})
+
+	d3.select("#link_states").selectAll("a.pop_scenario")
+		.data(pop_scenarios)
+		.on("click", function(d) {
+			show_selected_link("pop_scenario", d3.select(this))
+			pop_scenario = d
+			d3.selectAll("div.pcp").select("svg").datum(svg_bound_data)
+			render_small_multiple_country(d3.selectAll("div.pcp svg"), 1000)
+			
+			var main_d = d3.select("div.pcp."+country_selected+" svg").datum()
+			load_main_view(main_d, 1000)
+		})
+
+	create_age_axes();
+	update_income_axes();
+}
+
+add_page_elements();
+load_countries();
+
 </script>
 </html>
-
