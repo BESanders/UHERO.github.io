@@ -634,7 +634,7 @@ function load_countries(){
 		add_main_view_dom_elements();
 		add_country_dom_elements(countries_pcp)
 
-		var q = queue(5)
+		var q = queue(10)
 		
 		selected_country_shuffle(countries_pcp, selected_country_index).forEach(function(d,i) {
 			q.defer(add_country_to_viz, d) 
