@@ -35,9 +35,10 @@ var all_states_data = []
 var us_data = {}
 var quarters_array = []
 var selected_states = [];
+var selected_change = "fares"
 
 var column_name ="1993Q1" //quarter to draw initially
-var slider_index = 1;
+var slider_index = 0;
 var US_row_index = 51;
 
 var svg = d3.select("#map").attr({ width: width, height: height})
@@ -45,17 +46,16 @@ var yoy_svg = d3.select("#yoy").attr({ width: ts_width, height: yoy_height})
 var tooltip = d3.select("#interactive_area").append("div").attr("class", "tooltip")
 var slider
 
-var data_states = {};
-
 var inset_price_scale;
 var inset_time_scale;
+var inset_ticket_scale;
 
 var ts_inset_path = d3.svg.line()
 	.y(function(d) { return inset_price_scale(d.value) })
 	.x(function(d) { return inset_time_scale(d.key) })
 
 var ts_ticket_inset_path = d3.svg.line()
-	.y(function(d){ return inset_ticket_scale(+d.value) })
+	.y(function(d){ return inset_ticket_scale(d.value) })
 	.x(function(d){ return inset_time_scale(d.key) })
 
 var projection = d3.geo.albersUsa()
@@ -65,6 +65,14 @@ var projection = d3.geo.albersUsa()
 var path = d3.geo.path()
 	.projection(projection);
 
+var data_states = {
+	fares: {
+		marker: "$"
+	},
+	tickets: {
+		marker: ""
+	}
+};
 
 function tooltip_html(d) {
 	return d.properties.name 
@@ -237,7 +245,7 @@ function remove_selected(abbreviation){
 function text_price_fill(d,i) {
 	if (["VT", "NH", "MA", "RI", "CT", "DE", "MD", "HI"].indexOf(d.abbreviation) > -1)
 		return "#222"
-	else if (d.data["fares"][quarters_array[slider_index]] < 550)
+	else if (d.data[selected_change][quarters_array[slider_index]] < 550)
 		return "#222"
 	else
 		return "#d9e3e3"	
@@ -266,7 +274,7 @@ function create_states(states){
 		.attr("class", function(d) { return "state " + d.properties.name + " " + d.abbreviation;;})
 		.attr("fill", function(d){ 
 			if (d.data["fares"])
-				return data_states["fares"](d.data["fares"][column_name]); 
+				return data_states[selected_change]["scale"](d.data["fares"][column_name]); 
 			else
 				console.log(d.abbreviation)
 		})
@@ -322,6 +330,7 @@ function initial_draw_map(data){
 	});
 	
 	d3.select("#slider").append("h3").attr("class","year").text([column_name]);
+	show_text_for_US();
 	
 }
 
@@ -337,7 +346,7 @@ function draw_year(evt, s_index) {
 	display_year_and_avg_us_fare(slider_index);
 
 	d3.selectAll("path.state")
- 		.attr("fill", function(d){ return data_states["fares"](d.data["fares"][quarters_array[slider_index]]); })
+ 		.attr("fill", function(d){ return data_states[selected_change]["scale"](d.data["fares"][quarters_array[slider_index]]); })
 		.on("mouseover", mouseover_state)
 		.on("mouseout", mouseout_state)
 
@@ -357,9 +366,9 @@ function create_slider(data){
 	slider = d3.select("#container").append("div").attr("class", "slider")	
 	slider.call(
 		d3.slider()
-			.min(1)
+			.min(0)
 			.max(quarters_array.length-1)
-			.value(1)
+			.value(0)
 			.step(1)
 			.orientation("vertical")
 			.on("slide", draw_year)
@@ -406,7 +415,7 @@ function load_data_object(results) {
 			all_tickets = all_tickets.concat(d3.values(ticket_array))
 			return {
 				state: state,
-				tickets: get_quarterly_values(ticket_data[state]),
+				tickets: ticket_array,
 				fares: fares_array,
 				fares_yoy: get_quarterly_values(yoy_data[state])
 			}
@@ -423,7 +432,7 @@ function load_data_object(results) {
 		  .range(["#fffcf7","rgb(25, 102, 127)"])//, "white", "orange"])
 		  .interpolate()
 	
-	data_states["fares"] = fare_color;	
+	data_states["fares"]["scale"] = fare_color;	
 	
 	var ticket_color = d3.scale.linear()
 	
@@ -431,19 +440,34 @@ function load_data_object(results) {
 		  .range(["#fffcf7","#6a9ba9","rgb(25, 102, 127)"])//, "white", "orange"])
 		  .interpolate()
 	
-	data_states["tickets"] = ticket_color;
+	data_states["tickets"]["scale"] = ticket_color;
 	
 	var price_min = d3.min(all_prices)
 	var price_max = d3.max(all_prices)
 	inset_price_scale = d3.scale.linear().range([ts_inset_height, 0]).domain([price_min, price_max])
 	
-}
+	var ticket_min = d3.min(all_tickets)
+	var ticket_max = d3.max(all_tickets)
+	inset_ticket_scale = d3.scale.linear().range([ts_inset_height, 0 ]).domain([ticket_min, ticket_max])
 	
-function change_link_data(target_state){
+}
+
+function change_state(target_change){
 	svg.selectAll("g.state_g").selectAll("path.state")
 		.attr("fill", function(d){
-			return data_states[target_state](d.data[target_state][column_name]); 
+			return data_states[target_change]["scale"](d.data[target_change][column_name]); 
 		})
+	
+	svg.selectAll("g.state_g").selectAll("text.state")
+		.text(function(d){ 
+			return data_states[target_change]["marker"] + d.data[target_change][column_name];
+		})
+		.attr('fill', text_price_fill)
+}
+	
+function change_link_data(target_change){
+	selected_change = target_change;
+	change_state(target_change)
 }
 
 var q = queue()

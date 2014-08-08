@@ -246,7 +246,7 @@ h5{
 
 .pcp, .aggregate_profile { float:left; margin:0 10px 0 0 }
 .pcp h5 { margin:0 0 20px 0; padding:0; font-size:10px; text-transform: uppercase}
-
+div.pcp { cursor: pointer}
 
 #link_states{
 	font-family:Helvetica, sans-serif;
