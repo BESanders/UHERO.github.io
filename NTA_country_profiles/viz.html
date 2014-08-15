@@ -17,7 +17,7 @@
 	<h3 id="country_header">
 		<span id="country">United States</span>
 		<span id="age_title"> age profile for</span> 
-		<span id="year">2014</span>
+		<span id="year">1950</span>
 	</h3>
 	<div id="top_selection_div">
 		<div id="pcp">
@@ -37,8 +37,9 @@
 				Support Ratio = <span id="support_ratio"></span>
 				<div id="controls">
 					<svg id="support_ratio_viz">
-						<path id="support_ratio_time_series"></path>
-						<circle id="support_ratio_marker"></circle>
+						<path id="support_ratio_time_series" stroke="black" fill="none"></path>
+						<path id="support_ratio_area" fill="red" fill-opacity=0.1 stroke="none"></path>
+						<circle id="support_ratio_marker" r=4 fill="red"></circle>
 					</svg>
 				</div>
 				<br/>
@@ -105,10 +106,6 @@
 		<a href="javascript:;" class="preview_mode selected">Aggregate Totals</a>
 		</p>
 		<h3>Display Parameters:</h3>
-		<p class="display_parameters">Scale:
-		<a href="javascript:;" class="scale selected">Normalized</a>
-		<a href="javascript:;" class="scale">Fixed</a>
-		</p>	
 		
 		<p class="display_parameters">Fertility Scenario:
 		<a href="javascript:;" class="pop_scenario">Constant</a>
@@ -144,25 +141,23 @@ var y_axis_space = 30;
 var pcp_height = 50
 var pcp_width = 80
 
-var year = 2014
+var year = 1950
 
-var pcp_max = 60000
-var pop_max = 40000
-var aggregate_max = 300000000
-
+var scale_max = {
+	pcp: 60000, 
+	population: 40000, 
+	aggregate_profile: 300000000,
+	dist: 4
+}
 var pop_csv = [];
 var aggregate_profile_storage;
 var date_column_header = "Reference date (as of 1 July)";
 var country_column_header = "Major area, region, country or area *";
-var country_selected = "US";
+var country_selected = "United States";
 var current_state = "aggregate_profile";
 var main_state = "Proportions"
 var zero_data_array = [];
-var no_data_binding = [
-	{key: "no data", data: zero_data_array, color: "#6600CC", fill_opacity: 0.5}, 
-	{key: "no data", data: zero_data_array, color: "#000066", fill_opacity: 0.7}
-]
-var current_scale = "normalized";
+
 var consumption = 0;
 var labor_income = 1;
 var pop_scenarios =["Constant fertility", "Low fertility", "Medium fertility", "High fertility"]
@@ -170,10 +165,11 @@ var pop_scenario = "Medium fertility"
 var all_pop_data = {}
 var slider;
 var selected_data;
+var playing = false;
 
 var x_small = d3.scale.linear().domain([0,100]).range([0, pcp_width])
 var x_main = {
-	pcp: d3.scale.linear().domain([0,100]).range(					[margin_left+y_axis_space, margin_left+pop_distributions_width]),
+	pcp: d3.scale.linear().domain([0,90]).range(					[margin_left+y_axis_space, margin_left+pop_distributions_width]),
 	population: d3.scale.linear().domain([0,100]).range(			[margin_left+y_axis_space, margin_left+pop_width]),
 	aggregate_profile: d3.scale.linear().domain([0,100]).range(		[margin_left+y_axis_space, margin_left+pop_width])
 }
@@ -186,17 +182,23 @@ var y_main = {
 }
 
 support_ratio_x = d3.scale.linear().domain([1950,2100]).range([180,310])
-support_ratio_y = d3.scale.linear().domain([.5,1]).range([220,190])
+//support_ratio_y = d3.scale.linear().domain([.74,1.49]).range([220,150])
+support_ratio_y = d3.scale.linear().domain([.5,1.25]).range([240,170])
 
 var support_ratio_path = d3.svg.line()
 	.x(function(d, i) { return support_ratio_x(1950+i) })
 	.y(function(d) { return support_ratio_y(d) })
 
+var support_ratio_area = d3.svg.area()
+	.x(function(d, i) { return support_ratio_x(1950+i) })
+	.y(function(d) { return support_ratio_y(d) })
+	.y0(support_ratio_y(1))
+	
 var small_path = d3.svg.area()
 	.x(function(d, i) { return x_small(i) })
 	.y(function(d) { return y_small(d)})
-	.y0(y_small(0))
-	
+	.y0(y_small(0))	
+
 var main_path = {
 	population : d3.svg.area()
 		.x(function(d, i) { return x_main["population"](i) })
@@ -384,49 +386,27 @@ function update_income_axes(){
 		.call(aggregate_profile_axis)
 }
 
-function load_main_component(d, view, duration_time) {
-
-	var consumption = d[year][view][0]; // 0 is consumption data
-	var labor_income = d[year][view][1] // 1 is labor income data
-	
-	if (main_state === "Units") {
-		y_main[view].domain([0, consumption.normalized])
-	
-		var paths = d3.select("#" + view + "_selected")
-			.selectAll("path."+view)
-			.data(d[year][view])
-			.attr("fill", function(d) { return d.color;})
-			.attr("fill-opacity", function(d){ return d.fill_opacity})
-		
-		paths.transition()
-			.duration(duration_time)	
-			.attr("d", function(d){ return main_path[view](d.data) })
-	} else {
-		var max = d3.max(labor_income.data)
-		var total = d3.sum(labor_income.data)
-		
-		function scale(array) {
-			return array.map(function(d) { return 100*d/total })
-		}
-		
-		y_main[view].domain([0, 100*max/total])
-	
-		var paths = d3.select("#" + view + "_selected")
-			.selectAll("path."+view)
-			.data(d[year][view])
-			.attr("fill", function(d) { return d.color;})
-			.attr("fill-opacity", function(d){ return d.fill_opacity})
-		
-		paths.transition()
-			.duration(duration_time)	
-			.attr("d", function(d){ return main_path[view](scale(d.data)) })		
-	}
+function scale(array, total) {
+	return main_state === "Units" ? array : array.map(function(d) { return 100*d/total })	
 }
 
+function load_main_component(d, view, duration_time) {
 
-function load_main_and_play(d, duration) {
-	load_main_view(d,duration)
-	//setTimeout(play_back_all_years, duration)
+	var labor_income = d[year][view][1] // 1 is labor income data
+	var max = main_state === "Units" ? labor_income.normalized : scale_max.dist
+	var total = d3.sum(labor_income.data)	
+
+	y_main[view].domain([0, max])
+	
+	var paths = d3.select("#" + view + "_selected")
+		.selectAll("path."+view)
+		.data(d[year][view])
+		.attr("fill", function(d) { return d.color;})
+		.attr("fill-opacity", function(d){ return d.fill_opacity})
+
+	paths.transition()
+		.duration(duration_time)	
+		.attr("d", function(d){ return main_path[view](scale(d.data, total)) })		
 }
 
 function load_main_view(d, duration){
@@ -436,17 +416,23 @@ function load_main_view(d, duration){
 	d3.select("#support_ratio").text(two_decimals(d.support_ratios[year-1950]))
 	d3.select("#support_ratio_marker")
 		.datum(d.support_ratios[year-1950])
+		.transition()
+		.duration(duration)
 		.attr("cx", function(d) { return support_ratio_x(year)})
 		.attr("cy", function(d) { return support_ratio_y(d) })
-		.attr("r", 4)
-		.attr("fill", "red")
 		
 	d3.select("#support_ratio_time_series")
 		.datum(d.support_ratios)
-		.attr("stroke", "black")
-		.attr("fill", "none")
+		.transition()
+		.duration(duration)
 		.attr("d", support_ratio_path)
 	
+	d3.select("#support_ratio_area")
+		.datum(d.support_ratios)
+		.transition()
+		.duration(duration)
+		.attr("d", support_ratio_area)
+			
 	d3.select("#country").text(d.country)
 	
 	load_main_component(d, "population", duration);
@@ -463,16 +449,16 @@ function year_for_country(d, info, normalized) {
 	return {
 		support_ratio: info.support_ratio,
 		pcp: [
-			{data: d.consumption, color: "#CC6699", fill_opacity: 0.5, fixed: pcp_max, normalized: normalized.pcp},
-			{data: d.labor_income, color: "#660066", fill_opacity: 0.7, fixed: pcp_max, normalized: normalized.pcp}
+			{data: d.consumption.slice(0,91), color: "#CC6699", fill_opacity: 0.5, normalized: normalized.pcp, total: d3.sum(d.labor_income) },
+			{data: d.labor_income.slice(0,91), color: "#660066", fill_opacity: 0.7, normalized: normalized.pcp, total: d3.sum(d.labor_income) }
 		],	
 		aggregate_profile: [
-			{data: info.aggregate_consumption, color: "#6600CC", fill_opacity: 0.5, fixed: aggregate_max, normalized: normalized.aggregate}, 
-			{data: info.aggregate_labor_income, color: "#000066", fill_opacity: 0.7, fixed: aggregate_max, normalized: normalized.aggregate}
+			{data: info.aggregate_consumption, color: "#6600CC", fill_opacity: 0.5, normalized: normalized.aggregate, total: d3.sum(info.aggregate_labor_income) }, 
+			{data: info.aggregate_labor_income, color: "#000066", fill_opacity: 0.7, normalized: normalized.aggregate, total: d3.sum(info.aggregate_labor_income) }
 		],
 		population: [
-			{data: info.pop_array, color: "#0066CC", fill_opacity:1, fixed: pop_max, normalized: normalized.pop }, 
-			{data: info.pop_array, color: "#0066CC", fill_opacity:1, fixed: pop_max, normalized: normalized.pop }
+			{data: info.pop_array, color: "#0066CC", fill_opacity:1, normalized: normalized.pop, total: d3.sum(info.pop_array) }, 
+			{data: info.pop_array, color: "#0066CC", fill_opacity:1, normalized: normalized.pop, total: d3.sum(info.pop_array) }
 		]
 	}
 }
@@ -486,7 +472,8 @@ function svg_bound_data(d) {
 	var data_object = {country: d.country}
 	var info = []
 	var normalized = {}
-		
+	var total_labor_income = {}
+	
 	var pop_years = pop_data
 		.filter(function(e) { return e["Variant"] === pop_scenario || e["Variant"] === "Estimates" })
 	
@@ -504,6 +491,7 @@ function svg_bound_data(d) {
 		})
 		
 	})
+	
 	normalized.pcp = avg_peak(d.labor_income)
 	normalized.pop = d3.max(info.map(function(row) { return d3.max(row.pop_array) }))
 	normalized.aggregate = d3.max(info.map(function(row) { return row.avg_peak }))
@@ -552,15 +540,13 @@ function add_country_dom_elements(countries_pcp) {
 	var svgs = divs.append("svg")
 		.attr("height", pcp_height)
 		.attr("width", pcp_width)
-		.on("click", function(d) { load_main_and_play(d, 1000) })
+		.on("click", function(d) { load_main_view(d, 1000) })
 		
 	
 	svgs.selectAll("path")
 		.data([
-			{css_class: "active", data: zero_data_array },
-		 	{css_class: "active", data: zero_data_array },
-			{css_class: "dormant", data: zero_data_array },
-			{css_class: "dormant", data: zero_data_array },
+			{css_class: "active", data: zero_data_array, total: 1},
+		 	{css_class: "active", data: zero_data_array, total: 1 },
 		])
 		.enter()
 		.append("path")
@@ -572,8 +558,11 @@ function add_country_dom_elements(countries_pcp) {
 }
 
 function small_multiple_path(d) {
-	y_small.domain([0, d[current_scale]])
-	return small_path(d.data)
+
+	var max = main_state === "Units" ? scale_max[current_state] : scale_max.dist
+
+	y_small.domain([0, max ])
+	return small_path(scale(d.data, d.total))
 }
 
 function render_small_multiple_country(svg, duration) {
@@ -586,9 +575,6 @@ function render_small_multiple_country(svg, duration) {
 		svg.selectAll("path.active")
 			.data(function(d) { return d[year][current_state] })
 			
-		svg.selectAll("path.dormant")
-			.data(function(d) { return no_data_binding })
-
 		var paths = svg.selectAll("path")
 		
 		paths.transition()
@@ -613,7 +599,7 @@ function add_country_to_viz(country_d, callback) {
 		render_small_multiple_country(svg, 300)
 		 
 		if (country_d.country === country_selected) {
-			var d = d3.select("div.pcp."+country_selected+" svg").datum()
+			var d = d3.select("div.pcp."+replace_space_with_underscore(country_selected)+" svg").datum()
 			load_main_view(d, 1000)	
 		}
 		callback(null, pop_data)
@@ -641,7 +627,6 @@ function load_countries(){
 			.map(data)
 			
 		countries_pcp = d3.entries(countries_pcp)
-			//.filter(function(d) { return d.key !== "Taiwan" })
 			.map(function(d, i) {
 				if (d.key === country_selected) selected_country_index = i
 				return  {
@@ -653,9 +638,7 @@ function load_countries(){
 		})
 		
 		zero_data_array = countries_pcp[0].consumption.map(function(d) { return 0 })
-		no_data_binding[0].data = zero_data_array //clean this up
-		no_data_binding[1].data = zero_data_array //clean this up
-		
+
 		add_main_view_dom_elements();
 		add_country_dom_elements(countries_pcp)
 
@@ -664,27 +647,25 @@ function load_countries(){
 		selected_country_shuffle(countries_pcp, selected_country_index).forEach(function(d,i) {
 			q.defer(add_country_to_viz, d) 
 		})	
-		
-		
-		//q.awaitAll(function(error, pop_arrays) { play_back_all_years() })	
-			
+					
 	})
 
 }
 
 function tweenYear() {
-  var year = d3.interpolateRound(1950, 2100);
+  var year_interpolator = d3.interpolateRound(year, 2100);
   return function(t) { 
-	update_year(year(t)); 
-	slider.slider("value", year(t))
+	update_year(year_interpolator(t)); 
+	slider.slider("value", year_interpolator(t))
   };
 }
 
-function play_back_all_years() {
+function play_from_year() {
 	d3.select("svg#support_ratio_viz")
 		.transition()
-		.duration(5000)
+		.duration(5000*(2100-year)/150)
 		.tween("slide", tweenYear)
+		.each("end", function(d) { playing = false; })
 }
 
 function show_selected_link(link_class, selected_link) { 
@@ -702,7 +683,17 @@ function add_page_elements() {
 		},
 	});
 		
-	d3.select("#play_button").on("click", play_back_all_years)
+	d3.select("#play_button").on("click", function(d) { 
+		if (playing) {
+			playing = false;
+			d3.select("svg#support_ratio_viz").transition()			
+		}
+		else {
+			playing = true;
+			year = year === 2100 ? 1950 : year
+			play_from_year() 
+		}
+	})
 
 	d3.select("#link_states").selectAll("a.main_display_mode")
 		.data(["Units", "Proportions"])
@@ -711,6 +702,8 @@ function add_page_elements() {
 			show_selected_link("main_display_mode", d3.select(this))
 			update_income_axes()
 			load_main_view(selected_data, 1000)
+			render_small_multiple_country(d3.selectAll("div.pcp svg"), 1000)
+			
 		})
 	
 	d3.select("#link_states").selectAll("a.preview_mode")
@@ -718,14 +711,6 @@ function add_page_elements() {
 		.on("click", function(d) {
 			show_selected_link("preview_mode", d3.select(this))
 			current_state = d.replace(" ", "_")
-			render_small_multiple_country(d3.selectAll("div.pcp svg"), 1000)
-		})
-	
-	d3.select("#link_states").selectAll("a.scale")
-		.data(["normalized", "fixed"])
-		.on("click", function(d) {
-			show_selected_link("scale", d3.select(this))
-			current_scale = d
 			render_small_multiple_country(d3.selectAll("div.pcp svg"), 1000)
 		})
 
@@ -737,7 +722,7 @@ function add_page_elements() {
 			d3.selectAll("div.pcp").select("svg").datum(svg_bound_data)
 			render_small_multiple_country(d3.selectAll("div.pcp svg"), 1000)
 			
-			var main_d = d3.select("div.pcp."+country_selected+" svg").datum()
+			var main_d = d3.select("div.pcp."+replace_space_with_underscore(country_selected)+" svg").datum()
 			load_main_view(main_d, 1000)
 		})
 

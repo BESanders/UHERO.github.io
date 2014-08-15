@@ -160,16 +160,22 @@ svg.inset_svg{
 	top:414px;
 }
 
-#fares{
-	position:absolute;
+#modes{
+	position:relative;
 	left:270px;
-	top:10px;
+	top:-110px;
+}
+
+#fares{
+	margin-right:10px;
 	text-decoration:underline;
 }
 
 #tickets{
-	position:absolute;
-	left:320px;
-	top:10px;
+	margin-right:10px;
+	text-decoration:underline;
+}
+
+#yoy{
 	text-decoration:underline;
 }
