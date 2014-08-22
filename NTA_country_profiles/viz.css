@@ -201,6 +201,7 @@ text#year {
 	width:70px;
 }
 #play_button{
+	color:#0066CC;
 	text-decoration: none;
 }
 
@@ -321,3 +322,20 @@ div.pcp { cursor: pointer}
 #scale_states { width:150px; }
 #preview_states { width: 310px;}
 #fertility_states { width: 280px;}
+
+#source_links{
+	position:relative;
+	top:0px;
+	left:500px;
+	width:420px;
+	text-align:right;
+	line-height:13pt;
+	height:0px;
+	font-size:12px;
+	color:#999;
+}
+
+#source_links a{
+	color:#d67d1a;
+	text-decoration:none;
+}
