@@ -1,0 +1,251 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+	    <title>Department of Education School Evaluator</title>
+	    <script type="text/javascript" src="js/d3.v3.min.js"></script>
+		<script type="text/javascript" src="js/jquery.min.js"></script>
+		<script type="text/javascript" src="js/jquery.svg.js"></script>
+		<script type="text/javascript" src="js/queue.min.js"></script>
+		
+		<style>
+			body { font-family: Helvetica, Arial, sans-serif}
+			a.school { margin: 0 5px; font-size:9px}
+			div#school_preview { height: 230px; position:absolute; top:0; left:0}
+			div#object_preview { width: 200px; position:absolute; left:620px; top:20px; background-color:white; z-index:100 }
+			div#data_browser { width: 800px; position:absolute; top: 230px; left:0}
+			
+			#object_preview { font-size: 9px;}
+			#object_preview td {padding-right: 10px}
+			#object_preview .key { color:#999}
+			#school_preview h4 { margin:0 0 5px 0}
+			#school_preview h5 { margin:0; padding:0; font-weight: normal; }
+			#school_preview h6 {margin:0; padding:0;}
+			.links a { font-size: 10px; margin: 0 10px 0 0;}
+		</style>
+</head>
+<body>
+	<div id="object_preview">
+		<table></table>
+	</div>
+	<div id="school_preview">
+		<h4 id="long_school_name"></h4>
+		<h5 id="address"></h5>
+		<h5 id="district"></h5>
+		<h5 id="complex_area"></h5>
+		<h5 id="complex"></h5>
+		<div id="detail">
+			<div id="staff">
+				<h6>Staff</h6>
+				<div class="links"></div>
+			</div>
+			<div id="strive">
+				<h6>Strive</h6>
+				<div class="links"></div>
+			</div>
+			<div id="college">
+				<h6>College 2013</h6>
+				<div class="links"></div>
+			</div>
+		
+			<div id="proficiency">
+				<h6>Proficiency</h6>
+				<table id="prof_links">
+					<tr class="header_row">
+						<td></td>
+						<td>M</td>
+						<td>R</td>
+						<td>S</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		
+	</div>
+</body>
+<script>
+
+var data_file_names = ["college_data", "proficiency", "school_info", "staff", "strive"];
+var data = {}
+var schools
+var grade_colors = d3.scale.category20()
+
+function preview_object(d) {
+
+	var rows = d3.select("#object_preview")
+		.selectAll("tr")
+		.data(d3.entries(d))
+	
+	rows.enter().append("tr")
+	rows.exit().remove()
+	
+	var cells = rows.selectAll("td")
+		.data(function(d) { return [d.key, d.value] })
+	
+	cells
+		.enter()
+		.append("td")
+	cells.text(function(d) { return d })
+		.attr("class", function(d,i) { return i === 0 ? "key" : "value"})
+}
+function set_up_data_objects(results) {
+	data_file_names.forEach(function(data_name, i) {
+		data[data_name] = results[i]
+	})
+	
+	var college_data_by_school = d3.nest().key(function(d) { return d.SchCode }).map(data["college_data"])
+	var proficiency_by_school = d3.nest().key(function(d) { return d.SchCode }).map(data["proficiency"])
+	var staff_by_school = d3.nest().key(function(d) { return d.SchCode }).map(data["staff"])
+	var strive_by_school = d3.nest().key(function(d) { return d["School ID"] }).map(data["strive"])
+	
+	schools = data["school_info"].slice()
+	schools.forEach(function(d) { 
+		d.college = college_data_by_school[d.school_id] ? college_data_by_school[d.school_id] : []
+		d.proficiency = proficiency_by_school[d.school_id] ? proficiency_by_school[d.school_id] : []
+		d.staff = staff_by_school[d.school_id] ? staff_by_school[d.school_id] : [] 
+		d.strive = strive_by_school[d.school_id] ? strive_by_school[d.school_id] : []
+	})
+	console.log(schools)
+	
+	
+}
+
+function proficiency_data_stringify(d) {
+
+	return d.key 
+		+ "("
+		+ d3.entries(d.value)
+			.sort(function(a,b) { return d3.ascending(a.key, b.key) })
+			.map(function(e) { return e.value.length > 1 ? e.key + "-" + e.value.length : e.key})
+			.join(", ") 
+		+ ")"
+}
+function preview_school(d) {
+	d3.selectAll("a.school").style("background-color", "white")
+	d3.selectAll("a.school."+d.complex_name.replace(" ","_")).style("background-color", "black")
+	var preview = d3.select("#school_preview").datum(d)
+		
+	preview.select("#long_school_name").text(d.long_school_name+" ("+ d.graderange+") - "+d.school_id)
+	preview.select("#address").text(d.address).style("font-weight", "bold")
+	preview.select("#district").text("district: "+ d.district_name)
+	preview.select("#complex_area").text("complex area: "+ d.complex_area_name)
+	preview.select("#complex").text("complex: "+ d.complex_name)
+
+	var staff = preview.select("#staff .links")
+		.selectAll("a")
+		.data(function(d) { return d.staff })
+	
+	staff
+		.enter()
+		.append("a")
+		.attr("href", "javascript:;")
+		.on("mouseover", preview_object)
+		
+	staff.text(function(d) { return d.Year })
+	staff.exit().remove()
+	
+	var college = preview.select("#college .links")
+		.selectAll("a")
+		.data(function(d) { return d.college})
+
+	college.enter()
+		.append("a")
+		.attr("href", "javascript:;")
+		.on("mouseover", preview_object)
+	
+	college.text(function(d) { return d.SubgroupCode })
+	college.exit().remove()
+	
+	
+	var strive = preview.select("#strive .links")
+		.selectAll("a")
+		.data(function(d) { return d.strive})
+
+	strive.enter()
+		.append("a")
+		.attr("href", "javascript:;")
+		.on("mouseover", preview_object)
+
+	strive.text(function(d) { return d.Year })
+	
+	strive.exit().remove()
+	
+	var proficiency_data_structured = d3.nest()
+		.key(function(d) { return d.Year})
+		.key(function(d) { return d.SubjectCode })
+		.key(function(d) { return d.GradeCode })
+		.map(d.proficiency)
+	
+	var proficiency_rows = preview.select("#prof_links")
+		.selectAll("tr.data")
+		.data(d3.entries(proficiency_data_structured))
+	
+	proficiency_rows.enter()
+		.append("tr")
+		.attr("class", "data")
+		.append("td")
+		.attr("class", "row_header")
+		.text(function(d) { return d.key })
+		
+	proficiency_rows.exit().remove()
+	
+	var cells = proficiency_rows
+		.selectAll("td.links")
+		.data(function(d) { return [d.value.M, d.value.R, d.value.S]})
+	
+	cells.enter()
+		.append("td")
+		.attr("class", "links")
+		
+	//cells.text(function(d) { return d3.entries(d).length })
+	var prof_links = cells.selectAll("a")
+		.data(function(d) { return d3.values(d).map(function(e) { return e[0]}) })
+	
+	prof_links.enter()
+		.append("a")
+		.attr("href", "javascript:;")
+		.on("mouseover", preview_object)
+
+	prof_links.text(function(d) { return d.GradeCode })
+
+	prof_links.exit().remove()
+
+	
+}
+function load_data_browser() {
+	var browser = d3.select("body")
+		.append("div")
+		.attr("id", "data_browser")
+
+	// browser.append("div")
+	// 	.attr("id", "school_preview")
+		
+	browser.append("div")
+		.attr("id", "school_selector")
+		.selectAll("a")
+		.data(schools.sort(function(a,b) { return d3.ascending(a.graderange, b.graderange) }))
+		.enter()
+		.append("a")
+		.attr("class", function(d) { return "school " + d.complex_name.replace(" ","_") })
+		.attr("href", "javascript:;")
+		.style("color", function(d) { return grade_colors(d.graderange) })
+		.text(function(d) { return d.commonname })
+		.on("mouseover", preview_school)
+	
+}
+
+function load_viz(error, results) {
+	set_up_data_objects(results)
+	load_data_browser()
+}
+
+function load_data() {
+	var q = queue();
+	data_file_names.forEach(function(elem) { q.defer(d3.csv, "data/"+elem+".csv") })
+	q.awaitAll(load_viz)
+}
+
+load_data();
+
+</script>
+</html>
+

@@ -1,0 +1,139 @@
+Data Notes
+Would be nice to put these schools on a map... browser
+Compare percent of pre-schools / feeders?
+All proficiency things have a grade code of 10... but doesn't seem to be a grade.. otherwise stops at 8
+
+4 categories of proficiency, expressed as a count, but can also be expressed as a perecentage. Some schools, however have very low student counts... maybe different category? Need to know how many in each count, or threshold for students that should count
+
+well below
+approaching
+meets
+exceeds
+
+summary of meets/exceeds
+NbrAllProf is sum of 4 cats. 
+3 subjects. Looking at each year... progress?
+
+number of students (not proficient -- bubble size, then percentage)
+Could also have a distributional plot on the left side and then have the comparison schools slide out to show change over time. Or 3 side by side distributions to show change over time. Highlight a school will highlight their 3
+
+Can sort schools based on which item is hovered over.
+percentage and size can show trend in size vs proficiency
+
+teacher data, super different between 2011/2012 and 2013
+before: only had total periods and periods not taught by highly qualified teacher
+
+basic, number of students? Student to teacher ratio? in grade?
+students in school students in grade?
+
+
+Data Format Notes
+school_id is unique identifier, found in school_info.csv
+Matches up with SchCode in other data sets
+
+
+STRIVE
+Strive Hawaii has a "school type" that could be the highest level classification
+some proficiency info in strive too. percentage?
+
+some things for 2010-2011 and some for 2011-2012
+16 month college enrollment date
+
+
+Other thoughts
+Can we include pictures of each school? School logos?
+
+
+8/15/2014 - Meting with Dave
+
+
+Schools by area (island)
+how do we help the person moving from milwaukee exclude Maui
+I know my neighborhood is called this (zip code - post office has neighborhood mapping)
+Complex is a K-12 feeder pattern
+Complex has 1 high school
+
+What will your outcomes be entering into this high school feeder pattern
+different weights to the strive components
+
+
+focus school - some miniums. Some points, but not 
+ranking puts them into an order - but may not be the most productive way to think about the schools
+
+How is my school doing relative to other schools like it
+How does this school compare to other schools in the complex, complex area ... then the state
+near work - geographic exemption because I work there. Want to be able to pick that.
+
+
+p20
+percentage of kids that require remediation
+AP course credit
+
+
+Staff
+count of ssn - not necessarily teachers
+FTE - also not necessarily teacher
+
+Teaching force Stability
+Fully Licensed
+HQT
+Staff 5 years
+Average Term
+
+High Needs - learning english, ELL; Free and reduced price lunch, economically disadvantaged families; students with disabilities
+
+students should be counted one time, equal weight
+
+plot gaps for high needs and non high needs (line)
+
+generally 4 years. See how an indicator changes over time
+
+
+
+
+
+
+List of visualizations for tool
+- "Complex" Level family
+
+
+- #students
+- #teachers
+- #student to teacher ratio
+- proficiency distributions (%) with count of students tested (colored for more or less than x percent)
+- College going rate (can show for all feeder complex. Maybe show all schools in a path?) - size of class
+- Licensed, provisional, emergency credit breakdown
+- periods taught by HQV vs not taught
+
+- Average term
+- Percent of teachers 5 years
+
+- Strive pieces
+-- High needs proficiency vs non high needs proficiency
+-- proficiency percentage (all school?)
+-- Math/Reading SGP (red/great around 45-55)
+-- absentee vs college
+-- strive step
+
+
+Teachers to students scatter plot
+- by grade
+- by complex?
+- by test scores?
+
+proficiency distribution small multiples
+- sort geographically
+- sort alphabetically
+- sort by total proficiency
+- sort by grade
+
+
+
+
+
+
+
+
+
+
+
