@@ -81,7 +81,7 @@
 			<svg id="population_selected">
 				<path class="population"></path>
 				<path class="population"></path>
-				<text id="year" class="year" x=50 y=225 font-size=40 fill="#CCC" fill-opacity=0.7 >1950</text>
+				<text id="year" class="year" x=50 y=225 font-size=40 fill="#CCC">1950</text>
 			</svg>
 		</div><!--population closing-->
 			
@@ -93,7 +93,7 @@
 			<svg id="aggregate_profile_selected">
 				<path class="aggregate_profile"></path>
 				<path class="aggregate_profile"></path>
-				<text class="year" x=50 y=225 font-size=40 fill="#AAA" fill-opacity=0.5 >1950</text>
+				<text class="year" x=50 y=225 font-size=40 fill="#AAA">1950</text>
 			</svg>
 		</div><!--aggregate closing-->
 		
@@ -121,10 +121,15 @@
 		<a href="javascript:;" class="pop_scenario">High</a>	
 		</p>
 
-		
+		<div style="width:910px">
+			<img src="UHERO.jpg" alt="UHERO" align="right"></img>
+		</div>
 	</div>
 	
 	<div id="per_capita_profiles"></div>
+	<div id="source_links">
+		Designed by <a href="http://www.uhero.hawaii.edu/46/benjamin-trevino" target="_blank">Ben Trevino</a>, Adele Balderston, and David Wang 
+	</div>
 </div>
 
 </body>
@@ -419,9 +424,20 @@ function load_main_component(d, view, duration_time) {
 function load_main_view(d, duration){
 	selected_data = d;
 	country_selected = d.country
-	
-	d3.selectAll("div.pcp h5").style({"background-color" : "white", "color": "black"})
-	d3.select("div." + replace_space_with_underscore(d.country) + ".pcp h5").style({"background-color": "black", "color": "white"})
+	console.log(d)
+	d3.selectAll("div.pcp h5").style({"background-color" : "white", "color": "black", "font-weight": "normal"})
+	d3.select("div." + replace_space_with_underscore(d.country) + ".pcp h5")
+		.style("color", function(){
+			if(current_state === "aggregate_profile"){
+				return "#6600cc"
+			}else if(current_state === "population"){
+				return "#0066cc"
+			}else if(current_state === "pcp"){
+				return "#cc6699"
+			}
+		})
+		.style("font-weight", "bold")
+		
 	d3.select("#support_ratio").text(two_decimals(d.support_ratios[year-1950]))
 	d3.select("#support_ratio_marker")
 		.datum(d.support_ratios[year-1950])
@@ -726,6 +742,16 @@ function add_page_elements() {
 			show_selected_link("preview_mode", d3.select(this))
 			current_state = d.replace(" ", "_")
 			render_small_multiple_country(d3.selectAll("div.pcp svg"), 1000)
+			d3.select("div."+replace_space_with_underscore(country_selected)+".pcp h5")
+				.style("color", function(){
+					if(current_state === "aggregate_profile"){
+						return "#6600cc"
+					}else if(current_state === "population"){
+						return "#0066cc"
+					}else if(current_state === "pcp"){
+						return "#cc6699"
+					}
+				})
 		})
 
 	d3.select("#link_states").selectAll("a.pop_scenario")
