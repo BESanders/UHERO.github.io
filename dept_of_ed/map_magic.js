@@ -24,8 +24,8 @@ function zoomed() {
 		.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 		
 	svg.select("g#zoom_map")
-		.selectAll("circle.pos")
-		.attr("r",school_r/d3.event.scale)
+		.selectAll("circle.school")
+		.attr("r",(school_r+(d3.event.scale-1)/2)/d3.event.scale)
 	
 }
 
