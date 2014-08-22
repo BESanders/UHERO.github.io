@@ -420,6 +420,8 @@ function load_main_view(d, duration){
 	selected_data = d;
 	country_selected = d.country
 	
+	d3.selectAll("div.pcp h5").style({"background-color" : "white", "color": "black"})
+	d3.select("div." + replace_space_with_underscore(d.country) + ".pcp h5").style({"background-color": "black", "color": "white"})
 	d3.select("#support_ratio").text(two_decimals(d.support_ratios[year-1950]))
 	d3.select("#support_ratio_marker")
 		.datum(d.support_ratios[year-1950])
@@ -672,7 +674,10 @@ function play_from_year() {
 		.transition()
 		.duration(5000*(2100-year)/150)
 		.tween("slide", tweenYear)
-		.each("end", function(d) { playing = false; })
+		.each("end", function(d) { 
+			playing = false; 
+			d3.select("#play_button_image").attr("src", "Blue+Triangle.png")
+		})
 }
 
 function show_selected_link(link_class, selected_link) { 
@@ -693,12 +698,14 @@ function add_page_elements() {
 	d3.select("#play_button").on("click", function(d) { 
 		if (playing) {
 			playing = false;
-			d3.select("svg#support_ratio_viz").transition()			
+			d3.select("svg#support_ratio_viz").transition()	
+			d3.select("#play_button_image").attr("src", "Blue+Triangle.png")	 		
 		}
 		else {
 			playing = true;
 			year = year === 2100 ? 1950 : year
-			play_from_year() 
+			play_from_year()
+			d3.select("#play_button_image").attr("src", "pause_blue.gif")	
 		}
 	})
 
