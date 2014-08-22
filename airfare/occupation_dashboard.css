@@ -87,15 +87,17 @@ div.tooltip {
 }
 
 h3.year {
-	position:absolute;
-	left:945px;
-	bottom: -13px;
+	position:relative;
+	left:245px;
 }
 
 #price{
-	position:absolute;
-	font-size:50px;
-	left:27px;
+	position:relative;
+	font-size:30px;
+	left:12px;
+	top:-14px;
+	font-weight:bold;
+	letter-spacing:2px;
 }
 
 div.inset{
@@ -103,8 +105,9 @@ div.inset{
 	width:271px;
 	height:93px;
 	left:700px;
-	top:26px;
-	border-bottom: solid;
+	top:-13px;
+	border-bottom: 1px solid;
+/*	border-top:1px solid;*/
 	padding-bottom: 47px;
 }
 
@@ -137,9 +140,9 @@ svg.inset_svg{
 }
 
 #us_details {
-	position:absolute;
+/*	position:absolute;
 	left:700px;
-	bottom:702px;
+	bottom:702px;*/
 }
 
 #show_all{
@@ -163,7 +166,7 @@ svg.inset_svg{
 #modes{
 	position:relative;
 	left:270px;
-	top:-110px;
+	top:-285px;
 }
 
 #fares{
@@ -178,4 +181,12 @@ svg.inset_svg{
 
 #yoy{
 	text-decoration:underline;
+}
+
+#info_and_controls{
+	position:relative;
+	left:700px;
+	width:300px;
+	height:300px;
+	border-left: 1px solid;
 }

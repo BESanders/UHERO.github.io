@@ -47,7 +47,7 @@
 }
 
 .d3-slider-horizontal .d3-slider-handle {
-    top: -.3em;
+    top: -.4em;
     margin-left: -.6em;
 }
 
@@ -86,10 +86,11 @@
 }
 
 .slider {
-	position:absolute;
-	left:921px;
-	top:58px;
-	height:130px;
+	position:relative;
+	left:21px;
+	bottom:70px;
+/*	height:130px;*/
+	width:200px;
 }
 
 .d3-slider-handle{
@@ -103,6 +104,5 @@
 
 .d3-slider{
 	border:none;
-	border-left:1px solid #AAA;
-	top:58px;
+	border-top:1px solid #AAA;
 }

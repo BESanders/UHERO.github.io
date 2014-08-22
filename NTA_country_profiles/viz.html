@@ -12,80 +12,90 @@
 		<link rel="stylesheet" href="viz.css" type="text/css">
 </head>
 <body>
-<div style="height:902px; width: 1160px">
+<div style="height:902px; width: 980px">
 	<h1>Population, Consumption, and Labor Income Profile by Country</h1>
 	<h3 id="country_header">
-		<span id="country">United States</span>
-		<span id="age_title"> age profile for</span> 
-		<span id="year">1950</span>
 	</h3>
 	<div id="top_selection_div">
-		<div id="pcp">
-			<h6 id="pcp_title">Per Capita<br/>
-				<span id="pcp_consumption">Consumption</span> &
-				<span id="pcp_labor_income">Labor Income</span>
-				<br/> <span id="pcp_age">by Age</span>
-			</h6>
-			<svg id="pcp_selected">
-				<path class="pcp"></path>
-				<path class="pcp"></path>
-			</svg>
-		</div> <!--pcp closing-->
+		<div id="controls">
+			<div id="pcp">
+				<h6 id="pcp_title">Per Capita
+					<span id="pcp_consumption">Consumption</span> &<br/>
+					<span id="pcp_labor_income">Labor Income</span>
+					<span id="pcp_age">by Age</span>
+				</h6>
+				<svg id="pcp_selected">
+					<path class="pcp"></path>
+					<path class="pcp"></path>
+				</svg>
+			</div> <!--pcp closing-->
 		
-		<div id="support_and_slider">
-			<div id="support_ratio_container">
-				Support Ratio = <span id="support_ratio"></span>
-				<div id="controls">
-					<svg id="support_ratio_viz">
-						<path id="support_ratio_time_series" stroke="black" fill="none"></path>
-						<path id="support_ratio_area" fill="red" fill-opacity=0.1 stroke="none"></path>
-						<circle id="support_ratio_marker" r=4 fill="red"></circle>
-					</svg>
+			<div id="support_and_slider">
+				<div id="support_ratio_container">
+
+						<div id="support_ratio_answer">
+							support ratio = 
+						</div>
+						<div id="support_ratio_equation">
+							<span id="support_labor_income">Labor Income</span>
+							<hr>
+							<span id="support_consumption">Consumption</span>
+						</div>
+						
+						<div id="support_ratio"></div>
+						<svg id="support_ratio_viz">
+							<path id="support_ratio_time_series" stroke="#0066CC" fill="none"></path>
+							<path id="support_ratio_area" fill="#0066CC" fill-opacity=0.1 stroke="none"></path>
+							<circle id="support_ratio_marker" r=4 fill="#0066CC"></circle>
+						</svg>
+					<!-- <br/>
+					<br/>
+					<div id="support_ratio_answer">
+						support ratio = 
+					</div>
+					<div id="support_ratio_equation">
+						<span id="support_labor_income">Labor Income</span>
+						<hr>
+						<span id="support_consumption">Consumption</span>
+					</div> -->
 				</div>
-				<br/>
-				<br/>
-				<div id="support_ratio_answer">
-					support ratio = 
-				</div>
-				<div id="support_ratio_equation">
-					<span id="support_labor_income">Labor Income</span>
-					<hr>
-					<span id="support_consumption">Consumption</span>
+				<div id="slider_container">
+					<div id="slider"></div>	
+					<span id="play_desc">drag slider to change timeframe or</span>
+					<div id="play">
+						<a id="play_button" href="javascript:;">
+							<img id="play_button_image" src="Blue+Triangle.png" alt="play button" width="20" height="20"></img>
+							play
+						</a>
+					</div>
 				</div>
 			</div>
-			<div id="slider_container">
-				<div id="slider"></div>	
-				<span id="slider_desc"><em>display dynamic profile by country</em></span>
-				<span id="play_desc">drag slider to change timeframe or</span>
-				<div id="play">
-					<a id="play_button" href="javascript:;">
-						<img id="play_button_image" src="Blue+Triangle.png" alt="play button" width="20" height="20"></img>
-						play
-					</a>
-				</div>
-			</div>
-		</div>
-		<!--slider closing-->
+			<!--slider closing-->
+			
+			<div id="country">United States</div>
+			
+		</div><!-- closing controls -->
 		
 		<div id="population">
-			<h3 id="population_title">Population</h3>
+			<h3 id="population_title">Population by Age</h3>
 			<svg id="population_selected">
 				<path class="population"></path>
 				<path class="population"></path>
+				<text id="year" class="year" x=50 y=225 font-size=40 fill="#CCC" fill-opacity=0.7 >1950</text>
 			</svg>
 		</div><!--population closing-->
 			
 		<div id="aggregate">
-			<h3 id="aggregate_title">Aggregate<br/>
-				<span id="aggregate_consumption">Consumption</span> & 
+			<h3 id="aggregate_title">Aggregate
+				<span id="aggregate_consumption">Consumption</span> & <br/>
 				<span id="aggregate_labor_income">Labor Income</span> by Age
 			</h3>
 			<svg id="aggregate_profile_selected">
 				<path class="aggregate_profile"></path>
 				<path class="aggregate_profile"></path>
+				<text class="year" x=50 y=225 font-size=40 fill="#AAA" fill-opacity=0.5 >1950</text>
 			</svg>
 		</div><!--aggregate closing-->
-		
 		
 	</div>
 
@@ -93,28 +103,24 @@
 	<div id="link_states">
 		
 
-		<h3>Main Display:</h3>
-		<p class="display_parameters">Show:
+		<p class="display_parameters" id="scale_states">Scale:
 		<a href="javascript:;" class="main_display_mode">Units</a>
 		<a href="javascript:;" class="main_display_mode selected">Proportions</a>
 		</p>
 		
-		<h3>Country Previews:</h3>
-		<p class="display_parameters">
+		<p class="display_parameters" id="preview_states">Previews:
 		<a href="javascript:;" class="preview_mode">Per Capita Profiles</a>
 		<a href="javascript:;" class="preview_mode">Population</a>
 		<a href="javascript:;" class="preview_mode selected">Aggregate Totals</a>
 		</p>
-		<h3>Display Parameters:</h3>
 		
-		<p class="display_parameters">Fertility Scenario:
+		<p class="display_parameters" id="fertility_states">Fertility Scenario:
 		<a href="javascript:;" class="pop_scenario">Constant</a>
 		<a href="javascript:;" class="pop_scenario">Low</a>	
 		<a href="javascript:;" class="pop_scenario selected">Medium</a>	
 		<a href="javascript:;" class="pop_scenario">High</a>	
 		</p>
-		
-		<h3 class="instructions">Click on a country thumbnail to load it into the main view</h3>
+
 		
 	</div>
 	
@@ -123,20 +129,21 @@
 
 </body>
 <script>
-var chart_height = 110
+var chart_height = 120
 var margin_top = 10
-var pop_distributions_width = 180
+var pop_distributions_width = 140
 
 var support_height = 200;
 var support_width = 290;
 
-var pop_width = 220;
-var pop_height = 180;
+var pop_width = 250;
+var pop_height = 230;
 
 var margin_left = 10
 
 var x_axis_space = 20;
 var y_axis_space = 30;
+var pcp_y_axis_space = 18;
 
 var pcp_height = 50
 var pcp_width = 80
@@ -169,7 +176,7 @@ var playing = false;
 
 var x_small = d3.scale.linear().domain([0,100]).range([0, pcp_width])
 var x_main = {
-	pcp: d3.scale.linear().domain([0,90]).range(					[margin_left+y_axis_space, margin_left+pop_distributions_width]),
+	pcp: d3.scale.linear().domain([0,90]).range(					[margin_left+pcp_y_axis_space, margin_left+pop_distributions_width]),
 	population: d3.scale.linear().domain([0,100]).range(			[margin_left+y_axis_space, margin_left+pop_width]),
 	aggregate_profile: d3.scale.linear().domain([0,100]).range(		[margin_left+y_axis_space, margin_left+pop_width])
 }
@@ -181,9 +188,9 @@ var y_main = {
 	aggregate_profile : d3.scale.linear().range(					[margin_top + pop_height, margin_top]), 
 }
 
-support_ratio_x = d3.scale.linear().domain([1950,2100]).range([180,310])
+support_ratio_x = d3.scale.linear().domain([1950,2100]).range([10,140])
 //support_ratio_y = d3.scale.linear().domain([.74,1.49]).range([220,150])
-support_ratio_y = d3.scale.linear().domain([.5,1.25]).range([240,170])
+support_ratio_y = d3.scale.linear().domain([.5,1.25]).range([90,20])
 
 var support_ratio_path = d3.svg.line()
 	.x(function(d, i) { return support_ratio_x(1950+i) })
@@ -281,7 +288,7 @@ function pop_vals(pop_data) {
 }
 
 function change_year_title(new_year){
-	d3.select("#year").text(new_year)
+	d3.selectAll("text.year").text(new_year)
 }
 
 
@@ -357,7 +364,7 @@ function update_income_axes(){
 		.ticks(5)
 		
 	pcp_g.attr("class","axis")
-		.attr("transform", "translate(" + (margin_left+y_axis_space) + ",0)")
+		.attr("transform", "translate(" + (margin_left+pcp_y_axis_space) + ",0)")
 		.call(pcp_axis)
 	
 	var pop_axis = d3.svg.axis()
