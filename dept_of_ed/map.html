@@ -229,6 +229,7 @@ function set_up_scores() {
 		.append("circle")
 		.attr("class", school_class)
 		.attr("r", school_r)
+		.attr("fill", school_color)
 		.attr("fill-opacity", 0.1)
 		.on("mouseover", highlight_school)
 		.on("mouseout", clear_schools)
@@ -245,8 +246,10 @@ function highlight_school(d) {
 	d3.select("#selected_school").text(d.long_school_name)
 	d3.selectAll("circle.id_"+d.school_id)
 		.attr("fill", highlight_color)
-		.attr("stroke", highlight_color)
 		.attr("fill-opacity", 1)
+		
+	d3.selectAll("circle.complex_"+d.complex_id)
+		.attr("stroke", highlight_color)
 }
 function clear_schools() {
 
@@ -271,7 +274,6 @@ function draw_scores(attribute) {
 	
 	scores.transition()
 		.duration(500)
-		.attr("fill", school_color)
 		.attr("cx", score_x)
 		.attr("cy", function(d) { return y(d[attribute])})
 }
