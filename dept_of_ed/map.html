@@ -31,6 +31,8 @@
 <h1>DOE Schools</h1>
 <h3 id="selected_school">&nbsp;</h3>
 <div id="show_selections"></div>
+<div id="controls"></div>
+<div id="selected_schools"></div>
 <div id="scores">
 </div>
 <div id="district_map">
@@ -48,9 +50,18 @@ var score_width = 300
 var school_r = 3
 var school_color = "#0066CC"
 var highlight_color = "red"
+
+var showing_school_size = false
+var showing_grade_levels = false
+
+var selected_schools = {}
 var data_file_names = ["college_data", "proficiency", "school_info", "staff", "strive"];
 var y = d3.scale.linear().range([score_height, 10])
-var x = d3.scale.ordinal().range([50,100,150,200]).domain(["Priority", "Focus", "Continuous Improvement", "Recognition"])
+var x = d3.scale.ordinal()
+	.range([50,100,150,200])
+	.domain(["Priority", "Focus", "Continuous Improvement", "Recognition"])
+	
+var school_size_r = d3.scale.sqrt().range([0,15])
 
 var attribute_domains = {
 	strive_index_score : [0,400], 
@@ -59,6 +70,37 @@ var attribute_domains = {
 	science_proficiency: [0,100],
 	reading_sgp: [0,100],
 	math_sgp: [0,100],
+}
+
+function score_x(d) {
+	 return showing_grade_levels ? x(d.strive_step+" "+d.grade_type) : x(d.strive_step) 
+}
+
+function toggle_scale() {
+	showing_grade_levels = showing_grade_levels ? false : true
+	
+	if (!showing_grade_levels) {
+		x.range([50,100,150,200])
+			.domain(["Priority", "Focus", "Continuous Improvement", "Recognition"])		
+	}
+	else {		
+		x.range([15,30,45,60, 100,115,130,145, 185,200,215,230])
+		.domain([
+			"Priority Elementary", "Focus Elementary", "Continuous Improvement Elementary", "Recognition Elementary", 
+			"Priority Middle", "Focus Middle", "Continuous Improvement Middle", "Recognition Middle",  	"Priority High",
+			"Focus High", 
+			 "Continuous Improvement High", 
+			 "Recognition High", 
+		])
+		
+	}
+	
+	d3.select("#score_svg")
+		.selectAll("circle")
+		.transition()
+		.duration(500)
+		.attr("cx", score_x)
+	
 }
 
 function draw_map(data){
@@ -102,6 +144,65 @@ function draw_school_positions(schools) {
 		.attr("fill-opacity", 0.3)
 		.on("mouseover", highlight_school)
 		.on("mouseout", clear_schools)
+		.on("click", toggle_school_selection)
+		
+}
+
+function set_up_school_size_button() {
+	var school_size_domain = d3.extent(schools.map(function(d)  {return d.size_proxy}))
+	school_size_r.domain(school_size_domain)
+	d3.select("#controls")
+		.selectAll("a")
+		.data([
+				["SCHOOL_SIZE", toggle_school_size],
+				["SHOW_GRADE_LEVELS", toggle_scale],
+		])
+		.enter()
+		.append("a")
+		.attr("href", "javascript:;")
+		.attr("class", "selection_link")
+		.text(function(d) { return d[0] })
+		.on("click", function(d) { d[1]() })
+			
+}
+
+//erase me
+function update_school_selection_list() {
+	var selections = d3.select("#selected_schools")
+		.selectAll("span")
+		.data(d3.values(selected_schools), function(d) { return d.long_school_name })
+
+	selections
+		.enter()
+		.append("span")
+		.text(function(d) { return d.long_school_name })
+		
+	selections.exit().remove()
+	
+}
+function toggle_school_selection(d) {
+	if(selected_schools[d.school_id]) {
+		//remove
+		delete selected_schools[d.school_id]
+		update_school_selection_list()
+		clear_schools(d)
+	} else {
+		//add
+		selected_schools[d.school_id] = d
+		update_school_selection_list()			
+	}
+	
+}
+function toggle_school_size() {
+	d3.select("#score_svg")
+		.selectAll("circle")
+		.transition()
+		.duration(500)
+		.attr("r", function(d) { 
+			return showing_school_size ? school_r : school_size_r(d.size_proxy) 
+		})
+	
+	showing_school_size = showing_school_size ? false : true
 		
 }
 
@@ -128,9 +229,10 @@ function set_up_scores() {
 		.append("circle")
 		.attr("class", school_class)
 		.attr("r", school_r)
-		.attr("fill-opacity", .3)
+		.attr("fill-opacity", 0.1)
 		.on("mouseover", highlight_school)
 		.on("mouseout", clear_schools)
+		.on("click", toggle_school_selection)
 		
 	score_svg.append("text")
 		.attr("id", "selected_attribute")
@@ -142,18 +244,19 @@ function set_up_scores() {
 function highlight_school(d) {
 	d3.select("#selected_school").text(d.long_school_name)
 	d3.selectAll("circle.id_"+d.school_id)
-		//.attr("r", 5)
 		.attr("fill", highlight_color)
 		.attr("stroke", highlight_color)
 		.attr("fill-opacity", 1)
 }
 function clear_schools() {
-	d3.select("#selected_school").html("&nbsp")
+
 	d3.selectAll("circle.school")
-		//.attr("r", school_r)
-		.attr("fill-opacity", .3)
+		.attr("fill-opacity", .1)
 		.attr("fill", school_color)
 		.attr("stroke", "none")
+		
+	d3.values(selected_schools).forEach(function(d) { highlight_school(d) })
+	d3.select("#selected_school").html("&nbsp")
 }
 function school_class(d) {
 	var school_id = " id_" + d.school_id
@@ -169,13 +272,14 @@ function draw_scores(attribute) {
 	scores.transition()
 		.duration(500)
 		.attr("fill", school_color)
-		.attr("cx", function(d) { return x(d.strive_step)})
+		.attr("cx", score_x)
 		.attr("cy", function(d) { return y(d[attribute])})
 }
 
 function draw(){
 	set_up_map();
 	set_up_scores();
+	set_up_school_size_button();
 	
 	var precinct_data = topojson.feature(hawaii_geo_json, hawaii_geo_json.objects.updated_precincts).features
 	precinct_data = precinct_data.filter(function(d) { return d.id !== "30-04"}) //this one seems to have a screwed up path	

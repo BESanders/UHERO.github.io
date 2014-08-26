@@ -80,8 +80,8 @@ var data_states = {
 
 var color = d3.scale.linear()
 
-function string_formatter(value){
-	switch(selected_mode){
+function string_formatter(value, mode){
+	switch(mode){
 		case "fares": return "$" + value;
 		
 		case "tickets": return value;
@@ -90,8 +90,8 @@ function string_formatter(value){
 	}
 }
 
-function change_state_header(state){
-	switch(selected_mode){
+function change_state_header(state, mode){
+	switch(mode){
 		case "fares": return "Median " + state + " <br/> airfare:";
 		
 		case "tickets": return state + " ticket <br/> volume:";
@@ -116,9 +116,14 @@ function tooltip_html(d) {
 function highlight_state(state_node, d, i) {
 	state_node.attr("stroke", "orange" )
 	
-	d3.select("#title").html(change_state_header(d.properties.name))
-	d3.select("#price").text(string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]]))
+	d3.select("#title_one").html(change_state_header(d.properties.name, "fares"))
+	d3.select(".label.one").text(string_formatter(d.data["fares"]["array"][quarters_array[slider_index]], "fares"))
 
+	d3.select("#title_two").html(change_state_header(d.properties.name, "tickets"))
+	d3.select(".label.two").text(string_formatter(d.data["tickets"]["array"][quarters_array[slider_index]], "tickets"))
+	
+	d3.select("#title_three").html(change_state_header(d.properties.name, "yoy"))
+	d3.select(".label.three").text(string_formatter(d.data["yoy"]["array"][quarters_array[slider_index]], "yoy"))
 	var bounds = path.bounds(d)
 	tooltip
 		.style({
@@ -135,8 +140,14 @@ function clear_tooltip(){
 }
 
 function show_text_for_US(){
-	d3.select("#title").html(data_states[selected_mode]["us_desc"])
-	d3.select("#price").text(string_formatter(Math.round(us_data[selected_mode]["array"][quarters_array[slider_index]])))
+	d3.select("#title_one").html(data_states["fares"]["us_desc"])
+	d3.select(".label.one").text(string_formatter(Math.round(us_data["fares"]["array"][quarters_array[slider_index]]), "fares"))
+	
+	d3.select("#title_two").html(data_states["tickets"]["us_desc"])
+	d3.select(".label.two").text(string_formatter(Math.round(us_data["tickets"]["array"][quarters_array[slider_index]]), "tickets"))
+	
+	d3.select("#title_three").html(data_states["yoy"]["us_desc"])
+	d3.select(".label.three").text(string_formatter(Math.round(us_data["yoy"]["array"][quarters_array[slider_index]]), "yoy"))
 }
 
 function clear_state(state_node, d ,i) {
@@ -186,7 +197,7 @@ function add_text_for_selection(state){
 		.datum(state)
 		.append("h2")
 		.attr("class", "number_label " + state.abbreviation)
-		.text(function(d){ return string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]]); })
+		.text(function(d){ return string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]], selected_mode); })
 		.style({"font-size": "14px", "position":"absolute", "left":"79px", "top":"15px"})
 
 }
@@ -400,7 +411,7 @@ function draw_year(evt, s_index) {
 		.on("mouseout", mouseout_state)
 
 	d3.selectAll("text.state")
-		.text(function(d){ return string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]])})
+		.text(function(d){ return string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]], selected_mode)})
 		.attr("fill", text_price_fill)
 
 	d3.selectAll("circle.inset_time_marker")
@@ -411,11 +422,11 @@ function draw_year(evt, s_index) {
 		.text(change_inset_header())
 		
 	d3.selectAll("h2.number_label")
-		.text(function(d){ return string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]]);})
+		.text(function(d){ return string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]], selected_mode);})
 }
 
 function create_slider(data){
-	slider = d3.select("#info_and_controls").append("div").attr("class", "slider")	
+	slider = d3.select("#slider").append("div").attr("class", "slider")	
 	slider.call(
 		d3.slider()
 			.min(0)

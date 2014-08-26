@@ -89,11 +89,12 @@ div.tooltip {
 h3.year {
 	position:relative;
 	left:245px;
+	top:-50px;
 }
 
-#price{
+
+.label{
 	position:relative;
-	font-size:30px;
 	left:12px;
 	top:-14px;
 	font-weight:bold;
@@ -140,9 +141,11 @@ svg.inset_svg{
 }
 
 #us_details {
-/*	position:absolute;
-	left:700px;
-	bottom:702px;*/
+	font-size:12px;
+}
+
+#us_details h2{
+	font-size:20px;
 }
 
 #show_all{

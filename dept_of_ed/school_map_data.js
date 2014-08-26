@@ -26,7 +26,8 @@ function set_up_data_objects(results) {
 			d.science_proficiency = d.strive[0]["Science Proficiency (%)"]
 			d.reading_sgp = d.strive[0]["Reading Median SGP"]
 			d.math_sgp = d.strive[0]["Math Median SGP"]
-			
+			d.size_proxy = parseInt(d.proficiency.filter(function(d) { return d.GradeCode === "99" && d.SubgroupCode === "1" && d.SubjectCode == "M"})[0].NbrAllProf)
+			d.grade_type = d.strive[0]["School Type for Strive HI"]
 		} else {
 			d.strive = []
 		}
