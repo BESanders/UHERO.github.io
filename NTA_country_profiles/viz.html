@@ -688,7 +688,7 @@ function tweenYear() {
 function play_from_year() {
 	d3.select("svg#support_ratio_viz")
 		.transition()
-		.duration(5000*(2100-year)/150)
+		.duration(10000*(2100-year)/150)
 		.tween("slide", tweenYear)
 		.each("end", function(d) { 
 			playing = false; 
