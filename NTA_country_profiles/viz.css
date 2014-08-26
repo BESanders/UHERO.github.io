@@ -41,13 +41,13 @@ text#year {
 
 #pcp{
 	float:left;
-	width:160px;
+	width:180px;
 	height:150px;
 	/*margin-left:20px;*/
 }
 
 #pcp_title{
-	font-size:10px;
+	font-size:14px;
 	font-weight:normal;
 	font-family:Helvetica, sans-serif;
 	text-align:center;
@@ -144,7 +144,7 @@ text#year {
 #support_ratio_equation{
 	width:90px;
 	position:absolute;
-	left:110px;
+	left:115px;
 	top:-7px;
 }
 
@@ -208,7 +208,7 @@ text#year {
 #controls{
 	height:280px;
 	float:left;	
-	width: 360px;
+	width: 380px;
 }
 
 #population{
@@ -306,7 +306,7 @@ div.pcp { cursor: pointer}
 #link_states h3.instructions { font-size: 12px; font-style: italic; color: #777}
 
 #link_states a {
-	font-size: 9px;
+	font-size: 12px;
 	padding: 3px;
 	color: black;
 	text-decoration:none;
@@ -318,9 +318,9 @@ div.pcp { cursor: pointer}
 	color:#FFF;
 }
 
-#link_states p.display_parameters { font-size:9px; color:#999;  float:left;}
-#scale_states { width:150px; }
-#preview_states { width: 310px;}
+#link_states p.display_parameters { font-size:12px; color:#999;  float:left;}
+#scale_states { width:161px; }
+#preview_states { width: 352px;}
 #fertility_states { width: 280px;}
 
 #source_links{
