@@ -117,14 +117,15 @@ function draw_map(data){
 		.attr("stroke-width", .05)
 		.attr("class", precinct_class)
 		.attr("d", geo_path)
-		.on("mouseover", highlight_precinct)
-		.on("mouseout", function(d) { d3.select(this).attr("fill-opacity", 1) })
-		.on("click", click_precinct)
-
-	var highlight = g.append("path")
-		.attr("class", "highlight")
-		.attr("stroke", highlight_fill)
-		.attr("fill", "none")
+		.on("mouseover", check_county)
+	// 	.on("mouseover", highlight_precinct)
+	// 	.on("mouseout", function(d) { d3.select(this).attr("fill-opacity", 1) })
+	// 	.on("click", click_precinct)
+	// 
+	// var highlight = g.append("path")
+	// 	.attr("class", "highlight")
+	// 	.attr("stroke", highlight_fill)
+	// 	.attr("fill", "none")
  
 	calculate_bounds(paths)
 		
@@ -137,6 +138,7 @@ function draw_school_positions(schools) {
 		.enter()
 		.append("circle")
 		.attr("class", school_class)
+		.attr("pane", "map")
 		.attr("cx", function(d) { return geo_proj([d.longitude, d.latitude])[0]})
 		.attr("cy", function(d) { return geo_proj([d.longitude, d.latitude])[1]})
 		.attr("r", school_r)
@@ -166,7 +168,6 @@ function set_up_school_size_button() {
 			
 }
 
-//erase me
 function update_school_selection_list() {
 	var selections = d3.select("#selected_schools")
 		.selectAll("span")
@@ -181,6 +182,8 @@ function update_school_selection_list() {
 	
 }
 function toggle_school_selection(d) {
+	d3.event.stopPropagation()
+	
 	if(selected_schools[d.school_id]) {
 		//remove
 		delete selected_schools[d.school_id]
@@ -189,7 +192,9 @@ function toggle_school_selection(d) {
 	} else {
 		//add
 		selected_schools[d.school_id] = d
-		update_school_selection_list()			
+		update_school_selection_list()	
+		zoom_to_bounds(get_complex_bounds(d3.selectAll("circle.complex_"+d.complex_id)))
+				
 	}
 	
 }
@@ -228,6 +233,7 @@ function set_up_scores() {
 		.enter()
 		.append("circle")
 		.attr("class", school_class)
+		.attr("pane", "score")
 		.attr("r", school_r)
 		.attr("fill", school_color)
 		.attr("fill-opacity", 0.1)
@@ -242,14 +248,28 @@ function set_up_scores() {
 	
 }
 
-function highlight_school(d) {
+function get_complex_bounds(complex) {
+	positions = complex.data().map(function(d) { return geo_proj([d.longitude, d.latitude]) })
+	x_extent = d3.extent(positions.map(function(d) { return d[0] }))
+	y_extent = d3.extent(positions.map(function(d) { return d[1] }))
+	return [ [x_extent[0]-20,y_extent[0]-20], [x_extent[1]+20, y_extent[1]+20] ]
+}
+function highlight_school_with_this(d, d_this) {
+	var complex = d3.selectAll("circle.complex_"+d.complex_id)
+		.attr("stroke", highlight_color)
+	
+	if (d_this && d3.select(d_this).attr("pane") === "score") {
+		zoom_to_bounds(get_complex_bounds(complex))
+	}
+	
 	d3.select("#selected_school").text(d.long_school_name)
 	d3.selectAll("circle.id_"+d.school_id)
 		.attr("fill", highlight_color)
 		.attr("fill-opacity", 1)
 		
-	d3.selectAll("circle.complex_"+d.complex_id)
-		.attr("stroke", highlight_color)
+}
+function highlight_school(d) {
+	highlight_school_with_this(d, this)
 }
 function clear_schools() {
 
@@ -258,7 +278,7 @@ function clear_schools() {
 		.attr("fill", school_color)
 		.attr("stroke", "none")
 		
-	d3.values(selected_schools).forEach(function(d) { highlight_school(d) })
+	d3.values(selected_schools).forEach(function(d) { highlight_school_with_this(d, null) })
 	d3.select("#selected_school").html("&nbsp")
 }
 function school_class(d) {

@@ -59,15 +59,10 @@ function reset(d) {
 	
 }
 
-function highlight_precinct_from_this(d, obj) {
-	if (map_clicked) return;	
-	d3.select(obj).attr("fill-opacity", .1)
-}
 
 function highlight_precinct(d) {
-	check_county(d)
-	highlight_precinct_from_this(d, this)
-
+	//check_county(d)
+	//highlight_precinct_from_this(d, this)
 }
 
 function zoom_to_bounds(bounds) {
@@ -90,22 +85,6 @@ function zoom_to_bounds(bounds) {
 	
 }
 
-function click_precinct(d) {
-	d3.event.stopPropagation()
-
-	if (d3.event.defaultPrevented) { return } 
-	
-	if (map_clicked) {
-		map_clicked = false;
-		highlight_precinct_from_this(d,this)
-	}
-
-	map_clicked = true
-	
-	var bounds = geo_path.bounds(d)
-	zoom_to_bounds(bounds)
-	
-}
 
 function county_accessor(d) {
 	return d.__data__.properties.COUNTY
