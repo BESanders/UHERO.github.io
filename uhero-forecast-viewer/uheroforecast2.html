@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>UHERO Forecast Viewer</title>
+	<script src="dat.gui.min.js"></script>
+    <script src="d3.v3.min.js"></script>
+	<script src="queue.min.js"></script>    
+	</head>
+  	<body>
+
+	<style>
+	</style>
+
+    <div id="visitor_arrivals">
+	<svg class="percent_error">
+	</svg>
+    <table class="comparison_table">
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+    UHERO In-Depth Errors
+    <ul><li>Q1</li><li>Q2</li><li>Q3</li>Q4</ul>
+    </div>
+
+
+<script type="text/javascript">
+
+var margin = {top: 10, right: 10, bottom: 35, left: 35},
+    width = 600,
+    height = 200,
+    hspacing = 10;
+
+var svg = d3.select("svg");
+svg.attr({
+    width: width + margin.left + margin.right,
+    height: height + margin.top + margin.bottom
+}).style({
+    "background-color": "#f1E4CC"
+});
+
+var raw = [];
+var stats = [];
+
+queue()
+    .defer(d3.csv, "forecast_comparison_raw.csv")
+    .defer(d3.csv, "forecast_comparison_stats.csv")
+    .awaitAll(ready);
+
+var pe_x_scale = d3.scale.linear().range([0,width]);
+
+function ready(error, data) {
+    console.log(raw);
+    raw = data[0];
+    stats = data[1];
+    raw.forEach(function(d) {
+            d.year = +d.year;
+            d.fhb = +d.fhb;
+            d.uhero = +d.uhero;
+            d.dbedt = d.dbedt.length > 0 ? +d.dbedt : null;
+            d.actual = +d.actual;
+            d.pe_fhb = (d.fhb - d.actual) / d.actual;
+            d.pe_uhero = (d.uhero - d.actual) / d.actual;
+            d.pe_dbedt = (d.dbedt - d.actual) / d.actual;
+    });
+    stats.forEach(function(d) {
+            d.bias = +d.bias;
+            d.mae = +d.mae;
+            d.mpe = +d.mpe;
+            d.mape = +d.mape;
+            d.rmse = +d.rmse;
+            d.mase = +d.mase;
+    });
+
+    var visitor_error = raw.filter(function(d) { return d.variable == "Visitor Arrivals"; }),
+        income_error = raw.filter(function(d) { return d.variable == "Personal Income"; }),
+        inflation_error = raw.filter(function(d) { return d.variable == "Inflation"; }),
+        job_error = raw.filter(function(d) { return d.variable == "Job Growth"; }),
+        unemployment_error = raw.filter(function(d) { return d.variable == "Unemployment Rate"; });
+    
+    pe_x_scale.domain([
+            d3.min(raw, function(d) { return d3.min([d.uhero, d.fhb, d.dbedt]); }),
+            d3.max(raw, function(d) { return d3.max([d.uhero, d.fhb, d.dbedt]); })]);
+
+    // do the Visitor Arrivals first
+    var pe_uhero_line = d3.svg.line()
+        .x(function(d) { return pe_x_scale(i); })
+        .y(function(d) { return pe_y_scale(d.pe_uhero) });
+    var pe_fhb_line = d3.svg.line()
+        .x(function(d) { return pe_x_scale(i); })
+        .y(function(d) { return pe_y_scale(d.pe_fhb) });
+    var pe_dbedt_line = d3.svg.line()
+        .x(function(d) { return pe_x_scale(i); })
+        .y(function(d) { return pe_y_scale(d.pe_dbedt) });
+
+}
+
+
+</script>
+</body>
+</html>

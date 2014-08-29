@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>UHERO Forecast Viewer</title>
+	<script type="text/javascript" src="dat.gui.min.js"></script>
+    <script type="text/javascript" src="d3.v3.min.js"></script>
+	</head>
+  	<body>
+
+    <script type="text/javascript">
+	
+	var gui = new dat.GUI();
+	var params = {
+		//data structures and storage
+		viz_data: [], all_estimates: [], all_errors: [], historical_data: {},
+				
+		//main graphic
+		chart_width: 1200, chart_height: 410, x_margin: 50, y_margin: 25,
+		
+		//errors area
+		legend_height: 180, legend_space:10, legend_spacing:5,
+		
+		//datatable area
+		datatable_height:400,
+		
+		//forecast horizon analysis area
+		horizon_width: 220, fhy_label: 40, fhx_label: 15, fhq_space: 10, fhy_space:10,
+		
+		//visualization variables
+		bar_width: 10, est_radius: 5, line_alpha: 0.1, bar_alpha: 0.1, circle_alpha: 0.1, tick_length: 10,
+		
+		old_color: '#FF0000',
+		new_color: '#0000FF',
+		indicator: "Visitors",
+		font_size:10,
+	};
+	
+	// Programmer: Larry Battle 
+	// Date: Mar 06, 2011
+	// Purpose: Calculate standard deviation, variance, and average among an array of numbers.
+	var isArray = function (obj) {
+		return Object.prototype.toString.call(obj) === "[object Array]";
+	},
+	getNumWithSetDec = function( num, numOfDec ){
+		var pow10s = Math.pow( 10, numOfDec || 0 );
+		return ( numOfDec ) ? Math.round( pow10s * num ) / pow10s : num;
+	},
+	getAverageFromNumArr = function( numArr, numOfDec ){
+		if( !isArray( numArr ) ){ return false;	}
+		var i = numArr.length, 
+			sum = 0;
+		while( i-- ){
+			sum += numArr[ i ];
+		}
+		return getNumWithSetDec( (sum / numArr.length ), numOfDec );
+	},
+	getVariance = function( numArr, numOfDec ){
+		if( !isArray(numArr) ){ return false; }
+		var avg = getAverageFromNumArr( numArr, numOfDec ), 
+			i = numArr.length,
+			v = 0;
+
+		while( i-- ){
+			v += Math.pow( (numArr[ i ] - avg), 2 );
+		}
+		v /= numArr.length;
+		return getNumWithSetDec( v, numOfDec );
+	},
+	getStandardDeviation = function( numArr, numOfDec ){
+		if( !isArray(numArr) ){ return false; }
+		var stdDev = Math.sqrt( getVariance( numArr, numOfDec ) );
+		return getNumWithSetDec( stdDev, numOfDec );
+	};
+	
+	// growth = (new - old) / old
+	// growth * old + old = new
+
+	function redraw() {
+		draw(params.viz_data);		
+	}
+	
+	function level_lookup(rec, forecast_paths) {
+		//path = forecast_paths.indexOf(rec.Forecast)
+		var path = forecast_paths[rec.Forecast]; //need to search here
+		return path.levels[rec.Year - path.year_start];		
+	}
+	
+	function convert_to_years(qdiff) {
+		errors = params.all_errors
+			.filter(function(d) {return d.qdiff === parseInt(qdiff)})
+			.map(function(d){return d.error});
+					
+		var message = " The Errors have a mean of " + getAverageFromNumArr(errors,2) + " and standard deviation of " +  getStandardDeviation(errors,2) +".";
+		//alert(errors.toSource());
+				// 
+				// for (error in errors){
+				// 	alert(error)
+				// }
+		if (qdiff[0] === "-") {
+			return "The estimates shown were calculated "+qdiff.substring(1)+" quarters prior to the end of that year." + message;
+		} else if (qdiff[0] === "0") {
+			return "The estimates shown were calculated during the last quarter of that year." + message ;
+		} else {
+			return "The estimates shown were calculated "+qdiff+" quarters after the end of that year,"+message;
+		}
+	}
+	
+	function init_viz_element(svg, elem_with_class, data) {
+		var elem_parts = elem_with_class.split(".");
+		var elem = elem_parts[0];
+		var elem_class = elem_parts[1];
+		
+		var viz_element = svg.selectAll(elem_with_class).data(data);
+		viz_element.enter().append(elem).attr("class", elem_class);
+		viz_element.exit().remove();
+		
+		return viz_element;
+	}
+	function onmouseover(d, i) {
+	    var currClassString = d3.select(this).attr("class");
+		var classes = currClassString.split(" ");
+		d3.selectAll(".estimate").classed("off", true);
+		d3.selectAll(".forecast").classed("off", true);
+		d3.selectAll("."+classes[1]).classed("current",true);
+		var svg = d3.select("svg");
+		svg.append("text")
+			.attr("x", params.x_margin + 10)
+			.attr("y", params.y_margin - 5)
+			.attr("class","blurb")
+			.text(convert_to_years(classes[1].substr(1)));
+	}
+	function onmouseout(d, i) {
+		var currClassString = d3.select(this).attr("class");
+		var classes = currClassString.split(" ");
+		d3.selectAll(".estimate").classed("off", false);
+		d3.selectAll(".forecast").classed("off", false);
+		d3.selectAll("."+classes[1]).classed("current",false);
+		var svg = d3.select("svg");
+		svg.select("text.blurb").remove();
+		
+	}
+	
+	function draw(data) {
+		params.viz_data = data;
+
+		data = data.filter(function(d) { return d[params.indicator] != "" });
+		all_vals = []
+		
+		var nested_data = d3.nest()
+			.key( function(d) { return d.Forecast; } )
+			.rollup( function(leaves) { 
+				var sorted_leaves = leaves.sort(function(a,b) { return d3.ascending(a.Year, b.Year) });
+				return  {"year_start" : parseInt(sorted_leaves[0].Year), "chg" : sorted_leaves.map(function(d){ return d[params.indicator]; }) }
+				} )
+			.entries(data);
+		
+		forecast_paths = nested_data.map(function(elem){
+			var prev_year_val = params.historical_data[params.indicator][elem.values.year_start-1];
+			var levels = elem.values.chg.map(function(chg){ 
+				prev_year_val = (1 + chg/100) * prev_year_val;
+				return prev_year_val;
+		 	});
+			all_vals = all_vals.concat(levels);
+			return {"forecast" : elem.key , "year_start" : elem.values.year_start , "levels" : levels };
+		});
+		
+		var nested_forecast_paths = d3.nest()
+			.key(function(d) { return d.forecast})
+			.rollup(function(leaves) { return leaves[0] })
+			.map(forecast_paths);
+
+		var all_estimates = [];
+		var nested_years = d3.nest()
+			.key( function(d) { return d.Year; })
+			.rollup(function(leaves) {
+				var points = {};
+				for (leaf in leaves) {
+					this_leaf = leaves[leaf];
+					qdiff = parseInt(this_leaf.qdiff) 
+					points[qdiff] = level_lookup(this_leaf, nested_forecast_paths);
+					all_estimates.push({"year":this_leaf.Year , "level":points[qdiff], "qdiff": qdiff, "fq":this_leaf.qnum, "fydiff":this_leaf.yeardiff });
+				}
+				return points;
+			})
+			.map(data);
+		
+		var all_errors = all_estimates.map(function(d) {
+			var history = params.historical_data[params.indicator][d.year]
+			var error = history != null ? d.level - history : 0;
+			return {"year":d.year, "qdiff": d.qdiff , "error":error, "fq": d.fq, "fydiff": d.fydiff } 
+		});
+		
+		//params.all_estimates = all_estimates;
+		params.all_errors = all_errors;
+		// var all_estimates = d3.entries(nested_years).map(function(year_entry) { 
+		// 	return d3.values(year_entry.value).map(function(level) {return [year_entry.key, level, qdiff]})
+		// 	return [year_entry.key, 
+		// 	});
+		var max_val = d3.max(all_vals);
+		var min_val = d3.min(all_vals);
+		
+		var max_year = d3.max(d3.keys(nested_years));
+		var min_year = d3.min(d3.keys(nested_years));
+		
+		var max_q = d3.max(all_errors.map(function(d) { return d.qdiff }));
+		var min_q = d3.min(all_errors.map(function(d) { return d.qdiff }));
+
+		var max_error = d3.max(all_errors.map(function(d) { return Math.abs(d.error) }));
+		var min_error = d3.min(all_errors.map(function(d) { return Math.abs(d.error) }));
+		
+		var min_fydiff = d3.min(all_errors.map(function(d) {return parseInt(d.fydiff) }));
+		var max_fydiff = d3.max(all_errors.map(function(d) {return parseInt(d.fydiff) }));
+		
+		val_spread = max_val - min_val;
+		//alert(params.historical_data[params.indicator].toSource());
+		relevant_historical_values = d3.keys(nested_years).sort().map(function(d) {return params.historical_data[params.indicator][d] });
+		//alert(relevant_historical_values.toSource());
+		all_vals = all_vals.concat(relevant_historical_values);
+		
+		y = d3.scale.linear().domain([min_val-val_spread/20, max_val + val_spread / 20]).range([params.chart_height - params.y_margin, params.y_margin]);
+		x = d3.scale.linear().domain([min_year, max_year]).range([params.x_margin * 2, params.chart_width - params.x_margin * 2]);
+
+		tick_spacing = (x(max_year) - x(min_year)) / (max_year - min_year);
+
+		q = d3.scale.linear().domain([min_q, max_q]).range([params.chart_height + params.legend_height - params.y_margin - params.legend_space, params.chart_height + params.y_margin + params.legend_space]);
+		e = d3.scale.linear().domain([-max_error, max_error]).range([-tick_spacing/2, tick_spacing/2]);
+		dtq = d3.scale.linear().domain([min_q, max_q]).range([params.chart_height + params.legend_height + params.datatable_height - params.y_margin, params.chart_height + params.legend_height + params.y_margin]);
+		
+		//height of area is 5 (or num years) * (max error + space)
+		//width of oy = horizon_width - label space - 4*(space) / 4
+		//for actual lines x and y functions
+		//x = FHQuarter + Observation Year
+		//y = FHYear(y1), FHYear + Error(y2)
+		// data array needs (FHQuarter, FHYear_diff, Observation Year, Error)
+		
+		//hytick_spacing = params.fhy_space + tick_spacing;
+        hytick_spacing = params.fhy_space * 10;
+		
+		fhy = d3.scale.linear().domain([min_fydiff,max_fydiff]).range([params.y_margin + params.fhx_label, (max_fydiff - min_fydiff) * (hytick_spacing)]); //y axis year blocks
+        // sneaky. The params.x_margin below used to be params.y_margin, gotta do better if you want to pull the wool over my eyes.
+		fhq = d3.scale.linear().domain([1,4]).range([params.chart_width+params.fhy_label,params.chart_width + params.horizon_width - params.x_margin]); //x axis quarter blocks
+		
+		htick_spacing =  (params.horizon_width - params.y_margin - params.fhy_label) / 4 - params.fhq_space;
+		
+		oy = d3.scale.linear().domain([min_year , max_year]).range([0,htick_spacing]); //x axis observation years
+				
+		var forecast_line = d3.svg.line()
+			.x(function(d) {return x(d.year)})
+			.y(function(d) {return y(d.level)});
+		//alert(min_val+" "+max_val);
+		
+		var svg = d3.select("svg");
+		svg
+			.attr("fill", "black")
+			.attr("width", params.chart_width + params.horizon_width)
+			.attr("height", params.chart_height + params.legend_height + params.datatable_height);
+		
+		// Plot Area ----------------------------------------------
+		var plot_area = svg.selectAll("rect.chart").data([1]);
+		
+		plot_area.enter()
+			.append("rect")
+			.attr("class", "chart");
+			
+		plot_area
+			.attr("x", params.x_margin)
+			.attr("y", params.y_margin)
+			.attr("width", params.chart_width - 2 * params.x_margin)
+			.attr("height", params.chart_height - 2 * params.y_margin);
+			
+		// Legend Area --------------------------------------------
+		// var legend_area = svg.selectAll("rect.legend").data([1]);
+		// legend_area.enter().append("rect").attr("class","legend");
+		// legend_area
+		// 	.attr("x", params.x_margin) 
+		// 	.attr("y", params.y_margin + params.chart_height)
+		// 	.attr("width", params.chart_width - 2 * params.x_margin)
+		// 	.attr("height", params.legend_height - 2 * params.y_margin);
+			
+
+		// // DataTable Area --------------------------------------------
+		// var datatable_area = svg.selectAll("rect.datatable").data([1]);
+		// datatable_area.enter().append("rect").attr("class","datatable");
+		// datatable_area
+		// 	.attr("x", params.x_margin) 
+		// 	.attr("y", params.y_margin + params.chart_height + params.legend_height)
+		// 	.attr("width", params.chart_width - 2 * params.x_margin)
+		// 	.attr("height", params.datatable_height - 2 * params.y_margin);
+			
+		// Forecast Paths --------------------------------------------
+		
+		var forecast_path_svgs = svg.selectAll("path.forecast").data(forecast_paths.map(function(d) {
+			return d.levels.map(function(level,i) {
+				return {"level":level, "year":d.year_start + i}
+			});
+		}));
+		
+		forecast_path_svgs.enter()
+			.append("path")
+			.attr("class","forecast");
+		
+		forecast_path_svgs.exit().remove();
+		
+		forecast_path_svgs.
+			attr("d", forecast_line)
+			.attr("stroke-opacity", params.line_alpha);
+			
+			
+		var actuals = svg.selectAll("rect.actuals").data(d3.keys(nested_years).sort().map(function(d) {return { "key": d, "value": params.historical_data[params.indicator][d]}; }));
+		actuals.enter().append("rect").attr("class", "actuals");
+		actuals.exit().remove();
+
+		actuals
+			.attr("x", function(d) {return x(d.key) - params.bar_width / 2})
+			.attr("y", function(d) {return y(d.value)})
+			.attr("width", params.bar_width)
+			.attr("height", function(d) {return params.chart_height - params.y_margin - y(d.value) })
+			.attr("fill-opacity", params.bar_alpha);;
+			
+		// Value Spreads -----------------------------------------
+		
+		var estimates = svg.selectAll("circle.estimate").data(all_estimates);
+		estimates.enter().append("circle").attr("class", "estimate");
+		estimates.exit().remove();
+		
+		estimates
+			.attr("cx", function(d) {return x(d.year)})
+			.attr("cy", function(d) {return y(d.level)})
+			.attr("r", params.est_radius)
+			.attr("fill-opacity", params.circle_alpha)
+			.attr("class", function(d) {
+				base_class = "estimate";
+				qdiff_class = "t"+d.qdiff;
+				return base_class + " " + qdiff_class;
+			})
+			.on("mouseover", onmouseover)
+			.on("mouseout", onmouseout);;
+			
+		// Errors --------------------------------------------------
+		
+		var errors = svg.selectAll("line.error").data(all_errors);
+		errors.enter().append("line").attr("class", "error");
+		errors.exit().remove();
+		
+		errors
+			.attr("y1", function(d) {return q(d.qdiff)})
+			.attr("y2", function(d) {return q(d.qdiff)})
+			.attr("x1", function(d) {return x(d.year)})
+			.attr("x2", function(d) {return x(d.year) - e(d.error)})
+			.attr("class", function(d) {
+				base_class = "error";
+				qdiff_class = "t"+d.qdiff;
+				return base_class + " " + qdiff_class;
+			})
+			.on("mouseover", onmouseover)
+			.on("mouseout", onmouseout);
+//		errors.classed(function(d) {return "t"+d.qdiff});
+			
+		var error_refs = svg.selectAll("line.error_ref").data(x.ticks(max_year-min_year));
+		error_refs.enter().append("line").attr("class", "error_ref")
+		error_refs.exit().remove();
+
+		error_refs
+			.attr("x1", function(d) {return x(d)})
+			.attr("x2", function(d) {return x(d)})
+			.attr("y1", params.chart_height + params.y_margin )
+			.attr("y2", params.chart_height + params.legend_height - params.y_margin);
+
+		var errors_by_year = init_viz_element(svg, "line.errors_by_year", all_errors)
+			.attr("x1", function(d) {return fhq(d.fq) + oy(d.year)} )
+			.attr("x2", function(d) {return fhq(d.fq) + oy(d.year)} )
+			.attr("y1", function(d) {return fhy(d.fydiff)} )
+			.attr("y2", function(d) {return fhy(d.fydiff) - e(d.error)} );
+			
+		// Datatable --------------------------------------------------
+
+		var dt_vals = svg.selectAll("text.dt_val").data(all_errors);
+		dt_vals.enter().append("text").attr("class", "dt_val");
+		dt_vals.exit().remove();
+
+		dt_vals
+			.attr("y", function(d) {return dtq(d.qdiff)})
+			.attr("x", function(d) {return x(d.year) - 12})
+			.text(function(d) {return Math.round(d.error) })
+			.attr("class", function(d) {
+				base_class = "dt_val";
+				qdiff_class = "t"+d.qdiff;
+				return base_class + " " + qdiff_class;
+			})
+			.on("mouseover", onmouseover)
+			.on("mouseout", onmouseout);
+			
+		var xticks = svg.selectAll("line.xticks").data(x.ticks(max_year-min_year));
+		xticks.enter().append("line").attr("class", "xticks")
+		xticks.exit().remove();
+		
+		xticks
+			.attr("x1", function(d) {return x(d)})
+			.attr("x2", function(d) {return x(d)})
+			.attr("y1", params.chart_height - params.y_margin )
+			.attr("y2", params.chart_height - params.y_margin + params.tick_length);
+		
+		var xtick_labels = svg.selectAll("text.xtick_labels").data(x.ticks(max_year-min_year));
+		
+		xtick_labels.enter().append("text").attr("class", "xtick_labels");
+		xtick_labels.exit().remove();
+		
+		xtick_labels
+			.attr("x", function(d) {return x(d) - 12} )
+			.attr("y", params.chart_height - params.y_margin + params.tick_length + params.font_size + 5)
+			.text(function(d) {return d; });
+
+		var yticks = svg.selectAll("line.yticks").data(y.ticks(20));
+		yticks.enter().append("line").attr("class", "yticks")
+		yticks.exit().remove();
+
+		yticks
+			.attr("x1", params.x_margin - params.tick_length)
+			.attr("x2", params.x_margin)
+			.attr("y1", function(d) {return y(d)} )
+			.attr("y2", function(d) {return y(d)});
+
+		var ytick_labels = svg.selectAll("text.ytick_labels").data(y.ticks(20));
+
+		ytick_labels.enter().append("text").attr("class", "ytick_labels");
+		ytick_labels.exit().remove();
+
+		ytick_labels
+			.attr("y", function(d) {return y(d)} )
+			.attr("x", params.x_margin - params.tick_length -30)
+			.text(function(d) {return d; });
+			
+			
+		// var qticks = svg.selectAll("line.qticks").data(q.ticks(max_q - min_q));
+		// qticks.enter().append("line").attr("class", "qticks")
+		// qticks.exit().remove();
+		// 
+		// qticks
+		// 	.attr("x1", params.x_margin - params.tick_length)
+		// 	.attr("x2", params.x_margin)
+		// 	.attr("y1", function(d) {return q(d)} )
+		// 	.attr("y2", function(d) {return q(d)});
+		// 	
+		// var qtick_labels = svg.selectAll("text.qtick_labels").data(q.ticks(max_q - min_q));
+		// qtick_labels.enter().append("text").attr("class", "qtick_labels");
+		// qtick_labels.exit().remove();
+		// 
+		// qtick_labels
+		// 	.attr("y", function(d) {return q(d)} )
+		// 	.attr("x", params.x_margin - params.tick_length -30)
+		// 	.text(function(d) {return d; });
+
+
+
+		var qtick_labels = svg.selectAll("text.dtqtick_labels").data(dtq.ticks(max_q - min_q));
+		qtick_labels.enter().append("text").attr("class", "dtqtick_labels");
+		qtick_labels.exit().remove();
+
+		qtick_labels
+			.attr("y", function(d) {return dtq(d)} )
+			.attr("x", params.x_margin - params.tick_length -30)
+			.attr("class", function(d) {return "dtqtick_labels t"+d})
+			.on("mouseover", onmouseover)
+			.on("mouseout", onmouseout)
+			.text(function(d) {return d; });
+			
+		var fhytick_labels = init_viz_element(svg, "text.fhytick_labels", fhy.ticks(max_fydiff - min_fydiff))
+			.attr("y", function(d) {return fhy(d)})
+			.attr("x", params.chart_width)
+			.text(function(d) {return d; });
+			
+		var fhqtick_labels = init_viz_element(svg, "text.fhqtick_labels", fhq.ticks(4))
+			.attr("y", params.y_margin)
+			.attr("x", function(d) {return fhq(d)})
+			.text(function(d) { return d });
+			
+	}		
+
+	d3.csv(params.indicator+".csv", function(data) {
+		params.historical_data[params.indicator] = d3.nest().key(function(d) {return d.date}).rollup(function(leaves) {return parseFloat(leaves[0].level)}).map(data);
+		d3.csv("forecastrawdata.csv", draw);
+	});
+	
+	
+	gui.add(params, 'indicator', 
+		[ 	"Employment",
+			"Inflation",
+			"JP Visitors",
+			"Other Visitors",
+			"Payroll Jobs",
+			"Real GDP",
+			"Real Personal Income",
+//			"Unemployment Rate",
+			"US Visitors",
+			"Visitors",
+		]).onChange(function() {
+			d3.csv(params.indicator+".csv", function(data) {
+				params.historical_data[params.indicator] = d3.nest().key(function(d) {return d.date}).rollup(function(leaves) {return parseFloat(leaves[0].level)}).map(data);
+				redraw();
+			});
+		});
+
+	gui.add(params, 'chart_width', 0, 2000).onChange(redraw);
+	gui.add(params, 'chart_height', 0, 1600).onChange(redraw);
+	gui.add(params, 'legend_height', 0, 600).onChange(redraw);
+	gui.add(params, 'datatable_height', 0, 800).onChange(redraw);
+	gui.add(params, 'horizon_width', 100, 500).onChange(redraw);
+	gui.add(params, 'bar_width', 0, 100).onChange(redraw);
+	gui.add(params, 'est_radius', 0, 15).onChange(redraw);
+	gui.add(params, 'x_margin', 0, 100).onChange(redraw);
+	gui.add(params, 'y_margin', 0, 100).onChange(redraw);
+	gui.add(params, 'tick_length', 0, 50).onChange(redraw);
+	//gui.addColor(params, 'old_color', 0, 1).onChange(redraw);
+	//gui.addColor(params, 'new_color', 0, 20).onChange(redraw);
+	gui.add(params, 'line_alpha', 0, 1).onChange(redraw);
+	gui.add(params, 'bar_alpha', 0, 1).onChange(redraw);
+	gui.add(params, 'circle_alpha', 0,1).onChange(redraw);
+    // Added handles for the horizon chart
+    gui.add(params, 'fhq_space', 5, 30).onChange(redraw);
+    gui.add(params, 'fhy_space', 5, 30).onChange(redraw);
+	
+	</script>
+
+	<style>
+	h2 { text-align:center; color:gray; font-family:verdana; font-weight:100; font-size:20px; padding-right:50px; }
+	svg {background-color: black;}
+	rect.chart,
+	rect.legend,
+	rect.datatable {stroke: white; stroke-width: 1;}
+	path.forecast {stroke:white; stroke-width: 1; fill-opacity: 0; /*stroke-opacity: 0.1*/}
+	line.xticks,
+	line.yticks,
+	line.qticks {stroke:white; stroke-width: 2;}
+	line.error,
+	line.errors_by_year {stroke:white; stroke-width: 1;}
+	line.error_ref {stroke:#333; stroke-width:1, stroke-opacity:0.1}
+	text.xtick_labels,
+	text.ytick_labels,
+	text.qtick_labels,
+	text.fhytick_labels,
+	text.fhqtick_labels,
+	text.dtqtick_labels {fill:white; font-family:verdana; font-size: 10px;}
+	text.dt_val {fill:#777; font-family:verdana; font-size: 10px;}
+	text.on {fill-opacity:1}
+	rect.actuals {fill:white; /*fill-opacity: 0.1;*/}
+	circle.estimate {fill:white; /*fill-opacity: 0.1;*/}
+	
+	text.blurb{fill:red; font-family:verdana; font-size: 12px;}
+	line.current{stroke:red;}
+	text.current{fill:red;}
+
+	circle.off {fill-opacity:0;}
+	path.off {stroke-opacity:0;}
+	circle.current{fill:red; fill-opacity:1;}
+	</style>
+
+	<svg>
+	</svg>
+</body>
+</html>
+
