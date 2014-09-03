@@ -82,7 +82,7 @@ div.tooltip {
 	width:60px;
 	position:relative;
 	right:13px;
-	top:56px;
+	top:-28px;
 	z-index:1;
 }
 
@@ -93,7 +93,7 @@ h3.year {
 }
 
 
-.label{
+.header{
 	position:relative;
 	left:12px;
 	top:-14px;
@@ -104,10 +104,9 @@ h3.year {
 div.inset{
 	position:relative;
 	width:271px;
-	height:93px;
+	height:22px;
 	left:700px;
-	top:-13px;
-	border-bottom: 1px solid;
+	top:-112px;
 /*	border-top:1px solid;*/
 	padding-bottom: 47px;
 }
@@ -116,6 +115,12 @@ svg#map{
 	position:absolute;
 }
 
+svg#bar_chart{
+	position:relative;
+	top:130px;
+	margin-left:30px;
+	/*border: 1px solid;*/
+}
 svg#time_series {
 	position:absolute;
 	right:327px;;
@@ -130,18 +135,19 @@ svg#yoy {
 
 svg.inset_time{
 	position:absolute;
-	left:81px;
+	left:74px;
 	top:34px;
 }
 
 svg.inset_svg{
 	position:absolute;
-	left:-60px;
-	top:-17px;
+	left:-32px;
+	top:-43px;
 }
 
 #us_details {
 	font-size:12px;
+	margin-top:10px;
 }
 
 #us_details h2{
@@ -169,7 +175,7 @@ svg.inset_svg{
 #modes{
 	position:relative;
 	left:270px;
-	top:-285px;
+	top:-290px;
 }
 
 #fares{
@@ -192,4 +198,27 @@ svg.inset_svg{
 	width:300px;
 	height:300px;
 	border-left: 1px solid;
+	top:20px;
+}
+
+h1#state{
+	font-weight:bold;
+	font-size:20px;
+	margin-left:10px;
+}
+
+
+#details_secondary_two{
+	position:relative;
+	top:-76px;
+	left:151px;
+	color:gray;
+}
+
+#details_secondary_two h2, #details_secondary_two h1, #details_secondary_one h2, #details_secondary_one h1{
+	color:#C0C0C0;
+}
+
+#details_secondary_one{
+	margin-top:-10px;
 }
