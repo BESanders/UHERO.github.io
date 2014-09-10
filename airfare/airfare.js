@@ -36,11 +36,12 @@ var us_data = {}
 var quarters_array = []
 var selected_states = [];
 var selected_mode = "fares";
+var selected_sort = "alphabetical";
 var ticket_max;
 var yoy_max;
 var yoy_min;
 var price_max;
-
+var sum_of_tickets_array = [];
 var column_name ="1993Q1" //quarter to draw initially
 var slider_index = 0;
 var US_row_index = 51;
@@ -281,7 +282,7 @@ function click_on_state(d,i){
 function remove_selected(abbreviation){
 	selected_states.splice(selected_states.indexOf(abbreviation),1)
 	d3.select(".inset." + abbreviation).remove();
-	d3.select("g.bar_g." + d.abbreviation + "text.bar").attr("class", "bar")
+	d3.select("g.bar_g." + abbreviation + "text.bar").attr("class", "bar")
 }
 
 
@@ -367,19 +368,22 @@ function create_bars(states){
 		state_names.push(d.properties.name)
 	})
 	state_names.sort()
-	var x = d3.scale.ordinal().domain(state_names).rangeRoundBands([0, ts_width], 0.3, 0.3)
+	state_names = sum_of_tickets_array.map(function(d){
+		return d.state;
+	})
+	var x = d3.scale.ordinal().domain(state_names).rangeRoundBands([0, ts_width], 0.5, 0.1)
 	bar_height_scale.domain([0, price_max]).range([5, yoy_height])
  	var g = bar_svg.selectAll("g")
 				.data(states)
 				.enter()
 				.append("g")
 				.attr("class", function(d){ return "bar_g " + d.abbreviation})
-				.attr("transform", function(d) { return "translate("  + (x(d.properties.name)) + ",0)"})
+				.attr("transform", function(d) { return "translate("  + (x(d.abbreviation)) + ",0)"})
 	
 	g.append("rect")
 		.attr("width", x.rangeBand())
 		.attr("height", function(d){ return bar_height_scale(d.data["fares"]["array"][column_name])})
-		.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data["fares"]["array"][column_name])})
+		.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data["fares"]["array"][column_name]) - 15})
 		.attr("fill", function(d){ return color(d.data["fares"]["array"][column_name])})
 		.on("mouseover", mouseover_state)
 		.on("mouseout", mouseout_state)
@@ -388,15 +392,15 @@ function create_bars(states){
 	g.append("text")
 		.attr("class", "bar_state")
 		.attr("transform", function(d){
-			return "translate(0," + (yoy_height - 1) + ")"
+			return "translate(0," + (yoy_height - 2) + ")"
 		})
-		.style("font-size", "8px")
+		.style("font-size", "7px")
 		.text(function(d){ return d.abbreviation})
-		.attr("fill", text_price_fill)
+		.attr("fill", "black")
 	
 	g.append("text")
 		.attr("transform", function(d){
-			return "translate(0," + ((yoy_height - 1) - bar_height_scale(d.data["fares"]["array"][column_name]) - 30) + ")"
+			return "translate(0," + ((yoy_height - 1) - bar_height_scale(d.data["fares"]["array"][column_name]) - 40) + ")"
 		})
 		.attr("class", "bar")
 		.style("font-size", "8px")
@@ -469,15 +473,8 @@ function draw_year(evt, s_index) {
 	d3.selectAll("rect")
 		.transition()	
 		.attr("height", function(d){ return bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]])})
-		.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]])})
+		.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) - 15})
 		.attr("fill", function(d){ return color(d.data[selected_mode]["array"][quarters_array[slider_index]])})
-	
-	if(selected_mode === "tickets"){
-		d3.selectAll("g.bar_g text.bar_state").attr("fill", "black")
-	}else{
-		d3.selectAll("g.bar_g text.bar_state").attr("fill", text_price_fill)
-	}
-
 }
 
 function create_slider(data){
@@ -520,6 +517,13 @@ function get_quarterly_values(nest_result, mode) {
 		}
 	})
 	return csv_row
+}
+
+function get_sum_of_tickets(){
+	all_states_data.forEach(function(d){
+		sum_of_tickets_array.push({state: d["state"], ticket_sum: d3.sum(d3.values(d["tickets"]["array"]), function(d){ return d;})})
+	})
+	sum_of_tickets_array.sort(function(a,b){ return a.ticket_sum - b.ticket_sum})
 }
 
 function load_data_object(results) {
@@ -621,10 +625,18 @@ function switching_number_labels(data, mode){
 		d3.select(".secondary_two").text(string_formatter(Math.round(data["tickets"]["array"][quarters_array[slider_index]]), "tickets"))
 	}
 }
+
 function change_modes(target_mode){
 	selected_mode = target_mode;
 	change_scale();
 	draw_year(null, slider_index);
+}
+
+function change_sorts(target_sort){
+	selected_sort = target_sort;
+	if(target_sort === "alphabetical"){
+		
+	}
 }
 
 var q = queue()
@@ -633,10 +645,14 @@ q.defer(d3.csv, "fare_median_pchya.csv")
 q.defer(d3.csv, "fare_medians_state.csv")
 q.awaitAll(function(error, results){
 	load_data_object(results)
+	get_sum_of_tickets();
 	initial_draw_map(results[2]);
 	create_slider(results[2]); 
 	inset_time_scale = d3.scale.ordinal().domain(quarters_array).rangePoints([0 + ts_left, ts_inset_width - ts_right])	
 	d3.select("#modes").selectAll("a").data(["fares","tickets", "yoy"]).on("click", function(d){
 		change_modes(d);
+	})
+	d3.select("#sorts").selectAll("a").data(["alphabetical", "number_of_tickets", "avg_fare", "avg_yoy"]).on("click", function(d){
+		change_sorts(d);
 	})
 })

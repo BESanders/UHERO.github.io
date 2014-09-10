@@ -154,22 +154,16 @@ svg.inset_svg{
 	font-size:20px;
 }
 
-#show_all{
-	position:absolute;
-	left:180px;
-	top:414px;
+#sorts{
+	position:relative;
+	top:140px;
+	text-align:right;
+	width:680px;
 }
 
-#show_weighted{
-	position:absolute;
-	left:250px;
-	top:414px;
-}
-
-#show_none{
-	position:absolute;
-	left:360px;
-	top:414px;
+#sorts a{
+	margin-right:10px;
+	text-decoration:underline;
 }
 
 #modes{
