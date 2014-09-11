@@ -368,17 +368,17 @@ function create_bars(states){
 		state_names.push(d.properties.name)
 	})
 	state_names.sort()
-	state_names = sum_of_tickets_array.map(function(d){
-		return d.state;
-	})
+	// state_names = sum_of_tickets_array.map(function(d){
+	// 	return d.state;
+	// })
 	var x = d3.scale.ordinal().domain(state_names).rangeRoundBands([0, ts_width], 0.5, 0.1)
 	bar_height_scale.domain([0, price_max]).range([5, yoy_height])
  	var g = bar_svg.selectAll("g")
 				.data(states)
 				.enter()
 				.append("g")
-				.attr("class", function(d){ return "bar_g " + d.abbreviation})
-				.attr("transform", function(d) { return "translate("  + (x(d.abbreviation)) + ",0)"})
+				.attr("class", function(d){ return "bar_g " + d.properties.name})
+				.attr("transform", function(d) { return "translate("  + (x(d.properties.name)) + ",0)"})
 	
 	g.append("rect")
 		.attr("width", x.rangeBand())
