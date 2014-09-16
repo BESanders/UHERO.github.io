@@ -78,8 +78,8 @@ function draw_data(hawaii) {
 	var path = d3.geo.path()
 	    .projection(projection);
 	
-//	hawaii_map_data = topojson.feature(hawaii, hawaii.objects.complex).features;
-	hawaii_map_data = topojson.feature(hawaii, hawaii.objects.hi_ct).features;
+	hawaii_map_data = topojson.feature(hawaii, hawaii.objects.doe).features;
+//	hawaii_map_data = topojson.feature(hawaii, hawaii.objects.hi_ct).features;
 
     // load the map
     var districts = svg.selectAll("path.district").data(hawaii_map_data);
@@ -98,7 +98,7 @@ function draw() {
 	draw_data(params.data)
 }
 
-d3.json("hi_ct_topo.json", draw_data);
+d3.json("doe_high_smallest.json", draw_data);
 //d3.json("doe_simplified.json", draw_data);
 
 

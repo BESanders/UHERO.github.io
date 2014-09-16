@@ -55,6 +55,13 @@ height:1200px;
 }
 
 
+.header.primary{
+	font-size:30px;
+}
+
+.header.secondary_one, .secondary_two	{
+	font-size:20px;
+}
 
 
 div.tooltip {  
@@ -78,18 +85,17 @@ div.tooltip {
 }
 
 #slider{
-	height:131px;
-	width:60px;
+	width:200px;
 	position:relative;
-	right:13px;
-	top:-28px;
+	right:-18px;
+	top:-90px;
 	z-index:1;
 }
 
 h3.year {
 	position:relative;
-	left:245px;
-	top:-50px;
+	left:220px;
+	top:-6px;
 }
 
 
@@ -119,8 +125,9 @@ svg#bar_chart{
 	position:relative;
 	top:130px;
 	margin-left:30px;
-	border: 1px solid;
+	border-top: 1px solid;
 }
+
 svg#time_series {
 	position:absolute;
 	right:327px;;
@@ -163,28 +170,25 @@ svg.inset_svg{
 
 #sorts a{
 	margin-right:10px;
-	text-decoration:underline;
+	font-size:14px;
 }
 
 #modes{
 	position:relative;
-	left:270px;
-	top:-290px;
+	font-size:14px;
+	left:30px;
+	top:125px;
+	width:300px;
 }
 
 #fares{
 	margin-right:10px;
-	text-decoration:underline;
 }
 
 #tickets{
 	margin-right:10px;
-	text-decoration:underline;
 }
 
-#yoy{
-	text-decoration:underline;
-}
 
 #info_and_controls{
 	position:relative;
@@ -204,7 +208,7 @@ h1#state{
 
 #details_secondary_two{
 	position:relative;
-	top:-76px;
+	top:-82px;
 	left:151px;
 	color:gray;
 }
@@ -215,4 +219,19 @@ h1#state{
 
 #details_secondary_one{
 	margin-top:-10px;
+}
+
+#play{
+	position:relative;
+	left: 14px;
+	top:-20px;
+	background-color: #E8E8E8;
+	width: 70px;
+	z-index:1;
+}
+
+#play_button {
+	color: #0066CC;
+	text-decoration: none;
+	font-size:16px;
 }

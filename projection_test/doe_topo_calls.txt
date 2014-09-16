@@ -1,0 +1,95 @@
+topojson \
+  -o uk.json \
+  --id-property SU_A3 \
+  --properties name=NAME \
+  -- \
+  subunits.json \
+  places.json
+
+"type": "Feature", "id": 1, "properties": { "OBJECTID": 2, "ELEM_DESC": "Aiea El", "SCHLCODE": 200,
+topojson \
+  -o doe_elem_large.json \
+  --id-property OBJECTID \
+  --properties sch_id=SCHLCODE \
+  --properties name=ELEM_DESC \
+  -- \
+  geojsons/elem_large/doe.json
+
+
+topojson \
+  -o doe_elem_smaller.json \
+  --id-property OBJECTID \
+  --properties sch_id=SCHLCODE \
+  --properties name=ELEM_DESC \
+  -- \
+  geojsons/elem_smaller/doe.json
+
+
+{ "type": "Feature", "id": 0, "properties": { "OBJECTID": 1, "INT_DESC": "Aiea Inter", "MIDCODE": 201, "Shape_Leng": 35573.859493500000099, "Shape_Area": 45746900.9966 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -157.860443482428423, 21.43075479275543 ], [ -157.860382449603634, 21.43007232118271 ], [ -157.860046481422842, 
+
+topojson \
+  -o doe_mid_large.json \
+  --id-property OBJECTID \
+  --properties sch_id=MIDCODE \
+  --properties name=INT_DESC \
+  -- \
+  geojsons/mid_large/doe.json
+
+topojson \
+  -o doe_mid_smaller.json \
+  --id-property OBJECTID \
+  --properties sch_id=MIDCODE \
+  --properties name=INT_DESC \
+  -- \
+  geojsons/mid_smaller/doe.json
+
+topojson \
+  -o doe_mid_smallest.json \
+  --id-property OBJECTID \
+  --properties sch_id=MIDCODE \
+  --properties name=INT_DESC \
+  -- \
+  geojsons/mid_smallest/doe.json
+
+
+
+
+
+{ "OBJECTID": 1, "HIGHDIST_": 2, "HIGHDIST_I": 15, "ID": 2, "COUNTY": "15007", "SECONDARY": "10870", "NAME": "Kapaa", "ADMIN": "10080", "ADMIN_NAME": "Kauai", "COMPLEXARE": "KAUAI"
+
+topojson \
+  -o doe_high_large.json \
+  --id-property OBJECTID \
+  --properties sch_id=SCHLCODE \
+  --properties name=NAME \
+  --properties name_id=ID \
+  --properties cnty_code=COUNTY \
+  --properties admin_district=ADMIN_NAME \
+  --properties high_dist=HIGHDIST_I \
+  -- \
+  geojsons/high_large/doe.json
+
+topojson \
+  -o doe_high_smaller.json \
+  --id-property OBJECTID \
+  --properties sch_id=SCHLCODE \
+  --properties name=NAME \
+  --properties name_id=ID \
+  --properties cnty_code=COUNTY \
+  --properties admin_district=ADMIN_NAME \
+  --properties high_dist=HIGHDIST_I \
+  -- \
+  geojsons/high_smaller/doe.json
+
+
+topojson \
+  -o doe_high_smallest.json \
+  --id-property OBJECTID \
+  --properties sch_id=SCHLCODE \
+  --properties name=NAME \
+  --properties name_id=ID \
+  --properties cnty_code=COUNTY \
+  --properties admin_district=ADMIN_NAME \
+  --properties high_dist=HIGHDIST_I \
+  -- \
+  geojsons/high_smallest/doe.json
