@@ -669,6 +669,9 @@ function play_all_years(){
 		.each("end", function(d){
 			playing = false;
 		})
+		.each("start", function(d){
+			d3.selectAll("svg#bar_chart rect").transition().remove()	
+		})
 	
 }
 
@@ -712,8 +715,7 @@ q.awaitAll(function(error, results){
 	d3.select("#play_button").on("click", function(d) { 
 		if (playing) {
 			playing = false;
-			d3.select("svg#map").transition()	 	
-			d3.selectAll("svg#bar_chart rect").transition()		
+			d3.select("svg#map").transition()	 		
 		}
 		else {
 			playing = true;
