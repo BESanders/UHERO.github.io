@@ -1,0 +1,70 @@
+#interactive_area {
+  	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	position: relative;
+	height:800px;
+	margin:0;
+	padding:0;
+	z-index: -1;
+
+}
+
+div#source_links{
+position:relative;
+right:100px;
+/*top:600px;*/
+z-index:200;
+/*padding: 0 18px 0 15px;*/
+text-align:right;
+line-height: 13pt;
+}
+
+div#title_bar {
+	border-bottom:solid 1.5px #C8C8C8;
+	padding: 40px 10px 15px;
+	background-image:url('http://www.uhero.hawaii.edu/assets/Dasboardbranding2.png');
+	background-repeat:no-repeat;
+	background-position: 98% 0%;
+	background-size: 15%;
+}
+
+h4.dash_title {
+	font-size: 27pt;
+	text-transform: uppercase;
+}
+
+h4.dash_sub {
+	font-size: 18pt;
+	text-transform: uppercase;
+	line-height: 3px;
+	
+}
+
+
+.contentwrapper-bottom {
+background:none;
+background-color:white;
+width:100%;
+margin:0 0;
+}
+
+#content {
+background:none;
+width:100%;
+padding:0 0 30px 0;
+height:1200px;
+}
+
+div {
+  box-sizing:border-box;
+  -moz-box-sizing:border-box;
+  -webkit-box-sizing:border-box;
+}
+
+#interactive_area { position:relative; }
+
+#major_controls, #map_container, #tract_data, #map_scales { position:absolute }
+#map_scales .map_scale { border-top:1px solid #999; }
+
+/* for debugging only. Dump eventually */
+#tract_data, #map_container { border: 1px solid #EEE}
+

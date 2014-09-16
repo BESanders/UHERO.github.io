@@ -713,7 +713,7 @@ q.awaitAll(function(error, results){
 		if (playing) {
 			playing = false;
 			d3.select("svg#map").transition()	 	
-			d3.select("svg#bar_chart rect").transition()		
+			d3.selectAll("svg#bar_chart rect").transition()		
 		}
 		else {
 			playing = true;
