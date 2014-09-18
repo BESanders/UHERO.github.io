@@ -41,7 +41,7 @@ var ticket_max;
 var yoy_max;
 var yoy_min;
 var price_max;
-var playing;
+var playing = false;
 
 var sort_array = [];
 var sorts = {
@@ -438,7 +438,6 @@ function initial_draw_map(data){
 
 
 function display_year_and_avg_us_fare(value){
-	console.log(quarters_array[value])
 	//var text = d3.select(".d3-slider-handle").style("bottom").split("px");
 	d3.select("#slider h3.year").text(quarters_array[value])//.style("bottom", (parseInt(text[0]) + 40) + "px");
 	show_text_for_US()
@@ -476,12 +475,19 @@ function draw_year(s_index) {
 			inset_scale = d.data[selected_mode]["scale"]; 
 			return ts_inset_path(d3.entries(d.data[selected_mode]["array"])) 
 		})
-	
-	d3.selectAll("rect")
-		.transition()	
-		.attr("height", function(d){ return bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]])})
-		.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) - 15})
-		.attr("fill", function(d){ return color(d.data[selected_mode]["array"][quarters_array[slider_index]])})
+		
+	//if(!playing){
+		d3.selectAll("rect")
+			.transition()	
+			.attr("height", function(d){ return bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]])})
+			.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) - 15})
+			.attr("fill", function(d){ return color(d.data[selected_mode]["array"][quarters_array[slider_index]])})
+	// }else{
+	// 		d3.selectAll("rect")
+	// 			.attr("height", function(d){ return bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]])})
+	// 			.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) - 15})
+	// 			.attr("fill", function(d){ return color(d.data[selected_mode]["array"][quarters_array[slider_index]])})
+	// 	}
 }
 
 function create_slider(){
@@ -661,18 +667,14 @@ function tweenTime(){
 	}
 }
 function play_all_years(){
-
-	d3.select("svg#bar_chart")
+	d3.select("svg#map")
 		.transition()
 		.duration(10000*((quarters_array.length - 1)-slider_index)/83)
 		.tween("slide", tweenTime)
-		.each("end", function(d){
+		.each(function(d){
 			playing = false;
+			d3.select("#play_button_image").attr("src", "Blue+Triangle.png")
 		})
-		.each("start", function(d){
-			d3.selectAll("svg#bar_chart rect").transition().remove()	
-		})
-	
 }
 
 function change_modes(target_mode){
@@ -714,10 +716,13 @@ q.awaitAll(function(error, results){
 	})
 	d3.select("#play_button").on("click", function(d) { 
 		if (playing) {
-			playing = false;
-			d3.select("svg#map").transition()	 		
+			console.log(playing)
+			playing = false;	 		
+			d3.select("svg#map").transition()
+			d3.select("#play_button_image").attr("src", "Blue+Triangle.png")
 		}
 		else {
+			console.log(playing)
 			playing = true;
 			slider_index = slider_index === (quarters_array.length - 1) ? 0 : slider_index
 			play_all_years()	

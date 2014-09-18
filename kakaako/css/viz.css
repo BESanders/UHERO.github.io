@@ -63,8 +63,16 @@ div {
 #interactive_area { position:relative; }
 
 #major_controls, #map_container, #tract_data, #map_scales { position:absolute }
-#map_scales .map_scale { border-top:1px solid #999; }
+#map_scales .map_scale { border-top:1px solid #999; position:relative;}
+#map_scales svg { position:absolute; bottom:20px; right:0px;}
+
+.tract {fill: #EEE}
+.tract.selected { fill: #AAA }
+
+#tract_map .tract {stroke: #FFF; stroke-width:0.02;}
+#county_map .tract {stroke: #EEE; stroke-width:0.06;}
+#state_map .tract {stroke: #EEE; stroke-width:1;}
+
 
 /* for debugging only. Dump eventually */
 #tract_data, #map_container { border: 1px solid #EEE}
-
