@@ -131,7 +131,7 @@ function highlight_state(state_node, d, i) {
 		})
 		.html(tooltip_html(d))
 	
-	d3.select("g." + d.abbreviation + " rect").attr("stroke", "orange")
+	d3.select("g." + d.abbreviation + ' rect').attr("stroke", "orange")
 	d3.select("g." + d.abbreviation + " text.bar")
 		.text(string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]], selected_mode))
 		.attr("fill", "black")
@@ -379,12 +379,13 @@ function create_bars(states){
 	})
 	bar_x.domain(sort_array).rangeRoundBands([0, ts_width], 0.5, 0.1)
 	bar_height_scale.domain([0, price_max]).range([5, yoy_height])
- 	var g = bar_svg.selectAll("g")
-				.data(states)
-				.enter()
-				.append("g")
-				.attr("class", function(d){ return "bar_g " + d.abbreviation})
-				.attr("transform", function(d) { return "translate("  + (bar_x(d.abbreviation)) + ",0)"})
+	
+	var g = bar_svg.selectAll("g")
+			.data(states)
+			.enter()
+			.append("g")
+			.attr("class", function(d){ return "bar_g " + d.abbreviation})
+			.attr("transform", function(d) { return "translate("  + (bar_x(d.abbreviation)) + ",0)"})
 	
 	g.append("rect")
 		.attr("width", bar_x.rangeBand())
@@ -476,18 +477,11 @@ function draw_year(s_index) {
 			return ts_inset_path(d3.entries(d.data[selected_mode]["array"])) 
 		})
 		
-	//if(!playing){
-		d3.selectAll("rect")
-			.transition()	
-			.attr("height", function(d){ return bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]])})
-			.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) - 15})
-			.attr("fill", function(d){ return color(d.data[selected_mode]["array"][quarters_array[slider_index]])})
-	// }else{
-	// 		d3.selectAll("rect")
-	// 			.attr("height", function(d){ return bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]])})
-	// 			.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) - 15})
-	// 			.attr("fill", function(d){ return color(d.data[selected_mode]["array"][quarters_array[slider_index]])})
-	// 	}
+	d3.selectAll("rect")
+		.transition()	
+		.attr("height", function(d){ return bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]])})
+		.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) - 15})
+		.attr("fill", function(d){ return color(d.data[selected_mode]["array"][quarters_array[slider_index]])})
 }
 
 function create_slider(){
@@ -671,7 +665,13 @@ function play_all_years(){
 		.transition()
 		.duration(10000*((quarters_array.length - 1)-slider_index)/83)
 		.tween("slide", tweenTime)
-		.each(function(d){
+		.each("start", function(){
+			d3.selectAll("svg#bar_chart rect")
+				.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) - 15})
+				.attr("height", function(d){ return bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]])})
+				.attr("fill", function(d){ return color(d.data[selected_mode]["array"][quarters_array[slider_index]])})
+		})
+		.each("end", function(){
 			playing = false;
 			d3.select("#play_button_image").attr("src", "Blue+Triangle.png")
 		})
@@ -726,6 +726,7 @@ q.awaitAll(function(error, results){
 			playing = true;
 			slider_index = slider_index === (quarters_array.length - 1) ? 0 : slider_index
 			play_all_years()	
+			d3.select("#play_button_image").attr("src", "pause_blue.gif")
 		}
 	})
 })
