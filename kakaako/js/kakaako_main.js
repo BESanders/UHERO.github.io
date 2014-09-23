@@ -39,9 +39,17 @@ function size_divs() {
 // })
 
 size_divs()
-render_leaflet_map();
+
+d3.json("data/map/newbuildings_geojson.geojson", function(json_data) { 
+  render_leaflet_map(json_data);
+})
 
 d3.csv("data/ct_census_data.csv", function(data) {
 	ct_data = data
-	d3.json("data/map/hi_census_tracts_topo.json", draw_d3_maps);
+  var q = queue()
+	q.defer(d3.json,"data/map/hi_census_tracts_topo.json")
+	q.defer(d3.json,"data/dot_positions.json")
+	q.awaitAll(function(error, results ) {
+  	draw_d3_maps(results)
+	})
 })

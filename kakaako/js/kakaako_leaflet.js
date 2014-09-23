@@ -1,4 +1,11 @@
-function render_leaflet_map() {
+function onEachFeature(feature, layer) {
+  //can check for existence of properties before binding popup like so:
+  //if (feature.properties && feature.properties.popupContent) {
+  console.log(feature)
+  layer.bindPopup("<strong>popup</strong> yo!<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />")
+}
+
+function render_leaflet_map(building_json) {
 
 	var map = L.map('map_container').setView([21.2990, -157.8537], 16);
 	//L.tileLayer.grayscale('https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
@@ -9,4 +16,6 @@ function render_leaflet_map() {
 			'Imagery © <a href="http://mapbox.com">Mapbox</a>',
 		id: 'examples.map-20v6611k'
 	}).addTo(map);
+	
+  L.geoJson(building_json, { onEachFeature: onEachFeature }).addTo(map)
 }

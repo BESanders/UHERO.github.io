@@ -12,6 +12,7 @@
 
 var maps = {}
 
+var dot_positions = []
 var county_bounds = {
 	kauai: {x:-35, y: -68, scale:5.6 },
 	honolulu: {x:-666, y: -318, scale:9.1 },
@@ -41,12 +42,13 @@ function set_up_map_scale_svgs() {
 function tract_class(d) {
 	return "tract t"+tag_valid(d.properties.NAME)
 }
-function draw_d3_maps(hawaii_geo_json) {
-	console.log(ct_data)
+function draw_d3_maps(results) {
+  var hawaii_geo_json = results[0]
+  dot_positions = results[1].positions //comment out if need to regenerate dots
 	set_up_map_scale_svgs()
 	hawaii_map_data = topojson.feature(hawaii_geo_json, hawaii_geo_json.objects.hi_census_tracts).features;
 	hawaii_map_data.forEach(function(d) { d.data = ct_data.filter(function(e) { return e.Tract === d.properties.NAME })[0] })
-	console.log(hawaii_map_data)
+	console.log(dot_positions)
 	
 	var tracts = maps["state"]
 	    .append("g")
@@ -78,8 +80,39 @@ function draw_d3_maps(hawaii_geo_json) {
 		.attr("class", tract_class)
 		.attr("d", geo_path)
 	
+	var dots = maps["state"].select("g")
+    .selectAll("circle")
+    .data(dot_positions)
+    .enter()
+    .append("circle")
+    .attr("cx", function(d) { return d[1] })
+    .attr("cy", function(d) { return d[2] })
+    .attr("r", .1)
+    .attr("fill", "red")
+
+	var dots = maps["county"].select("g")
+    .selectAll("circle")
+    .data(dot_positions)
+    .enter()
+    .append("circle")
+    .attr("cx", function(d) { return d[1] })
+    .attr("cy", function(d) { return d[2] })
+    .attr("r", .03)
+    .attr("fill", "red")
+      
+  var dots = maps["tract"].select("g")
+    .selectAll("circle")
+    .data(dot_positions)
+    .enter()
+    .append("circle")
+    .attr("cx", function(d) { return d[1] })
+    .attr("cy", function(d) { return d[2] })
+    .attr("r", .01)
+    .attr("fill", "red")
+
 	set_county("honolulu")
 	zoom_to_tract_id("89.22")
+	
 	// add_dot_density_to("state", "Total_units", 300, .3)
 	// add_dot_density_to("county", "Total_units", 200, .05)
 	// add_dot_density_to("tract", "Total_units", 100, .03)
@@ -99,13 +132,14 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function add_point_in_bounds(map, tract, d, bounds, attempts, dot_r) {
+function add_point_in_bounds(map, tract,id, d, bounds, attempts, dot_r) {
 	//put a limit on attempts to prevent infinite loop
 	for (var i = 0; i < attempts; i++) {
 		x = parseFloat(getRandomArbitrary(bounds[0][0], bounds[1][0]).toFixed(4))
 		y = parseFloat(getRandomArbitrary(bounds[0][1], bounds[1][1]).toFixed(4))	
 		if (Raphael.isPointInsidePath(d,x,y)) {
 			maps[map].select("g").append("circle").attr({cx:x, cy:y, r:dot_r, fill:"red"})	
+			dot_positions.push({tract:id, x:x, y:y})
 			return true
 		}
 	}
@@ -119,7 +153,7 @@ function add_points_in_bounds(map, tract_id, num_points, dot_r, callback) {
 		bounds = geo_path.bounds(tract.datum())
 		d = tract.attr("d")
 		for (var i = 0; i < num_points; i++)
-			add_point_in_bounds(map, tract, d, bounds, 10, dot_r)
+			add_point_in_bounds(map, tract, tract_id, d, bounds, 30, dot_r)
 		callback(null, num_points)
 	}, 0)
 }
@@ -130,11 +164,22 @@ function add_dot_density_to(map, col, dot_scale, dot_r) {
 		.forEach(function(d) { 
 			if (d.data)
 				// add_points_in_bounds(map, d.data.Tract, Math.round(d.data[col] / dot_scale), dot_r) 
-				q.defer(add_points_in_bounds, map, d.data.Tract, Math.round(d.data[col] / dot_scale), dot_r) 
+        q.defer(add_points_in_bounds, map, d.data.Tract, Math.round(d.data[col] / dot_scale), dot_r) 
 			else
 				console.log("no data for " + d.properties.NAME)
 		})
-	q.awaitAll(function(errors,d) { console.log(d) })
+	q.awaitAll(function(errors,d) { 
+	  console.log(d) 
+	  console.log(dot_positions)
+	  d3.select("#output")
+	    .selectAll("span")
+	    .data(dot_positions)
+	    .enter()
+	    .append("span")
+//	    .text(function(d) { return "{ tract:'" + d.tract + "' , x:" + d.x + " , y:" + d.y + " }," })
+      .text(function(d) { return "[\"" + d.tract + "\", " + d.x + ", " + d.y + " ]," })
+	    
+	})
 }
 function zoom_to_tract_id(id) {
 	var tract = d3.select("#tract_"+tag_valid(id))
