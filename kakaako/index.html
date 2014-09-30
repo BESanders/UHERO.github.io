@@ -10,6 +10,7 @@
 	<link rel="stylesheet" type="text/css" href="css/screen.css" media="screen,print" >	<!--[if lte IE 8]>
 	<link rel="stylesheet" type="text/css" href="/media/css/main_ie.css" media="screen,print" >	<![endif]-->
 	<link rel="stylesheet" type="text/css" href="css/print.css" media="print" >
+	<link rel="stylesheet" type="text/css" href="css/d3.tip.css" media="screen" >
 	 <script src="js/vendor/jquery.min.js"></script>
 	<!--[if lt IE 7]>
 		<script type="text/javascript" src="/media/js/DD_belatedPNG_0.0.8a-min.js"></script>	<![endif]-->
@@ -19,6 +20,7 @@
 	<script type="text/javascript" src="/media/js/main_ie.js"></script>	<![endif]-->
 	<link media="screen,print" href="css/viz.css" type="text/css" rel="stylesheet">
 	<script src="js/vendor/d3.v3.min.js"></script>
+	<script src="js/vendor/d3.tip.js"></script>
 	<script src="js/vendor/topojson.v1.min.js"></script>
 	<script src="js/vendor/queue.min.js"></script>
 
@@ -86,15 +88,24 @@
 </div>
 
 <div id="interactive_area">
-	<div id="major_controls"></div>
+	<div id="major_controls">
+	  <div id="column_header">
+	    <p>The State of Housing in Hawaii</p>
+	    <ul id="col_nav"><li id="owner_occupied">Owner Occupied</li><li id="renter_occupied">Renter Occupied</li></ul>
+	  </div>
+	</div>
 	<div id="map_container">
 	</div>
 	<div id="map_scales">  
-		<div id="state_map" class="map_scale"></div>
-		<div id="county_map" class="map_scale"></div>
-		<div id="tract_map" class="map_scale"></div>
+		<div id="state_map" class="map_scale">
+		  <div class="unit_info">Statewide: <span class="selected_units"></span> / <span class="total_units"></span></div>
+		  <div class="unit_nav">Select Range<ul><li>1</li><li>2</li><li>3</li><li>4</li></ul></div>
+		</div>
+		<div id="county_map" class="map_scale"><div class="unit_info">Oahu County: <span class="selected_units"></span> / <span class="total_units"></span></div></div>
+		<div id="tract_map" class="map_scale"><div class="unit_info">Kakaako: <span class="selected_units"></span> / <span class="total_units"></span></div></div>
 	</div>
 	<div id="tract_data"></div>
+	<div id="tract_controls"></div>
 	
 </div><!-- end interactive_area -->
 

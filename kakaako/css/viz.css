@@ -62,17 +62,60 @@ div {
 
 #interactive_area { position:relative; }
 
-#major_controls, #map_container, #tract_data, #map_scales { position:absolute }
+#major_controls, #map_container, #tract_data, #map_scales, #tract_controls { position:absolute }
 #map_scales .map_scale { border-top:1px solid #999; position:relative;}
 #map_scales svg { position:absolute; bottom:20px; right:0px;}
 
-.tract {fill: #EEE}
-.tract.selected { fill: #AAA }
+#column_header { position:absolute; text-align:right; padding:7px 10px;}
+#column_header p { font-size:14px; }
+#column_header #col_nav li {display:inline; text-transform: uppercase; font-size:10px; cursor:pointer; }
+#column_header #col_nav .selected { font-weight: bold;}
+#column_header #col_nav {padding:0px 0 0 0;}
+.unit_info { text-align:right; text-transform:uppercase; padding:5px 0 0 0; font-size:14px;}
 
-#tract_map .tract {stroke: #FFF; stroke-width:0.02;}
-#county_map .tract {stroke: #EEE; stroke-width:0.06;}
-#state_map .tract {stroke: #EEE; stroke-width:1;}
+.unit_nav { font-size: 10px; text-transform: uppercase}
+.unit_nav ul li { list-style: none; margin:5px 0 0 0; padding:0; width: 60px; background-color: #CCC; text-align:center; color: white; cursor:pointer}
+.unit_nav ul li:hover { background-color:#333; }
+.unit_nav ul li.selected { background-color:#333; }
+#tract_map path.tract {stroke: #FFF; stroke-width:0.02;}
+#county_map path.tract {stroke: #EEE; stroke-width:0.06;}
+#state_map path.tract {stroke: #EEE; stroke-width:1;}
 
 
 /* for debugging only. Dump eventually */
 #tract_data, #map_container { border: 1px solid #EEE}
+
+#tract_controls li { display: inline; font-size: 10px;}
+
+svg circle.t { fill: #AAA; stroke:#AAA; stroke-width:0; fill-opacity:0}
+svg circle.t.Total_units { fill: #555; stroke: #555; fill-opacity:1}
+
+
+svg circle.t.Occupied,
+svg circle.t.Vacant,
+svg circle.t.Owner_occupied,
+svg circle.t.rent_units,
+svg circle.t.VALUE_Less299k,
+svg circle.t.VALUE_300_499k,
+svg circle.t.VALUE_500_999k,
+svg circle.t.VALUE_1Mup,
+svg circle.t.RENT_Less749,
+svg circle.t.RENT_750_999,
+svg circle.t.RENT_1k_1499,
+svg circle.t.RENT_1k5up { fill: red; stroke: red; fill-opacity:1}
+
+path.tract {fill: #EEE}
+path.tract.selected { fill: #EEE; }
+#tract_map path.tract.selected { fill: #CCC }
+
+rect.tract.selected {fill-opacity:1}
+g.tract.selected circle {stroke-width:0.02;}
+
+.d3-tip { 
+ font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+ font-size:10px;
+ line-height:12px;
+ font-weight:bold;
+}
+
+

@@ -1,7 +1,7 @@
 var page_width = d3.select("#interactive_area").node().offsetWidth
     map_width = 700,
     map_height = 500,
-	controls_height = 70,
+	controls_height = 50,
 	data_height = 150,
 	map_scales_height = map_height+data_height,
 	map_scales_width = page_width - map_width - 20,
@@ -12,3 +12,5 @@ var page_width = d3.select("#interactive_area").node().offsetWidth
 ;
 
 var ct_data;
+var sum_data = {};
+var curr_tract_d = null;
