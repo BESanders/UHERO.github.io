@@ -14,3 +14,18 @@ var page_width = d3.select("#interactive_area").node().offsetWidth
 var ct_data;
 var sum_data = {};
 var curr_tract_d = null;
+
+var fields = [
+  "Total_units", 
+  "Renter_occupied", 
+  "Owner_occupied", 
+  "Vacant", 
+  "VALUE_Less299k", 
+  "VALUE_300_499k", 
+  "VALUE_500_999k", 
+  "VALUE_1Mup", 
+  "RENT_Less749", 
+  "RENT_750_999", 
+  "RENT_1k_1499", 
+  "RENT_1k5up"
+]

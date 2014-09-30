@@ -91,18 +91,25 @@
 	<div id="major_controls">
 	  <div id="column_header">
 	    <p>The State of Housing in Hawaii</p>
-	    <ul id="col_nav"><li id="owner_occupied">Owner Occupied</li><li id="renter_occupied">Renter Occupied</li></ul>
+	    <ul id="col_nav"><li id="all_occupied">All</li><li id="owner_occupied">Owner Occupied</li><li id="renter_occupied">Renter Occupied</li></ul>
 	  </div>
 	</div>
 	<div id="map_container">
 	</div>
 	<div id="map_scales">  
 		<div id="state_map" class="map_scale">
-		  <div class="unit_info">Statewide: <span class="selected_units"></span> / <span class="total_units"></span></div>
-		  <div class="unit_nav">Select Range<ul><li>1</li><li>2</li><li>3</li><li>4</li></ul></div>
+		  <div class="unit_info"></div>
+		  <div class="context_info"></div>
+		  <div class="unit_nav">Select Range<ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li></ul></div>
 		</div>
-		<div id="county_map" class="map_scale"><div class="unit_info">Oahu County: <span class="selected_units"></span> / <span class="total_units"></span></div></div>
-		<div id="tract_map" class="map_scale"><div class="unit_info">Kakaako: <span class="selected_units"></span> / <span class="total_units"></span></div></div>
+		<div id="county_map" class="map_scale">
+		  <div class="unit_info"></div>
+		  <div class="context_info"></div>
+		</div>
+		<div id="tract_map" class="map_scale">
+		  <div class="unit_info"></div>
+		  <div class="context_info"></div>		  
+		</div>
 	</div>
 	<div id="tract_data"></div>
 	<div id="tract_controls"></div>

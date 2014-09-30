@@ -33,6 +33,11 @@ var geo_path = d3.geo.path()
 function tag_valid(string) {
 	return string.split(".").join("_")
 }
+
+function commas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 function set_up_map_scale_svgs() {
 	maps["state"] = d3.select("#state_map svg").attr("width", map_svg_width).attr("height", map_svg_height) 
 	maps["county"] = d3.select("#county_map svg").attr("width", map_svg_width).attr("height", map_svg_height)//.call(zoom) 
@@ -43,26 +48,53 @@ function tract_class(d) {
 	return "tract t"+tag_valid(d.properties.NAME)
 }
 
-function add_dot_positions_to(map, dot_positions, r) {
-  nested_dots = d3.nest().key(function(d) { return d[0] }).entries(dot_positions)
+
+function add_dot_counts_to_nested_dots(nested_dots) {
+  ct_data.forEach(function(d) { 
+    if (nested_dots[+d.Tract]) {
+      nested_dots[+d.Tract].forEach(function(e) { e.push("t ") })
+      fields.forEach(function(field) {
+        var dotcount = Math.round(+d[field] / 50)
+        nested_dots[+d.Tract].forEach(function(dot,i) { 
+          if (i < dotcount) {
+            dot[3] = dot[3]+" "+field
+          }
+        })
+      })
+    }
+  })
+}
+
+function prep_dots(dots_position) {
+  nested_dots = d3.nest().key(function(d) { return d[0] }).map(dot_positions)
+  add_dot_counts_to_nested_dots(nested_dots);
+  nested_dots = d3.entries(nested_dots)
+  return nested_dots
+}
+
+function dot_class(d) {
+  return (typeof d[3] === "undefined") ? "t" : d[3]   //problem with the dots/tracts lining up
+}
+function add_dot_positions_to(map, dots, r) {
   
   var tract_gs = maps[map].select("g")
     .selectAll("g.tract")
-    .data(nested_dots)
+    .data(dots)
     .enter()
     .append("g")
     .attr("class", function(d) { return "tract t"+tag_valid(d.key)})
     
   var dots = tract_gs
     .selectAll("circle.t")
-    .data(function(d) { return d.values })
+    .data(function(d) { return d.value })
     .enter()
     .append("circle")
-    .attr("class", "t")
+    .attr("class", dot_class)
     .attr("cx", function(d) { return d[1] })
     .attr("cy", function(d) { return d[2] })
     .attr("r", r)
 }
+
 function draw_d3_maps(results) {
   var hawaii_geo_json = results[0]
   dot_positions = results[1].positions //comment out if need to regenerate dots
@@ -102,17 +134,14 @@ function draw_d3_maps(results) {
 		.attr("class", tract_class)
 		.attr("d", geo_path)
 
-  add_dot_positions_to("state", dot_positions, .1)
-  add_dot_positions_to("county", dot_positions, .03)
-  add_dot_positions_to("tract", dot_positions, .01)
+  var dots = prep_dots(dot_positions)
+  add_dot_positions_to("state", dots, .1)
+  add_dot_positions_to("county", dots, .03)
+  add_dot_positions_to("tract", dots, .01)
+  
+  //no zoom, no need to attach to g
+  maps["state"].append("circle").attr("class", "highlighter").attr("r",3)
 
-
-
-	
-	//I think the generated dots were 1/100 units
-	// add_dot_density_to("state", "Total_units", 300, .3)
-	// add_dot_density_to("county", "Total_units", 200, .05)
-	// add_dot_density_to("tract", "Total_units", 100, .03)
 }
 
 function set_county(county) { 
@@ -131,78 +160,11 @@ function zoom_g_to_county(map_name, county) {
 	  .attr("r",1 / Math.pow(c.scale,.5) * .1)
 }
 
-function getRandomArbitrary(min, max) {
-    return Math.random() * (max - min) + min;
-}
 
-function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function add_point_in_bounds(map, tract,id, d, bounds, attempts, dot_r) {
-	//put a limit on attempts to prevent infinite loop
-	for (var i = 0; i < attempts; i++) {
-		x = parseFloat(getRandomArbitrary(bounds[0][0], bounds[1][0]).toFixed(4))
-		y = parseFloat(getRandomArbitrary(bounds[0][1], bounds[1][1]).toFixed(4))	
-		if (Raphael.isPointInsidePath(d,x,y)) {
-			maps[map].select("g").append("circle").attr({cx:x, cy:y, r:dot_r, fill:"red"})	
-			dot_positions.push({tract:id, x:x, y:y})
-			return true
-		}
-	}
-	console.log("could not find a point inside for "+ tract.datum().properties.NAME+" in "+attempts+" attempts")
-	return true
-	
-}
-function add_points_in_bounds(map, tract_id, num_points, dot_r, callback) {
-	setTimeout(function() {
-		var tract = d3.select("#"+map+"_"+tag_valid(tract_id))
-		bounds = geo_path.bounds(tract.datum())
-		d = tract.attr("d")
-		for (var i = 0; i < num_points; i++)
-			add_point_in_bounds(map, tract, tract_id, d, bounds, 30, dot_r)
-		callback(null, num_points)
-	}, 0)
-}
-function add_dot_density_to(map, col, dot_scale, dot_r) {
-	var q = queue(1)
-	d3.selectAll("#"+map+"_map .tract")
-		.data()
-		.forEach(function(d) { 
-			if (d.data)
-				// add_points_in_bounds(map, d.data.Tract, Math.round(d.data[col] / dot_scale), dot_r) 
-        q.defer(add_points_in_bounds, map, d.data.Tract, Math.round(d.data[col] / dot_scale), dot_r) 
-			else
-				console.log("no data for " + d.properties.NAME)
-		})
-	q.awaitAll(function(errors,d) { 
-	  d3.select("#output")
-	    .selectAll("span")
-	    .data(dot_positions)
-	    .enter()
-	    .append("span")
-      .text(function(d) { return "[\"" + d.tract + "\", " + d.x + ", " + d.y + " ]," })
-	    
-	})
-}
-
-
-//assuming 50 units per dot...guess, but I think that's right
-function dots_for_prop(tract_d, prop) {
-  if (!tract_d.data) {
-    console.log("no data for feature: "+tract_d.properties.NAME)
-  }
-  else {
-    var id = tract_d.data.Tract
-    var num_dots = Math.round(+tract_d.data[prop] / 50)
-    var dots = d3.selectAll("g.t"+tag_valid(id)).selectAll("circle:nth-of-type(-n+"+num_dots+")")
-    dots.classed(prop, true)
-  }
-}
 
 function set_maps_to_prop(prop) {
-  d3.selectAll("circle.t").attr("class", "t")
-  d3.selectAll("path.tract").each(function(d) { dots_for_prop(d, prop) })
+  d3.selectAll("circle.t").attr("class", dot_class)
+  d3.selectAll("circle.t."+prop).classed("show_"+prop, true)
 }
 
 function zoom_to_tract_id(id) {
@@ -229,7 +191,9 @@ function zoom_to_tract_id(id) {
 }
 
 function highlight_tract_path(id) {
-  
+  var tract = d3.selectAll("#state_map path.tract.t"+tag_valid(id))//.style("fill", "red")
+  var centroid = geo_path.centroid(tract.datum())
+  d3.select(".highlighter").attr("cx", centroid[0]).attr("cy", centroid[1])
 }
 
 function highlight_tract(id) {
@@ -245,24 +209,26 @@ function update_all_text() {
 }
 
 function update_tract_text(d) {
-  prop_string = curr_prop ? d[curr_prop] : ""
-  d3.select("#tract_map .unit_info").text("Tract # "+d.Tract+": "+prop_string+" / "+d.Total_units+" units")
+  update_text("tract_map", d, "Tract #"+d.Tract)
 }
 
 function update_county_text(county) {
-  var d = sum_data[county]
-  prop_string = curr_prop ? d[curr_prop] : ""
-  d3.select("#county_map .unit_info").text(county+": "+prop_string+" / "+d.Total_units+" units")  
+  update_text("county_map", sum_data[county], county)
 }
 
 function update_statewide_text() {
-  var d = sum_data["Statewide"]
-  prop_string = curr_prop ? d[curr_prop] : ""
-  d3.select("#state_map .unit_info").text("Statewide: "+prop_string+" / "+d.Total_units+" units")  
+  update_text("state_map", sum_data["Statewide"], "Statewide")
+}
+
+function update_text(map_id, d, prefix) {
+  prop_string = curr_prop && curr_prop !== "Total_units" ? "out of "+commas(d.Total_units) + " total units": " "
+  d3.select("#"+map_id+" .unit_info").html(prefix+": <strong>"+ commas(d[curr_prop]) + "</strong> units")  
+  d3.select("#"+map_id+" .context_info").text(prop_string)    
 }
 function select_tract_id(id) {
   var d = zoom_to_tract_id(id)
   curr_tract_d = d
   update_tract_text(d)
   highlight_tract(id)
+  highlight_tract_path(id)
 }

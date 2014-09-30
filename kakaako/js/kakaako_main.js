@@ -37,33 +37,50 @@ function set_price_nav(d) {
   var data = []
   if(d === "owner_occupied") {
     data = [
+      {label:"All", col:"Owner_occupied"},
       {label:"<$299K", col:"VALUE_Less299k"},
       {label:"$300-499K", col:"VALUE_300_499k"},
       {label:"$500-999K", col:"VALUE_500_999k"},
-      {label:"> $1M", col:"VALUE_1Mup"}
+      {label:"> $1M", col:"VALUE_1Mup"},
     ]
-  } else {
+  } else if (d === "renter_occupied") {
     data = [
+      {label:"All", col:"Renter_occupied"},
       {label:"< $749", col:"RENT_Less749"},
       {label:"$750-999", col:"RENT_750_999"},
       {label:"$1K-1499", col:"RENT_1k_1499"},
       {label:"> $1500", col:"RENT_1k5up"}
     ]
+  } else {
+    data = [
+      {label:"All", col:"Total_units"},
+      {label:"Rented", col:"Renter_occupied"},
+      {label:"Owned", col:"Owner_occupied"},
+      {label:"Vacant", col:"Vacant"}
+    ]
   }
   
-  d3.selectAll(".unit_nav ul li")
+  var options = d3.select(".unit_nav ul")
+    .selectAll("li")
     .data(data)
+    
+  options.enter().append("li")
+  options.exit().remove()
+  options
     .text(function(d) { return d.label})
+    .classed("selected", false)
     .on("click", function(d) { 
       d3.selectAll(".unit_nav ul li").classed("selected", false)
-      d3.select(this).classed("selected", true)
+      //d3.select(this).classed("selected", true)
       units_scale_y(d.col)
     })
+  
+  d3.select(".unit_nav ul li").classed("selected", true)
+  units_scale_y(data[0].col)
 }
 
 function sum_tract_data(tracts_data){
   var new_obj = {}
-  var fields = ["Total_units", "Renter_occupied", "Owner_occupied", "VALUE_Less299k", "VALUE_300_499k", "VALUE_500_999k", "VALUE_1Mup", "RENT_Less749", "RENT_750_999", "RENT_1k_1499", "RENT_1k5up"]
   fields.forEach(function(col) { 
     new_obj[col] = d3.sum(tracts_data.map(function(d) { return +d[col] }) ) 
   })
@@ -84,6 +101,7 @@ function calc_sum_data(tract_data) {
 }
 
 function bind_unit_type_nav() {
+  d3.select("#all_occupied").datum("all_occupied").on("click", set_price_nav)
   d3.select("#owner_occupied").datum("owner_occupied").on("click", set_price_nav)
   d3.select("#renter_occupied").datum("renter_occupied").on("click", set_price_nav)
 }
@@ -92,7 +110,7 @@ function bind_unit_type_nav() {
 
 size_divs()
 bind_unit_type_nav()
-set_price_nav("owner_occupied")
+set_price_nav("all_occupied")
 
 d3.json("data/map/final_shape.geojson", function(json_data) { 
   render_leaflet_map(json_data);
@@ -105,6 +123,7 @@ d3.csv("data/ct_census_data_compacted.csv", function(data) {
 	q.defer(d3.json,"data/map/hi_census_tracts_topo.json")
 	q.defer(d3.json,"data/dot_positions.json")
 	q.awaitAll(function(error, results ) {
+	  console.log(results)
   	draw_d3_maps(results)
     draw_d3_bars(ct_data)
     select_tract_id("89.22")

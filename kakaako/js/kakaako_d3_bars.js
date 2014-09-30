@@ -63,10 +63,12 @@ function create_bars(data) {
       .on("mouseover", function(d) { 
         d3.select(this).attr("fill-opacity", 1)
         tip.show(d)
+        highlight_tract_path(d.Tract)
       })
       .on("mouseout", function(d) { 
         svg.selectAll("rect").attr("fill-opacity", .3)
         tip.hide(d)
+        highlight_tract_path(curr_tract_d.Tract)
       })
       .on("click", function(d) { 
         console.log(d)

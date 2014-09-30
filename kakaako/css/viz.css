@@ -72,8 +72,9 @@ div {
 #column_header #col_nav .selected { font-weight: bold;}
 #column_header #col_nav {padding:0px 0 0 0;}
 .unit_info { text-align:right; text-transform:uppercase; padding:5px 0 0 0; font-size:14px;}
+.context_info { text-align: right;color: #AAA} 
 
-.unit_nav { font-size: 10px; text-transform: uppercase}
+.unit_nav { font-size: 10px; text-transform: uppercase; position:absolute; top: 5px;}
 .unit_nav ul li { list-style: none; margin:5px 0 0 0; padding:0; width: 60px; background-color: #CCC; text-align:center; color: white; cursor:pointer}
 .unit_nav ul li:hover { background-color:#333; }
 .unit_nav ul li.selected { background-color:#333; }
@@ -88,21 +89,21 @@ div {
 #tract_controls li { display: inline; font-size: 10px;}
 
 svg circle.t { fill: #AAA; stroke:#AAA; stroke-width:0; fill-opacity:0}
-svg circle.t.Total_units { fill: #555; stroke: #555; fill-opacity:1}
 
+svg circle.t.show_Total_units { fill: #555; stroke: #555; fill-opacity:1}
 
-svg circle.t.Occupied,
-svg circle.t.Vacant,
-svg circle.t.Owner_occupied,
-svg circle.t.rent_units,
-svg circle.t.VALUE_Less299k,
-svg circle.t.VALUE_300_499k,
-svg circle.t.VALUE_500_999k,
-svg circle.t.VALUE_1Mup,
-svg circle.t.RENT_Less749,
-svg circle.t.RENT_750_999,
-svg circle.t.RENT_1k_1499,
-svg circle.t.RENT_1k5up { fill: red; stroke: red; fill-opacity:1}
+svg circle.t.show_Occupied,
+svg circle.t.show_Vacant,
+svg circle.t.show_Owner_occupied,
+svg circle.t.show_Renter_occupied,
+svg circle.t.show_VALUE_Less299k,
+svg circle.t.show_VALUE_300_499k,
+svg circle.t.show_VALUE_500_999k,
+svg circle.t.show_VALUE_1Mup,
+svg circle.t.show_RENT_Less749,
+svg circle.t.show_RENT_750_999,
+svg circle.t.show_RENT_1k_1499,
+svg circle.t.show_RENT_1k5up { fill: red; stroke: red; fill-opacity:1}
 
 path.tract {fill: #EEE}
 path.tract.selected { fill: #EEE; }
@@ -118,4 +119,5 @@ g.tract.selected circle {stroke-width:0.02;}
  font-weight:bold;
 }
 
+circle.highlighter {fill:red; fill-opacity:.5}
 
