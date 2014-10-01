@@ -27,5 +27,6 @@ var fields = [
   "RENT_Less749", 
   "RENT_750_999", 
   "RENT_1k_1499", 
-  "RENT_1k5up"
+  "RENT_1k5up",
+  "BLT_After2010","BLT_2000_2009","BLT_1990_1999","BLT_1980_1989","BLT_1970_1979","BLT_1960_1969","BLT_1950_1959","BLT_1940_1949","BLT_Before1939"
 ]

@@ -39,7 +39,7 @@ function set_scale_domains(data, prop) {
 function sorted_tract_names(data, prop) {
   return data
     .sort(function(a,b) { return d3.ascending(+a[prop], +b[prop]) })
-    .map(function(d) { return d.Tract })
+    .map(function(d) { return d.tract_id })
 }
 
 function extent_by(data, prop) {
@@ -58,21 +58,20 @@ function create_bars(data) {
       .data(data)
       .enter()
       .append("rect")
-      .attr("class", function(d) { return "tract t"+tag_valid(d.Tract) })
+      .attr("class", function(d) { return "tract t"+d.tract_id })
       .attr("fill-opacity", ".3")
       .on("mouseover", function(d) { 
         d3.select(this).attr("fill-opacity", 1)
         tip.show(d)
-        highlight_tract_path(d.Tract)
+        highlight_tract_path(d.tract_id)
       })
       .on("mouseout", function(d) { 
         svg.selectAll("rect").attr("fill-opacity", .3)
         tip.hide(d)
-        highlight_tract_path(curr_tract_d.Tract)
+        highlight_tract_path(curr_tract_d.tract_id)
       })
       .on("click", function(d) { 
-        console.log(d)
-        select_tract_id(d.Tract)
+        select_tract_id(d.tract_id)
       })
   
   draw_initial_bar_position()
@@ -81,7 +80,7 @@ function create_bars(data) {
 
 function draw_initial_bar_position() {
   d3.selectAll("rect.tract")
-    .attr("x", function(d) { return bar_x(d.Tract) })
+    .attr("x", function(d) { return bar_x(d.tract_id) })
     .attr("y", bar_y(0))
     .attr("height", 0)
     .attr("width", bar_x.rangeBand())
@@ -116,7 +115,7 @@ function resort_x(prop) {
   bars
     .transition()
     .duration(1000)
-    .attr("x", function(d) { return bar_x(d.Tract) })  
+    .attr("x", function(d) { return bar_x(d.tract_id) })  
 }
 
 function draw_d3_bars(data) {

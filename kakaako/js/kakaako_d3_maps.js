@@ -45,7 +45,7 @@ function set_up_map_scale_svgs() {
 }
 
 function tract_class(d) {
-	return "tract t"+tag_valid(d.properties.NAME)
+	return "tract t"+d.id
 }
 
 
@@ -95,54 +95,6 @@ function add_dot_positions_to(map, dots, r) {
     .attr("r", r)
 }
 
-function draw_d3_maps(results) {
-  var hawaii_geo_json = results[0]
-  dot_positions = results[1].positions //comment out if need to regenerate dots
-	set_up_map_scale_svgs()
-	hawaii_map_data = topojson.feature(hawaii_geo_json, hawaii_geo_json.objects.hi_census_tracts).features;
-	hawaii_map_data.forEach(function(d) { 
-	  d.data = ct_data.filter(function(e) { return e.Tract === d.properties.NAME })[0] 
-	})
-	
-	var tracts = maps["state"]
-	    .append("g")
-	    .selectAll("path.tract")
-		.data(hawaii_map_data)
-		.enter()
-		.append("path")
-		.attr("id", function(d) { return "state_"+tag_valid(d.properties.NAME)})
-		.attr("class", tract_class)
-		.attr("d", geo_path)
-
-	var tracts_c = maps["county"]
-		.append("g")
-		.selectAll("path.tract")
-		.data(hawaii_map_data)
-		.enter()
-		.append("path")
-		.attr("id", function(d) { return "county_"+tag_valid(d.properties.NAME)})
-		.attr("class", tract_class)
-		.attr("d", geo_path)
-
-	var tracts_t = maps["tract"]
-		.append("g")
-		.selectAll("path.tract")
-		.data(hawaii_map_data)
-		.enter()
-		.append("path")
-		.attr("id", function(d) { return "tract_"+tag_valid(d.properties.NAME)})
-		.attr("class", tract_class)
-		.attr("d", geo_path)
-
-  var dots = prep_dots(dot_positions)
-  add_dot_positions_to("state", dots, .1)
-  add_dot_positions_to("county", dots, .03)
-  add_dot_positions_to("tract", dots, .01)
-  
-  //no zoom, no need to attach to g
-  maps["state"].append("circle").attr("class", "highlighter").attr("r",3)
-
-}
 
 function set_county(county) { 
   update_county_text(county)
@@ -159,8 +111,6 @@ function zoom_g_to_county(map_name, county) {
 	maps[map_name].selectAll("circle")
 	  .attr("r",1 / Math.pow(c.scale,.5) * .1)
 }
-
-
 
 function set_maps_to_prop(prop) {
   d3.selectAll("circle.t").attr("class", dot_class)
@@ -231,4 +181,55 @@ function select_tract_id(id) {
   update_tract_text(d)
   highlight_tract(id)
   highlight_tract_path(id)
+}
+
+
+
+function draw_d3_maps(results) {
+  var hawaii_geo_json = results[0]
+  dot_positions = results[1].positions //comment out if need to regenerate dots
+	set_up_map_scale_svgs()
+	hawaii_map_data = topojson.feature(hawaii_geo_json, hawaii_geo_json.objects.tracts_final_simplified).features;
+	hawaii_map_data.forEach(function(d) { 
+    d.data = ct_data.filter(function(e) { return e.tract_id === d.id })[0] 
+	})
+	
+	var tracts = maps["state"]
+	    .append("g")
+	    .selectAll("path.tract")
+		.data(hawaii_map_data)
+		.enter()
+		.append("path")
+		.attr("id", function(d) { return "state_"+d.id})
+		.attr("class", tract_class)
+		.attr("d", geo_path)
+
+	var tracts_c = maps["county"]
+		.append("g")
+		.selectAll("path.tract")
+		.data(hawaii_map_data)
+		.enter()
+		.append("path")
+		.attr("id", function(d) { return "county_"+d.id})
+		.attr("class", tract_class)
+		.attr("d", geo_path)
+
+	var tracts_t = maps["tract"]
+		.append("g")
+		.selectAll("path.tract")
+		.data(hawaii_map_data)
+		.enter()
+		.append("path")
+		.attr("id", function(d) { return "tract_"+d.id})
+		.attr("class", tract_class)
+		.attr("d", geo_path)
+
+  var dots = prep_dots(dot_positions)
+  add_dot_positions_to("state", dots, .1)
+  add_dot_positions_to("county", dots, .03)
+  add_dot_positions_to("tract", dots, .01)
+  
+  //no zoom, no need to attach to g
+  maps["state"].append("circle").attr("class", "highlighter").attr("r",3)
+
 }

@@ -103,7 +103,16 @@ svg circle.t.show_VALUE_1Mup,
 svg circle.t.show_RENT_Less749,
 svg circle.t.show_RENT_750_999,
 svg circle.t.show_RENT_1k_1499,
-svg circle.t.show_RENT_1k5up { fill: red; stroke: red; fill-opacity:1}
+svg circle.t.show_RENT_1k5up,
+svg circle.t.show_BLT_After2010,
+svg circle.t.show_BLT_2000_2009,
+svg circle.t.show_BLT_1990_1999,
+svg circle.t.show_BLT_1980_1989,
+svg circle.t.show_BLT_1970_1979,
+svg circle.t.show_BLT_1960_1969,
+svg circle.t.show_BLT_1950_1959,
+svg circle.t.show_BLT_1940_1949,
+svg circle.t.show_BLT_Before1939 { fill: red; stroke: red; fill-opacity:1}
 
 path.tract {fill: #EEE}
 path.tract.selected { fill: #EEE; }
