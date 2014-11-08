@@ -157,7 +157,7 @@ function show_text_for_US(){
 }
 
 function clear_state(d) {
-	d3.select("g.state_g." + d.abbreviation + " path").attr("stroke", "#CCC").attr('stroke-width',0.5)
+	d3.select("g.state_g." + d.abbreviation + " path").attr("stroke", "#CCC").attr("stroke-width", 1)
 	d3.select("g." + d.abbreviation + " rect").attr("stroke", "none")
 	d3.select("g." + d.abbreviation + " text.bar").text("").attr("fill", "black")
 	d3.select("g." + d.abbreviation + " line").attr("stroke-width", 0)
@@ -812,7 +812,7 @@ function create_reset_button(){
 	                    .on('click', function(d){
    	                      selected_states = [];
    	                      d3.selectAll("div.inset").remove()
-   	                      d3.selectAll(".state_g path").attr("stroke", "#CCC").attr("stroke-width", 0)
+   	                      d3.selectAll(".state_g path").attr("stroke", "#CCC").attr("stroke-width", 1)
    	                      d3.selectAll("g.bar_g rect").attr("stroke", "none")
    	                      d3.selectAll("g.bar_g text.bar.selected").attr("class", "bar")
                           d3.selectAll("g.bar_g text.bar").text("")
