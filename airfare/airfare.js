@@ -812,11 +812,11 @@ function create_reset_button(){
 	                    .on('click', function(d){
    	                      selected_states = [];
    	                      d3.selectAll("div.inset").remove()
-   	                      d3.selectAll(".state_g path").attr("stroke", "#CCC")
+   	                      d3.selectAll(".state_g path").attr("stroke", "#CCC").attr("stroke-width", 0)
    	                      d3.selectAll("g.bar_g rect").attr("stroke", "none")
    	                      d3.selectAll("g.bar_g text.bar.selected").attr("class", "bar")
-                            d3.selectAll("g.bar_g text.bar").text("")
-                            d3.selectAll("g.bar_g line.label").attr("stroke-width", 0)
+                          d3.selectAll("g.bar_g text.bar").text("")
+                          d3.selectAll("g.bar_g line.label").attr("stroke-width", 0)
 	                    })
 	
 	reset_button.append("rect")
