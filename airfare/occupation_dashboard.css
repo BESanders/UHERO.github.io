@@ -112,7 +112,7 @@ div.inset{
 	width:271px;
 	height:22px;
 	left:700px;
-	top:-112px;
+	top:-187px;
 /*	border-top:1px solid;*/
 	padding-bottom: 47px;
 }
@@ -150,6 +150,7 @@ svg.inset_svg{
 	position:absolute;
 	left:-32px;
 	top:-43px;
+	z-index:-1;
 }
 
 #us_details {
@@ -221,17 +222,25 @@ h1#state{
 	margin-top:-10px;
 }
 
-#play{
-	position:relative;
-	left: 14px;
-	top:-20px;
-	background-color: #E8E8E8;
-	width: 70px;
-	z-index:1;
+g.button rect{
+  fill:#19667f;
 }
 
-#play_button {
-	color: #0066CC;
-	text-decoration: none;
-	font-size:16px;
+g.button text{
+  fill:white;
+  font-weight:bold;
+  font-size:14px;
+}
+
+
+#slider_desc{
+  position:relative;
+  top:-80px;
+  left:30px;
+}
+
+#bar_chart_desc{
+  position:relative;
+  top:130px;
+  left:350px;
 }

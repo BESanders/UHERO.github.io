@@ -21,11 +21,11 @@ $(document).ready(function() {
 
 var width = 1000,
     height = 400,//860
-	ts_width = 650,
+	ts_width = 670,
 	ts_height = 400,
 	ts_left  = 20,
 	ts_right = 20,
-	yoy_height = 100;//100
+	yoy_height = 200;//100
 	inset_width = 150;
 	inset_height = 150;
 	ts_inset_width = 200;
@@ -42,6 +42,7 @@ var yoy_max;
 var yoy_min;
 var price_max;
 var playing = false;
+var state_shown = false;
 
 var sort_array = [];
 var sorts = {
@@ -57,6 +58,10 @@ var US_row_index = 51;
 
 var svg = d3.select("#map").attr({ width: width, height: height})
 var bar_svg = d3.select("#bar_chart").attr({ width: ts_width, height: yoy_height})
+var button_svg = d3.select("#us_details")
+              .append("svg")
+              .attr("width", "300")
+              .attr("height", "50")
 var tooltip = d3.select("#interactive_area").append("div").attr("class", "tooltip")
 var slider
 
@@ -78,7 +83,8 @@ var path = d3.geo.path()
 	
 var data_states = {
 	fares: {
-		desc: "Avg Fare: ",
+		us_desc: "Avg Fare: ",
+		state_desc: "Median Fare:",
 		path_height: "34px"
 	},
 	tickets: {
@@ -118,10 +124,11 @@ function tooltip_html(d) {
 }
 
 function highlight_state(state_node, d, i) {
-	d3.select("g.state_g." + d.abbreviation + " path").attr("stroke", "orange" )
+	state_node.attr("stroke", "orange" ).attr("stroke-width", 3)
 	
 	d3.select("h1#state").text(d.properties.name)
 	switching_number_labels(d.data, selected_mode)
+	switching_titles(selected_mode)
 	var bounds = path.bounds(d)
 	tooltip
 		.style({
@@ -135,6 +142,8 @@ function highlight_state(state_node, d, i) {
 	d3.select("g." + d.abbreviation + " text.bar")
 		.text(string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]], selected_mode))
 		.attr("fill", "black")
+		
+	d3.select("g." + d.abbreviation + " line").attr("stroke-width", 2)
 }
 
 function clear_tooltip(){
@@ -147,49 +156,53 @@ function show_text_for_US(){
 	switching_number_labels(us_data, selected_mode)
 }
 
-function clear_state(state_node, d ,i) {
-	d3.select("g.state_g." + d.abbreviation + " path").attr("stroke", "#CCC")
+function clear_state(d) {
+	d3.select("g.state_g." + d.abbreviation + " path").attr("stroke", "#CCC").attr('stroke-width',0.5)
 	d3.select("g." + d.abbreviation + " rect").attr("stroke", "none")
 	d3.select("g." + d.abbreviation + " text.bar").text("").attr("fill", "black")
+	d3.select("g." + d.abbreviation + " line").attr("stroke-width", 0)
 	clear_tooltip();
 	show_text_for_US();	
 }
 
 function mouseover_state(d,i) {
+  state_shown = true;
 	highlight_state(d3.select(this), d, i)
 }
 
-function mouseout_state(d,i) {
+function mouseout_state(d) {
+  state_shown = false;
 	if(selected_states.indexOf(d.abbreviation) === -1){
-		clear_state(d3.select(this), d, i)
+		clear_state(d)
 	}else{
 		clear_tooltip();
 		show_text_for_US();
 	}
 }
 
-function change_inset_header(){
+function change_inset_header(state_name){
 	switch(selected_mode){
-		case "fares": return "Avg Fare:";
+		case "fares": return state_name + " Median Fare:";
 		
-		case "tickets": return "Ticket Volume:";
+		case "tickets": return state_name + " Ticket Volume:";
 		
-		case "yoy": return "YOY:"
+		case "yoy": return state_name + " YOY:"
 	}
 }
 
 function add_text_for_selection(state){	
-	console.log(state)
 	// d3.select(".inset." + state.abbreviation)
 	// 	.append("h4")
 	// 	.attr("class", "state_name " + state.abbreviation)
 	// 	.text(state.properties.name)
 	// 	.style({"position":"absolute", "left":"10px", "top":"70px"})
 	
+	
 	d3.select(".inset." + state.abbreviation)
+	  .datum(state)
 		.append("h2")
 		.attr("class", "label " + state.abbreviation)
-		.text(change_inset_header())
+		.text(change_inset_header(state.properties.name))
 		.style({"font-size": "12px", "position":"absolute", "left": "79px"})
 		
 	d3.select(".inset." + state.abbreviation)
@@ -213,7 +226,6 @@ function add_selected_time_series(abbreviation){
 		.datum(datum)
 		.attr("class", "path_inset " + abbreviation)
 		.attr("d", function(d) { 
-			console.log(d)
 			inset_scale = d.data[selected_mode]["scale"]
 			return ts_inset_path(d3.entries(d.data[selected_mode]["array"])) 
 		}) 
@@ -247,14 +259,20 @@ function add_selected_state(abbreviation, state){
 	
 	selected_states.push(abbreviation)
 	
-	var inset = d3.select("#interactive_area")
-		.append("div")
-		.attr("class", "inset " + abbreviation)
-		.append("svg")
-		.attr("class", "inset_svg " + abbreviation)
-		.attr({width: inset_width, height: inset_height})
+	var inset_div = d3.select("#interactive_area")
+	                  .datum(state)
+	                  .append("div")
+                		.attr("class", "inset " + abbreviation)
+	                  .on("click", function(d){
+	                     clear_state(d)
+                   		 remove_selected(d.abbreviation);
+	                  })
+	                  
+	var inset_svg = inset_div.append("svg")
+                		.attr("class", "inset_svg " + abbreviation)
+                		.attr({width: inset_width, height: inset_height})
 		
-	g = inset.append("g")
+	g = inset_svg.append("g")
 	var path_inset = d3.select("path." + abbreviation).attr("d")
 	g.append("path").attr("d", path_inset).attr("fill", "#95b7c0")
 
@@ -278,15 +296,16 @@ function add_selected_state(abbreviation, state){
 }
 
 function click_on_state(d,i){
-
-	if(selected_states.indexOf(d.abbreviation) === -1){
-		highlight_state(d3.select(this), d, i)
-		add_selected_state(d.abbreviation, d);
-		d3.select("g.bar_g." + d.abbreviation + " text.bar").attr("class", "bar selected")
-	}else{
-		clear_state(d3.select(this), d, i)
-		remove_selected(d.abbreviation);
-	}
+  	if(selected_states.indexOf(d.abbreviation) === -1){
+  	  if(selected_states.length < 6){
+  	    highlight_state(d3.select(this), d, i)
+    		add_selected_state(d.abbreviation, d);
+    		d3.select("g.bar_g." + d.abbreviation + " text.bar").attr("class", "bar selected")
+  	  }
+  	}else{
+  		clear_state(d)
+  		remove_selected(d.abbreviation);
+  	}
 }
 
 function remove_selected(abbreviation){
@@ -378,7 +397,7 @@ function create_bars(states){
 		return d.state;
 	})
 	bar_x.domain(sort_array).rangeRoundBands([0, ts_width], 0.5, 0.1)
-	bar_height_scale.domain([0, price_max]).range([5, yoy_height])
+	bar_height_scale.domain([0, price_max]).range([5, yoy_height - 100])
 	
 	var g = bar_svg.selectAll("g")
 			.data(states)
@@ -390,27 +409,54 @@ function create_bars(states){
 	g.append("rect")
 		.attr("width", bar_x.rangeBand())
 		.attr("height", function(d){ return bar_height_scale(d.data["fares"]["array"][column_name])})
-		.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data["fares"]["array"][column_name]) - 15})
+		.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data["fares"]["array"][column_name]) - 85})
 		.attr("fill", function(d){ return color(d.data["fares"]["array"][column_name])})
 		.on("mouseover", mouseover_state)
 		.on("mouseout", mouseout_state)
 		.on("click", click_on_state)
-				
+	
+	bar_svg.append("line")
+		.attr("x1", "20")
+		.attr("y1", yoy_height - 170)
+		.attr("x2", ts_width - 10)
+		.attr("y2",yoy_height - 170)
+		.attr("stroke", "black")
+		.attr("stroke-width",0)
+	
 	g.append("text")
 		.attr("class", "bar_state")
-		.attr("transform", function(d){
-			return "translate(0," + (yoy_height - 2) + ")"
-		})
+		.attr("transform", function(d){ return "translate(0," + (yoy_height - 70) + ")"})
 		.style("font-size", "7px")
 		.text(function(d){ return d.abbreviation})
 		.attr("fill", "black")
-	
+
 	g.append("text")
-		.attr("transform", function(d){
-			return "translate(0," + ((yoy_height - 1) - bar_height_scale(d.data["fares"]["array"][column_name]) - 40) + ")"
+		.attr("transform", function(d, i){
+         if(i % 2 !== 0){
+            return "translate(" + (-(bar_x.rangeBand()/2) - 3) + "," + ((yoy_height - 170) - 5) + ")"
+         }else{
+            return "translate(" + (-(bar_x.rangeBand()/2) - 3) + ","  + ((yoy_height - 170) - 20) + ")"
+         }
 		})
 		.attr("class", "bar")
 		.style("font-size", "8px")
+  			
+	g.append("line")
+     .attr("class", "label")
+	  .attr("x1", bar_x.rangeBand()/2)
+	  .attr("y1", function(d, i) { 
+        if(i % 2 !== 0){
+           return yoy_height - 170
+        }else{
+           return yoy_height - 170 - 15   
+        }
+      })
+	  .attr("x2", bar_x.rangeBand()/2)
+	  .attr("y2", function(d){ return (yoy_height - 100)- bar_height_scale(d.data["fares"]["array"][column_name]) + 10})
+	  .attr("stroke", "orange")
+	  .attr("stroke-width",0)
+	  .attr("stroke-opacity", 0.5)
+	
 }
 
 function initial_draw_map(data){
@@ -457,18 +503,18 @@ function draw_year(s_index) {
 		.text(function(d){ return string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]], selected_mode)})
 		.attr("fill", text_price_fill)
 
-	d3.selectAll("text.bar.selected")
-		.text(function(d){ return string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]], selected_mode)})
+  d3.selectAll("text.bar.selected")
+  	.text(function(d){ return string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]], selected_mode)})
 	
 	d3.selectAll("circle.inset_time_marker")
 		.attr("cx", function(d) { return inset_time_scale(quarters_array[slider_index]) })
 		.attr("cy", function(d) { return d.data[selected_mode]["scale"](d.data[selected_mode]["array"][quarters_array[slider_index]]) })
 	
 	d3.selectAll("h2.label")
-		.text(change_inset_header())
+		.text(function(d){ return change_inset_header(d.properties.name)})
 		
 	d3.selectAll("h2.number_label")
-		.text(function(d){ return string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]], selected_mode);})
+		.text(function(d){return string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]], selected_mode);})
 		
 	d3.selectAll("path.path_inset")
 		.transition()
@@ -477,11 +523,15 @@ function draw_year(s_index) {
 			return ts_inset_path(d3.entries(d.data[selected_mode]["array"])) 
 		})
 		
-	d3.selectAll("rect")
+	d3.selectAll("#bar_chart rect")
 		.transition()	
 		.attr("height", function(d){ return bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]])})
-		.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) - 15})
+		.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) - 85})
 		.attr("fill", function(d){ return color(d.data[selected_mode]["array"][quarters_array[slider_index]])})
+   
+   d3.selectAll("#bar_chart line.label")
+      .transition()
+      .attr("y2", function(d){ return (yoy_height - 100)- bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) + 10})
 }
 
 function create_slider(){
@@ -491,6 +541,7 @@ function create_slider(){
 		step: 1,
 		value: 0,
 		slide:function(evt, value_obj){
+			console.log(value_obj)
 			draw_year(value_obj.value)
 		},
 	})
@@ -623,17 +674,35 @@ function change_scale(){
 
 function switching_titles(mode){
 	if(mode === "fares"){
-		d3.select("#title_primary").text(data_states["fares"]["desc"])	
+		d3.select("#title_primary").text(function(){
+		  if(state_shown){
+		    return data_states["fares"]['state_desc']
+		  }else{
+		    return data_states["fares"]["us_desc"]	
+		  }
+		})
 		d3.select("#title_secondary_one").text(data_states["tickets"]["desc"])	
 		d3.select("#title_secondary_two").text(data_states["yoy"]["desc"])		
 	}else if(mode === "tickets"){
 		d3.select("#title_primary").text(data_states["tickets"]["desc"])
 		d3.select("#title_secondary_one").text(data_states["yoy"]["desc"])
-		d3.select("#title_secondary_two").text(data_states["fares"]["desc"])
+		d3.select("#title_secondary_two").text(function(){
+		  if(state_shown){
+		    return data_states["fares"]['state_desc']
+		  }else{
+		    return data_states["fares"]["us_desc"]	
+		  }
+		})
 	}else if(mode === "yoy"){
 		d3.select("#title_primary").text(data_states["yoy"]["desc"])
 		d3.select("#title_secondary_one").text(data_states["fares"]["desc"])
-		d3.select("#title_secondary_two").text(data_states["tickets"]["desc"])
+		d3.select("#title_secondary_two").text(function(){
+		  if(state_shown){
+		    return data_states["fares"]['state_desc']
+		  }else{
+		    return data_states["fares"]["us_desc"]	
+		  }
+		})
 	}
 }
 
@@ -667,13 +736,16 @@ function play_all_years(){
 		.tween("slide", tweenTime)
 		.each("start", function(){
 			d3.selectAll("svg#bar_chart rect")
-				.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) - 15})
+				.attr("y", function(d){ return (yoy_height - 1) - bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) - 85})
 				.attr("height", function(d){ return bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]])})
 				.attr("fill", function(d){ return color(d.data[selected_mode]["array"][quarters_array[slider_index]])})
+				
+			d3.selectAll("#bar_chart line.label")
+        .attr("y2", function(d){ return (yoy_height - 100)- bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) + 10})
 		})
 		.each("end", function(){
 			playing = false;
-			d3.select("#play_button_image").attr("src", "Blue+Triangle.png")
+		  d3.select("#play_button_image").attr("xlink:href", "Blue+Triangle.png")
 		})
 }
 
@@ -692,6 +764,75 @@ function change_sorts(target_sort){
 	d3.selectAll("#bar_chart g").transition().duration(1000).attr("transform", function(d) { return "translate("  + (bar_x(d.abbreviation)) + ",0)"})
 }
 
+function create_play_button(){
+	              
+	var play_button = button_svg
+      	              .append("g")
+      	              .attr('class', "button")
+      	              .on("click", function(d){
+      	                if (playing){
+                           console.log(playing)
+                           playing = false;      
+                           d3.select("svg#map").transition()
+                           d3.select("#play_button_image").attr("xlink:href", "Blue+Triangle.png")
+      	                }else {
+                          console.log(playing)
+                          playing = true;
+                          slider_index = slider_index === (quarters_array.length - 1) ? 0 : slider_index
+                          play_all_years()  
+                          d3.select("#play_button_image").attr("xlink:href", "pause_blue.gif")
+                        }
+      	              })
+	
+	play_button.append("rect")
+	  .attr("x", "10")
+	  .attr("y", "10")
+	  .attr("width", "75")
+	  .attr("height", "25")
+	  .attr("rx", "10")
+	  .attr("ry", "10")
+	
+	play_button.append('text')
+	  .attr("x", "45")
+	  .attr("y", "25")
+	  .text("play")
+	  
+  play_button.append("image")
+    .attr("id", "play_button_image")
+	  .attr("xlink:href", "Blue+Triangle.png")
+	  .attr("x", "20")
+	  .attr("y", "10")
+	  .attr("width", "20")
+	  .attr("height","20")
+}
+
+function create_reset_button(){ 
+  var reset_button = button_svg.append("g")
+	                    .attr("class", "button")
+	                    .on('click', function(d){
+   	                      selected_states = [];
+   	                      d3.selectAll("div.inset").remove()
+   	                      d3.selectAll(".state_g path").attr("stroke", "#CCC")
+   	                      d3.selectAll("g.bar_g rect").attr("stroke", "none")
+   	                      d3.selectAll("g.bar_g text.bar.selected").attr("class", "bar")
+                            d3.selectAll("g.bar_g text.bar").text("")
+                            d3.selectAll("g.bar_g line.label").attr("stroke-width", 0)
+	                    })
+	
+	reset_button.append("rect")
+  	.attr("x", "200")
+    .attr("y", "10")
+    .attr("width", "65")
+    .attr("height", "25")
+    .attr("rx", "10")
+    .attr("ry", "10")
+    
+	reset_button.append('text')
+	  .attr("x", "215")
+	  .attr("y", "25")
+	  .text("reset")
+}
+
 var q = queue()
 q.defer(d3.csv, "total_pass_state.csv")
 q.defer(d3.csv, "fare_median_pchya.csv")
@@ -704,29 +845,16 @@ q.awaitAll(function(error, results){
 	initial_draw_map(results[2]);
 	create_slider(); 
 	inset_time_scale = d3.scale.ordinal().domain(quarters_array).rangePoints([0 + ts_left, ts_inset_width - ts_right])	
-	d3.select("#modes").selectAll("a").data(["fares","tickets", "yoy"]).on("click", function(d){
+	d3.select("#modes").selectAll("a").data(["fares","tickets"]).on("click", function(d){
 		d3.selectAll("#modes a").style("font-weight", "normal")
 		d3.select(this).style("font-weight", 'bold')
 		change_modes(d);
 	})
-	d3.select("#sorts").selectAll("a").data(["alphabetical", "number_of_tickets", "avg_fare", "avg_yoy"]).on("click", function(d){
+	d3.select("#sorts").selectAll("a").data(["alphabetical", "number_of_tickets", "avg_fare"]).on("click", function(d){
 		d3.selectAll("#sorts a").style("font-weight", "normal")
 		d3.select(this).style("font-weight", 'bold')
 		change_sorts(d);
 	})
-	d3.select("#play_button").on("click", function(d) { 
-		if (playing) {
-			console.log(playing)
-			playing = false;	 		
-			d3.select("svg#map").transition()
-			d3.select("#play_button_image").attr("src", "Blue+Triangle.png")
-		}
-		else {
-			console.log(playing)
-			playing = true;
-			slider_index = slider_index === (quarters_array.length - 1) ? 0 : slider_index
-			play_all_years()	
-			d3.select("#play_button_image").attr("src", "pause_blue.gif")
-		}
-	})
+	create_play_button();
+  create_reset_button();
 })
