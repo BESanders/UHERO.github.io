@@ -98,6 +98,7 @@ var data_states = {
 };
 
 var color = d3.scale.linear()
+var color_legend = d3.scale.threshold()
 
 function string_formatter(value, mode){
 	switch(mode){
@@ -138,7 +139,7 @@ function highlight_state(state_node, d, i) {
 		})
 		.html(tooltip_html(d))
 	
-	d3.select("g." + d.abbreviation + ' rect').attr("stroke", "orange")
+	d3.select("g." + d.abbreviation + ' rect').attr("stroke", "orange").attr("stroke-width", 2)
 	d3.select("g." + d.abbreviation + " text.bar")
 		.text(string_formatter(d.data[selected_mode]["array"][quarters_array[slider_index]], selected_mode))
 		.attr("fill", "black")
@@ -483,6 +484,14 @@ function initial_draw_map(data){
 	
 }
 
+function add_rect_legend(){
+  var legend = svg.selectAll("g.legend")
+                  .data(price_quantiles.quantiles())
+                  .enter()
+                  .append("g")
+                  .attr("class", "legend")
+                  
+}
 
 function display_year_and_avg_us_fare(value){
 	//var text = d3.select(".d3-slider-handle").style("bottom").split("px");
@@ -645,7 +654,10 @@ function load_data_object(results) {
 	color.domain([200, price_quantiles.quantiles()[18]])
 		  .range(["#fffcf7","rgb(25, 102, 127)"])//, "white", "orange"])
 		  .interpolate()
-		
+	
+	color_legend.domain([200, price_quantiles.quantiles()[18]])
+	            .range(["#fffcf7","rgb(25, 102, 127)"])
+	            
 	price_max = d3.max(all_prices)
 	ticket_max = d3.max(all_tickets)
 	yoy_min = d3.min(all_yoy)
@@ -843,6 +855,7 @@ q.awaitAll(function(error, results){
 	get_avg_fare();
 	get_avg_yoy();
 	initial_draw_map(results[2]);
+	add_rect_legend();
 	create_slider(); 
 	inset_time_scale = d3.scale.ordinal().domain(quarters_array).rangePoints([0 + ts_left, ts_inset_width - ts_right])	
 	d3.select("#modes").selectAll("a").data(["fares","tickets"]).on("click", function(d){
