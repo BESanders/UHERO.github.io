@@ -244,3 +244,9 @@ g.button text{
   top:130px;
   left:350px;
 }
+
+#legend{
+  position:relative;
+  top:450px;
+  left:30px;
+}

@@ -30,6 +30,8 @@ var width = 1000,
 	inset_height = 150;
 	ts_inset_width = 200;
 	ts_inset_height = 30;
+	legend_width = 300;
+	legend_height = 40;
 
 var all_states_data = []
 var us_data = {}
@@ -58,6 +60,7 @@ var US_row_index = 51;
 
 var svg = d3.select("#map").attr({ width: width, height: height})
 var bar_svg = d3.select("#bar_chart").attr({ width: ts_width, height: yoy_height})
+var legend_svg = d3.select("#legend").attr({width: legend_width, height: legend_height})
 var button_svg = d3.select("#us_details")
               .append("svg")
               .attr("width", "300")
@@ -485,11 +488,32 @@ function initial_draw_map(data){
 }
 
 function add_rect_legend(){
-  var legend = svg.selectAll("g.legend")
-                  .data(price_quantiles.quantiles())
+  var legend_labels = ["< 200", "200-400", "400-600", "600-800", "800-1000", "1000+"]
+  var legend = legend_svg.selectAll("g.legend")
+                  .data([200, 400, 600, 800, 1000, 1200])
                   .enter()
                   .append("g")
                   .attr("class", "legend")
+                                  
+  var legend_rect_width = 45 , legend_rect_height = 30;
+  
+  legend.append("rect")
+        .attr('x', function(d, i){ return 0 + (i * (legend_rect_width + 5))})
+        .attr("y", 10)
+        .attr("width", legend_rect_width)
+        .attr("height", legend_rect_height)
+        .attr("fill", function(d, i){ console.log(d); console.log(color_legend(d)); return color_legend(d)})
+  
+  // legend.append("text")
+  //     .attr('x', function(d, i){ if(i === 6) {  return 0 + (i * (legend_rect_width + 10)) } else { return 0 + (i * (legend_rect_width + 5))}})
+  //     .attr("y", 10)
+  //     .text(function(d, i){ return legend_labels[i]})
+    
+  // d3.select("g.legend")
+  //     .append("rect")
+  //     .attr("width", 100)
+  //     .attr('height', 200)
+  //     .attr("fill", color(1200))
                   
 }
 
@@ -550,7 +574,7 @@ function create_slider(){
 		step: 1,
 		value: 0,
 		slide:function(evt, value_obj){
-			console.log(value_obj)
+			//console.log(value_obj)
 			draw_year(value_obj.value)
 		},
 	})
@@ -655,8 +679,8 @@ function load_data_object(results) {
 		  .range(["#fffcf7","rgb(25, 102, 127)"])//, "white", "orange"])
 		  .interpolate()
 	
-	color_legend.domain([200, price_quantiles.quantiles()[18]])
-	            .range(["#fffcf7","rgb(25, 102, 127)"])
+	color_legend.domain([200, 600, 800, 1000, 1200])
+	            .range(["#fffcf7", "#bed2d5", "#7da7b3", "#3c7d91", "#00536f", "#00284e"])
 	            
 	price_max = d3.max(all_prices)
 	ticket_max = d3.max(all_tickets)
