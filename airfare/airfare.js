@@ -31,7 +31,7 @@ var width = 1000,
 	ts_inset_width = 200;
 	ts_inset_height = 30;
 	legend_width = 300;
-	legend_height = 40;
+	legend_height = 50;
 
 var all_states_data = []
 var us_data = {}
@@ -54,6 +54,11 @@ var sorts = {
 	alphabetical: []
 }
 
+var legend_labels = {
+   fares: ["< 250", "250-400", "400-600", "600-800", "800-1K", "1K+"],
+   tickets: ["< 100", "100-500", "500-1K", "1K-20K", "20K+"]
+   // .data([100, 200, 500, 1000, 3000, 5000])
+}
 var column_name ="1993Q1" //quarter to draw initially
 var slider_index = 0;
 var US_row_index = 51;
@@ -101,7 +106,6 @@ var data_states = {
 };
 
 var color = d3.scale.linear()
-var color_legend = d3.scale.threshold()
 
 function string_formatter(value, mode){
 	switch(mode){
@@ -488,9 +492,8 @@ function initial_draw_map(data){
 }
 
 function add_rect_legend(){
-  var legend_labels = ["< 200", "200-400", "400-600", "600-800", "800-1000", "1000+"]
   var legend = legend_svg.selectAll("g.legend")
-                  .data([200, 400, 600, 800, 1000, 1200])
+                  .data([250, 400, 600, 800, 1000, 1200])
                   .enter()
                   .append("g")
                   .attr("class", "legend")
@@ -498,23 +501,23 @@ function add_rect_legend(){
   var legend_rect_width = 45 , legend_rect_height = 30;
   
   legend.append("rect")
-        .attr('x', function(d, i){ return 0 + (i * (legend_rect_width + 5))})
+        .attr('x', function(d, i){ return 0 + (i * (legend_rect_width + 6))})
         .attr("y", 10)
         .attr("width", legend_rect_width)
         .attr("height", legend_rect_height)
-        .attr("fill", function(d, i){ console.log(d); console.log(color_legend(d)); return color_legend(d)})
+        .attr("fill", function(d, i){ return color(d)})
   
-  // legend.append("text")
-  //     .attr('x', function(d, i){ if(i === 6) {  return 0 + (i * (legend_rect_width + 10)) } else { return 0 + (i * (legend_rect_width + 5))}})
-  //     .attr("y", 10)
-  //     .text(function(d, i){ return legend_labels[i]})
-    
-  // d3.select("g.legend")
-  //     .append("rect")
-  //     .attr("width", 100)
-  //     .attr('height', 200)
-  //     .attr("fill", color(1200))
-                  
+  legend.append("text")
+      .attr('x', function(d, i){ 
+         if(i === 5){
+            return 0 + (i * (legend_rect_width + 6))
+         }else{
+            return 0 + (i * (legend_rect_width + 6))
+         }
+      })
+      .attr("y", 50)
+      .text(function(d, i){ return legend_labels["fares"][i]})
+      .style("font-size", "10px")                  
 }
 
 function display_year_and_avg_us_fare(value){
@@ -565,6 +568,7 @@ function draw_year(s_index) {
    d3.selectAll("#bar_chart line.label")
       .transition()
       .attr("y2", function(d){ return (yoy_height - 100)- bar_height_scale(d.data[selected_mode]["array"][quarters_array[slider_index]]) + 10})
+      
 }
 
 function create_slider(){
@@ -675,13 +679,13 @@ function load_data_object(results) {
 	price_quantiles = d3.scale.quantile().domain(all_prices.sort()).range([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19])
 	yoy_quantiles = d3.scale.quantile().domain(all_yoy.sort()).range([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19])
 	
+   array = all_tickets.sort(function(a,b){return a-b})
+   low_array = all_tickets.slice(0, all_tickets.length/2)
+   
 	color.domain([200, price_quantiles.quantiles()[18]])
 		  .range(["#fffcf7","rgb(25, 102, 127)"])//, "white", "orange"])
 		  .interpolate()
-	
-	color_legend.domain([200, 600, 800, 1000, 1200])
-	            .range(["#fffcf7", "#bed2d5", "#7da7b3", "#3c7d91", "#00536f", "#00284e"])
-	            
+            
 	price_max = d3.max(all_prices)
 	ticket_max = d3.max(all_tickets)
 	yoy_min = d3.min(all_yoy)
@@ -690,6 +694,32 @@ function load_data_object(results) {
 
 }
 
+function change_legend(){
+   if(selected_mode === "fares"){
+      legend_svg.selectAll("g.legend rect")
+         .data([250, 400, 600, 800, 1000, 1200])
+      
+      d3.selectAll("g.legend rect")
+        .attr("fill", function(d, i){ return color(d)})
+       
+      d3.selectAll("g.legend text")
+         .text(function(d, i){ return legend_labels["fares"][i]})
+   }else if(selected_mode === "tickets"){
+      legend_svg.selectAll("g.legend rect")
+         .data([80, 500, 1000, 5000, 20000])
+      
+      d3.selectAll("g.legend rect")
+        .attr("fill", function(d, i){ 
+          if(i === 5){
+            return "none"
+          }else{
+            return color(d)
+          }  
+      })
+      d3.selectAll("g.legend text")
+         .text(function(d, i){ return legend_labels["tickets"][i]})
+   }
+}
 function change_scale(){
 	if(selected_mode === "fares"){
 		color.domain([200, price_quantiles.quantiles()[18]])
@@ -788,6 +818,7 @@ function play_all_years(){
 function change_modes(target_mode){
 	selected_mode = target_mode;
 	change_scale();
+   change_legend();
 	draw_year(slider_index);
 }
 

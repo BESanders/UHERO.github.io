@@ -10,11 +10,11 @@
 
 div#source_links{
 position:relative;
-right:100px;
+right:-300px;
+width:400px;
 /*top:600px;*/
 z-index:200;
 /*padding: 0 18px 0 15px;*/
-text-align:right;
 line-height: 13pt;
 }
 
@@ -249,4 +249,11 @@ g.button text{
   position:relative;
   top:450px;
   left:30px;
+}
+
+#disclaimer{
+  width:670px;
+  position:relative;
+  left:50px;
+  top:70px;
 }
