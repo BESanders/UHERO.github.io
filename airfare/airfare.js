@@ -56,7 +56,7 @@ var sorts = {
 
 var legend_labels = {
    fares: ["< 250", "250-400", "400-600", "600-800", "800-1K", "1K+"],
-   tickets: ["< 100", "100-500", "500-1K", "1K-20K", "20K+"]
+   tickets: ["< 100", "100-500", "500-1K", "1K-10K", "10K+"]
    // .data([100, 200, 500, 1000, 3000, 5000])
 }
 var column_name ="1993Q1" //quarter to draw initially
@@ -66,8 +66,7 @@ var US_row_index = 51;
 var svg = d3.select("#map").attr({ width: width, height: height})
 var bar_svg = d3.select("#bar_chart").attr({ width: ts_width, height: yoy_height})
 var legend_svg = d3.select("#legend").attr({width: legend_width, height: legend_height})
-var button_svg = d3.select("#us_details")
-              .append("svg")
+var button_svg = d3.select("svg#buttons")
               .attr("width", "300")
               .attr("height", "50")
 var tooltip = d3.select("#interactive_area").append("div").attr("class", "tooltip")
@@ -327,13 +326,13 @@ function text_price_fill(d,i) {
 	if (["VT", "NH", "MA", "RI", "CT", "DE", "MD", "HI"].indexOf(d.abbreviation) > -1)
 		return "#222"
 		
-	if(selected_mode !== "yoy"){
+	if(selected_mode === "fares"){
 	 	if (d.data[selected_mode]["array"][quarters_array[slider_index]] < 550)
 			return "#222"
 		else 
 			return "#d9e3e3"
-	}else if(selected_mode === "yoy"){
-		if(d.data[selected_mode]["array"][quarters_array[slider_index]] < 10)
+	}else if(selected_mode === "tickets"){
+		if(d.data[selected_mode]["array"][quarters_array[slider_index]] < 700)
 			return "#222"
 		else
 			return "#d9e3e3"
@@ -348,7 +347,10 @@ var other_states = {
 	"Rhode Island" :	{"x-text offset":60,  "y-text offset":20,  "x1":"605px", "y1":"125px", "x2":"650px", "y2":"140px"},
 	"Connecticut" :		{"x-text offset":60,  "y-text offset":30,  "x1":"590px", "y1":"127px", "x2":"640px", "y2":"150px"},
 	"Delaware" :		{"x-text offset":75,  "y-text offset":5,   "x1":"580px", "y1":"175px", "x2":"640px", "y2":"175px"},
-	"Maryland" :		{"x-text offset":94,  "y-text offset":15,  "x1":"580px", "y1":"185px", "x2":"640px", "y2":"185px"} 
+	"Maryland" :		{"x-text offset":94,  "y-text offset":15,  "x1":"580px", "y1":"185px", "x2":"640px", "y2":"185px"},
+	"Louisiana" :		{"x-text offset":-3,  "y-text offset":11,  "x1":"0px", "y1":"0px", "x2":"0px", "y2":"0px"},
+	"Florida" :		{"x-text offset":4,  "y-text offset":-4,  "x1":"0px", "y1":"0px", "x2":"0px", "y2":"0px"},
+	"Michigan" :		{"x-text offset":4,  "y-text offset":15,  "x1":"0px", "y1":"0px", "x2":"0px", "y2":"0px"},
 };
 
 function create_states(states){
@@ -378,12 +380,12 @@ function create_states(states){
 		.attr("text-anchor", "middle")
 		.attr("font-size", "10px")
 		.attr("fill", text_price_fill)
-	    .attr("x", function(d) {
-			return other_states[d.properties.name] !== undefined ?  path.centroid(d)[0] + other_states[d.properties.name]["x-text offset"] : path.centroid(d)[0];
-	    })
-	    .attr("y", function(d) {
-			return other_states[d.properties.name] !== undefined ?  path.centroid(d)[1] + other_states[d.properties.name]["y-text offset"] : path.centroid(d)[1];
-	    })
+	  .attr("x", function(d) {
+		  return other_states[d.properties.name] !== undefined ?  path.centroid(d)[0] + other_states[d.properties.name]["x-text offset"] : path.centroid(d)[0];
+    })
+    .attr("y", function(d) {
+		  return other_states[d.properties.name] !== undefined ?  path.centroid(d)[1] + other_states[d.properties.name]["y-text offset"] : path.centroid(d)[1];
+    })
 }
 
 function create_label_lines(){

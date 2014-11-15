@@ -88,7 +88,7 @@ div.tooltip {
 	width:200px;
 	position:relative;
 	right:-18px;
-	top:-90px;
+	top:-64px;
 	z-index:1;
 }
 
@@ -112,7 +112,7 @@ div.inset{
 	width:271px;
 	height:22px;
 	left:700px;
-	top:-187px;
+	top:219px;
 /*	border-top:1px solid;*/
 	padding-bottom: 47px;
 }
@@ -122,8 +122,8 @@ svg#map{
 }
 
 svg#bar_chart{
-	position:relative;
-	top:130px;
+	position:absolute;
+	top:495px;
 	margin-left:30px;
 	border-top: 1px solid;
 }
@@ -164,7 +164,7 @@ svg.inset_svg{
 
 #sorts{
 	position:relative;
-	top:140px;
+	top:411px;
 	text-align:right;
 	width:680px;
 }
@@ -178,7 +178,7 @@ svg.inset_svg{
 	position:relative;
 	font-size:14px;
 	left:30px;
-	top:125px;
+	top:396px;
 	width:300px;
 }
 
@@ -192,10 +192,10 @@ svg.inset_svg{
 
 
 #info_and_controls{
-	position:relative;
+	position:absolute;
 	left:700px;
 	width:300px;
-	height:300px;
+	height:330px;
 	border-left: 1px solid;
 	top:20px;
 }
@@ -235,19 +235,19 @@ g.button text{
 
 #slider_desc{
   position:relative;
-  top:-80px;
+  top:-59px;
   left:30px;
 }
 
 #bar_chart_desc{
-  position:relative;
-  top:130px;
+  position:absolute;
+  top:439px;
   left:350px;
 }
 
 #legend{
   position:relative;
-  top:450px;
+  top:400px;
   left:30px;
 }
 
@@ -255,5 +255,11 @@ g.button text{
   width:670px;
   position:relative;
   left:50px;
-  top:70px;
+  top:563px;
+}
+
+#buttons{
+  position: absolute;
+  top: 270px;
+  left: 0px;
 }
