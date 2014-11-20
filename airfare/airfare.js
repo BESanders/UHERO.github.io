@@ -323,7 +323,7 @@ function remove_selected(abbreviation){
 
 
 function text_price_fill(d,i) {
-	if (["VT", "NH", "MA", "RI", "CT", "DE", "MD", "HI"].indexOf(d.abbreviation) > -1)
+	if (["VT", "NH", "MA", "RI", "CT", "DE", "MD", "HI", "NJ"].indexOf(d.abbreviation) > -1)
 		return "#222"
 		
 	if(selected_mode === "fares"){
@@ -351,6 +351,8 @@ var other_states = {
 	"Louisiana" :		{"x-text offset":-3,  "y-text offset":11,  "x1":"0px", "y1":"0px", "x2":"0px", "y2":"0px"},
 	"Florida" :		{"x-text offset":4,  "y-text offset":-4,  "x1":"0px", "y1":"0px", "x2":"0px", "y2":"0px"},
 	"Michigan" :		{"x-text offset":4,  "y-text offset":15,  "x1":"0px", "y1":"0px", "x2":"0px", "y2":"0px"},
+	"New Jersey": {"x-text offset":40,  "y-text offset":10,  "x1":"580px", "y1":"145px", "x2":"610px", "y2":"155px"},
+	"California" :		{"x-text offset":-7,  "y-text offset":0,  "x1":"0px", "y1":"0px", "x2":"0px", "y2":"0px"},
 };
 
 function create_states(states){
@@ -607,7 +609,11 @@ function get_quarterly_values(nest_result, mode) {
 	delete csv_row.State
 	d3.keys(csv_row).forEach(function(q) { 
 		if(mode === "yoy"){
-			return csv_row[q] = +csv_row[q] * 100 
+         if(csv_row[q] !== "N/A"){
+            return csv_row[q] = +csv_row[q] * 100 
+         }else{
+            return csv_row[q] = 0 
+         }
 		}else{
 			return csv_row[q] = +csv_row[q] 
 		}
@@ -644,14 +650,13 @@ function get_avg_yoy(){
 }
 
 function load_data_object(results) {
-
 	var ticket_data = d3.nest().key(function(d) { return d.State }).map(results[0])
 	var fare_data = d3.nest().key(function(d) { return d.State }).map(results[2])
 	var yoy_data = d3.nest().key(function(d) { return d.State }).map(results[1])
 	var all_prices = []
 	var all_tickets = []
 	var all_yoy = []
-	
+
 	all_states_data = d3.keys(ticket_data)
 		.filter(function(d) { var exclude = ["DC", "", "PR"]; return exclude.indexOf(d) === -1 })
 		.map(function(state) {
@@ -669,9 +674,9 @@ function load_data_object(results) {
 			var yoy_max = d3.max(d3.values(yoy_array))
 			return {
 				state: state,
-				tickets: {array: ticket_array, scale: d3.scale.linear().range([ts_inset_height, 0]).domain([ticket_min, ticket_max]) },
-				fares: {array: fares_array, scale: d3.scale.linear().range([ts_inset_height, 0]).domain([price_min, price_max]) },
-				yoy: {array: yoy_array, scale:  d3.scale.linear().range([ts_inset_height, 0]).domain([yoy_min, yoy_max]) }
+				tickets: {array: ticket_array, scale: d3.scale.linear().range([ts_inset_height, 5]).domain([ticket_min, ticket_max]) },
+				fares: {array: fares_array, scale: d3.scale.linear().range([ts_inset_height, 5]).domain([price_min, price_max]) },
+				yoy: {array: yoy_array, scale:  d3.scale.linear().range([ts_inset_height, 5]).domain([yoy_min, yoy_max]) }
 			}
 		})
 		
@@ -904,13 +909,13 @@ function create_reset_button(){
 
 var q = queue()
 q.defer(d3.csv, "total_pass_state.csv")
-q.defer(d3.csv, "fare_median_pchya.csv")
+q.defer(d3.csv, "fareyoy_14Q2.csv")
 q.defer(d3.csv, "fare_medians_state.csv")
 q.awaitAll(function(error, results){
 	load_data_object(results)
 	get_sum_of_tickets();
 	get_avg_fare();
-	get_avg_yoy();
+	//get_avg_yoy();
 	initial_draw_map(results[2]);
 	add_rect_legend();
 	create_slider(); 

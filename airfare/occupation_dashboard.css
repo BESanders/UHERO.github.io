@@ -1,7 +1,7 @@
 #interactive_area {
   	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 	position: relative;
-	height:800px;
+	height:700px;
 	margin:0;
 	padding:0;
 	z-index: -1;
@@ -10,7 +10,7 @@
 
 div#source_links{
 position:relative;
-right:-300px;
+right:-50px;
 width:400px;
 /*top:600px;*/
 z-index:200;
