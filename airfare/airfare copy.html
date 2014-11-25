@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="imagetoolbar" content="no" />
+	<title>UHERO Dashboard Project | UHERO</title>
+	
+	<meta name="keywords" content="Hawaii, Economy,  Hawaii Economic Forecast,  Economic Research, Environment, Energy, Invasive Species, Economic Policy, Economic Impact">
+ 	<meta name="description" content="UHERO helps inform public and private-sector decision making through rigorous, independent economic research on the people, environment and economies of Hawaii and the Asia Pacific region.">
+	<link rel="stylesheet" type="text/css" href="/media/css/screen.css" media="screen,print" >	<!--[if lte IE 8]>
+	<link rel="stylesheet" type="text/css" href="/media/css/main_ie.css" media="screen,print" >	<![endif]-->
+	<link rel="stylesheet" type="text/css" href="/media/css/print.css" media="print" >
+	 <script src="/media/kakaako/js/vendor/jquery.min.js"></script>
+	<!--[if lt IE 7]>
+		<script type="text/javascript" src="/media/js/DD_belatedPNG_0.0.8a-min.js"></script>	<![endif]-->
+	<!--[if IE]>
+		<script type="text/javascript" src="/media/js/DD_roundies_0.0.2a-min.js"></script>	<![endif]-->
+	<!--[if lte IE 8]>
+	<script type="text/javascript" src="/media/js/main_ie.js"></script>	<![endif]-->
+	<link media="screen,print" href="/media/airfare/airfare.css" type="text/css" rel="stylesheet">
+	<script src="/media/airfare/d3.js"></script>
+	<script src="/media/airfare/queue.min.js"></script>
+	<script src="/media/airfare/topojson.v1.min.js"></script>
+	<script src="/media/airfare/jquery.svg.js"></script>
+	<script src="/media/airfare/jquery.tipsy.js"></script>
+	<link media="screen,print" href="/media/airfare/tipsy.css" type="text/css" rel="stylesheet">
+	<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+	<link rel="stylesheet" href="/media/airfare/d3.slider.css" type="text/css">
+  	<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+  	<script src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+	<script src="/media/airfare/d3.slider.js"></script>
+</head>
+<body>
+	<ol id="accessibility-nav">
+		<li><a href="#navigation">Skip to navigation</a></li>
+		<li><a href="#content">Skip to content</a></li>
+		<li><a href="#sidebar">Skip to sidebar</a></li>
+	</ol>
+	<!-- / accessibility-nav -->
+
+	<div id="header">
+		<div class="wrapper">
+
+			<form action="" class="mailing-list">
+				<fieldset>
+					<ul class="topmenu">
+						<li><a href="http://www.facebook.com/pages/uhero-The-Economic-Research-Organization-at-the-University-of-Hawaii/144885908919188?sk=wall" class="facebook" target="_blank">Like Us on Facebook</a> | <a href="/4/become-a-sponsor">Become a Sponsor</a> | </li>
+					</ul>
+					
+					<label for="email"><a href="/31/contact">Join Mailing List</a></label>
+					<!--<input type="text" value="E-Mail Address" id="email" />
+					<input type="submit" value="submit" />-->
+				</fieldset>
+			</form>
+
+			<h1><a href="/">UHERO the economic research organization at the university of hawai�i</a></h1>
+			<!-- / h1 -->
+			<form accept-charset="utf-8" class="search" method="get" action="/search">				<fieldset>
+					<input name="q" type="text" class="text" value="Search" title="Search" id="SearchQ" >					<input type="submit" value="search" />
+				</fieldset>
+    		</form>
+		</div>
+		<!-- / wrapper -->
+
+	</div>
+	
+	<!-- / header -->
+	<div id="content-wrapper">
+		<div id="content-wrapper2">
+			<div id="content-wrapper-center">
+
+					<div class="contentwrapper-bottom">
+						
+						<div id="content">
+							<div id="breadcrumb"><ol><li class="first"><a href="/"><span></span>Home</a></li><li><a href="occupations-explorer-with-table" class="currentPage currentSection navButton" id="occupations-explorer-with-tableButton"><span></span>UHERO Dashboard Project</a></li></ol></div>
+<div id="title_bar">
+<h4 class="dash_title">Flying to Hawaii<span style="text-transform:none; color:#DDD"></span></h4>
+<h4 class="dash_sub">Comparing the cost and frequency across states</h4>
+</div>
+														
+							
+<div id="intro_area">
+
+</div>
+
+<div id="interactive_area">
+	<div id="container">
+		<svg id="map"></svg>
+		<svg id="legend"></svg>
+		<div id="info_and_controls">
+			<div id="us_details">
+				<h1 id="state"></h1>
+				<div id="details_primary">
+					<h2 id="title_primary"></h2>
+					<br/>
+					<h1 class="header primary"></h1>
+				</div>
+				
+				<div id="details_secondary_one">
+					<h2 id="title_secondary_one"></h2>
+					<br/>
+					<h1 class="header secondary_one"></h1>
+				</div>
+				
+				<div id="details_secondary_two">
+					<h2 id="title_secondary_two"></h2>
+					<br/>
+					<h1 class="header secondary_two"></h1>
+				</div>
+				
+			</div>
+		
+		<div id="slider">	</div>
+    <em id="slider_desc">Drag slider to change time frame</em>
+    <svg id="buttons"></svg>
+		</div>
+		<em id="bar_chart_desc">Hover over states or bars to see values. Click to compare at right</em>
+		<div id="sorts">
+			Chart View:
+			<a href="javascript:;" id="alphabetical">Alphabetical</a>
+			<a href="javascript:;" id="Number_of_Tickets">Number of Tickets</a>
+			<a href="javascript:;" id="Avg_Fare">Avg Fare</a>
+		</div>
+		<div id="modes">
+			Map View:
+			<a href="javascript:;" id="fares">Fares</a>
+			<a href="javascript:;" id="tickets">Tickets</a>
+		</div>
+		<svg id="bar_chart"></svg>	
+    <div id="disclaimer">
+      <em>* These figures are calculated from a data set that consists of a 10% sample of airline tickets reported by US air carriers. For some states, the sample includes only a handful of tickets to Hawaii each quarter. As a result, median fares calculated from the sample can be volatile from one quarter to the next for states with a small sample.</em>
+    </div>
+	</div>
+	<label for="dates"></label>
+</div>
+
+<div id="source_links">
+	<!-- ><a target="_blank" href="jobs.csv">Download Raw Data</a> / 
+	<a target="_blank" href="http://www.bls.gov/oes/current/oes_hi.htm">Source: BLS 2012 Occupational Employment and Wage Estimates Hawaii</a> <br /> -->
+	By <a href="/46/benjamin-trevino" target="_blank">Ben Trevino</a>, David Wang, and <a href="/144" target="_blank">Adele Balderston</a> 
+  <br/>Source <a href=" http://www.transtats.bts.gov/DatabaseInfo.asp?DB_ID=125&DB_Name=Airline%20Origin%20and%20Destination%20Survey%20(DB1B)" target="_blank">BTS Airline Origin and Destination Survey (DB1B)</a>
+</div>
+
+<div id="output">
+</div>
+
+<script src="/media/airfare/airfare.js"></script>
+
+
+
+						</div>
+						<!-- / content -->
+					</div>
+			</div>
+			<!-- / content-wrapper-center -->
+		</div>
+		<!-- / content-wrapper2 -->
+	</div>
+	<!-- / content-wrapper -->
+	<!-- <script type="text/javascript" charset="utf-8">
+		$(document).ready(function(){
+			$('ul.udm').addClass('v2');
+		})
+	</script>
+	-->
+	<div id="footer">
+
+		<div class="wrap-inner">
+
+			<p class="left">
+				2424 Maile Way, Saunders Hall 540 | Honolulu, Hawaii 96822<br />
+				(808) 956-2325 | <a href="mailto:uhero@hawaii.edu"><strong>uhero@hawaii.edu</strong></a>
+			</p>
+
+			<p class="right">
+				<strong>External Links</strong> <a href="http://www.economics.hawaii.edu/" target="_blank">Department of Economics</a> | <a href="http://www.ssri.hawaii.edu/" target="_blank">Social Science Research Institute</a> | <a href="http://www.socialsciences.hawaii.edu/" target="_blank">College of Social Sciences</a><br />
+				<strong>Website Design &amp; Development</strong> <a href="http://walltowall.com" target="_blank">Wall-to-Wall Studios</a>
+			</p>
+
+		</div>
+		<!-- / wrap-inner -->
+
+	</div>
+	<!-- / footer -->
+  
+	<script type="text/javascript" src="/media/airfare/swfobject.js"></script><script type="text/javascript" src="/media/js/cufon-yui.js"></script><script type="text/javascript" src="/media/js/TrajanPro_400-TrajanPro_700.font.js"></script><script type="text/javascript" src="/media/js/GothamLight_300.font.js"></script><script type="text/javascript" src="/media/js/GothamBold_400.font.js"></script><script type="text/javascript" src="/media/js/main.js"></script>	<script type="text/javascript">
+
+   var _gaq = _gaq || [];
+   _gaq.push(['_setAccount', 'UA-18074519-1']);
+   _gaq.push(['_trackPageview']);
+
+   (function() {
+     var ga = document.createElement('script'); ga.type =
+  'text/javascript'; ga.async = true;
+     ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+  'http://www') + '.google-analytics.com/ga.js';
+     var s = document.getElementsByTagName('script')[0];
+  s.parentNode.insertBefore(ga, s);
+   })();
+
+  </script>
+</body>
+</html>
+		
+
+

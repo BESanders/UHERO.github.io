@@ -880,17 +880,45 @@ function create_play_button(){
 	  .attr("height","20")
 }
 
+function deselect_states(){
+      selected_states = []; 
+      d3.selectAll("div.inset").remove()
+      d3.selectAll(".state_g path").attr("stroke", "#CCC").attr("stroke-width", 1)
+      d3.selectAll("g.bar_g rect").attr("stroke", "none")
+      d3.selectAll("g.bar_g text.bar.selected").attr("class", "bar")
+      d3.selectAll("g.bar_g text.bar").text("")
+      d3.selectAll("g.bar_g line.label").attr("stroke-width", 0)
+}
+
+function move_back_play_button(){
+    playing = false;      
+    d3.select("svg#map").interrupt()
+    d3.select("#play_button_image").attr("xlink:href", "Blue+Triangle.png")
+    slider_index = 0;
+    d3.select("#slider a").style("left", "0%")
+    
+}
+
+function revert_to_fares_mode(){
+      change_modes("fares");
+      d3.selectAll("#modes a").style("font-weight", "normal")
+      d3.selectAll("#fares").style("font-weight", "bold")
+}
+
+function revert_to_alphabet_sort(){
+   change_sorts("alphabetical");
+    d3.selectAll("#sorts a").style("font-weight", "normal")
+    d3.selectAll("#alphabetical").style("font-weight", "bold")
+}
+
 function create_reset_button(){ 
   var reset_button = button_svg.append("g")
 	                    .attr("class", "button")
 	                    .on('click', function(d){
-   	                      selected_states = [];
-   	                      d3.selectAll("div.inset").remove()
-   	                      d3.selectAll(".state_g path").attr("stroke", "#CCC").attr("stroke-width", 1)
-   	                      d3.selectAll("g.bar_g rect").attr("stroke", "none")
-   	                      d3.selectAll("g.bar_g text.bar.selected").attr("class", "bar")
-                          d3.selectAll("g.bar_g text.bar").text("")
-                          d3.selectAll("g.bar_g line.label").attr("stroke-width", 0)
+	                        deselect_states();
+  	                      move_back_play_button();
+                          revert_to_fares_mode();
+                          revert_to_alphabet_sort();
 	                    })
 	
 	reset_button.append("rect")

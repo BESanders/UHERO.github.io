@@ -184,12 +184,16 @@ svg.inset_svg{
 
 #fares{
 	margin-right:10px;
+	font-weight:bold;
 }
 
 #tickets{
 	margin-right:10px;
 }
 
+#alphabetical{
+  font-weight:bold;
+}
 
 #info_and_controls{
 	position:absolute;
