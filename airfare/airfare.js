@@ -765,7 +765,7 @@ function change_scale(){
 		color.domain([200, price_quantiles.quantiles()[18]])
 			  .range(["#fffcf7","rgb(25, 102, 127)"])//, "white", "orange"])
 			  .interpolate()
-		bar_height_scale.domain([0, price_max])
+		bar_height_scale.domain([0, price_max]).range([0, yoy_height - 100])
 	}else if(selected_mode === "tickets"){
 		color.domain([0, 1000, 5000, ticket_max])
 			  .range(["#fffcf7", "#6a9ba9", "rgb(25, 102, 127)", "blue"])//, "white", "orange"])
